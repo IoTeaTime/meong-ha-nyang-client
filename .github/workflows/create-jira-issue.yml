@@ -38,7 +38,7 @@ jobs:
         uses: stefanbuck/github-issue-praser@v3
         id: issue-parser
         with:
-          template-path: '.github/ISSUE_TEMPLATE/1-feature-issue-form.yml'
+          template-path: '.github/ISSUE_TEMPLATE/2-feature-issue-form.yml'
 
       - name: 이슈 Markdown 문법을 Jira 문법으로 변환
         uses: peter-evans/jira2md@v1
