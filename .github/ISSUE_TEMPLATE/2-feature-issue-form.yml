@@ -1,7 +1,7 @@
-name: '⚙️ 테스트코드 이슈'
-description: '멍하냥 클라이언트 레포지토리에 이슈를 생성하며, Jira와 연동됩니다.'
-labels: [test]
-title: '⚙️ 이슈 내용'
+name: '🐶 기능 추가 이슈'
+description: '새로운 기능 추가, 기존 기능 변경 시 작성합니다.'
+labels: [feature]
+title: '🐶 이슈 제목'
 assignees:
   - octocat
 body:

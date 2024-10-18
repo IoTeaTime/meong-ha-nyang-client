@@ -1,7 +1,7 @@
-name: '🍎 기능/오류 수정 이슈'
+name: '🚧 리팩토링 이슈'
 description: '멍하냥 클라이언트 레포지토리에 이슈를 생성하며, Jira와 연동됩니다.'
-labels: [fix]
-title: '🍎 이슈 내용'
+labels: [refactor]
+title: '🚧 이슈 제목'
 assignees:
   - octocat
 body:
