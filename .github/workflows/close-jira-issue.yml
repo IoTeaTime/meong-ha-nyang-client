@@ -59,8 +59,6 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_JINSOO_API_TOKEN }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_JINSOO_USER_EMAIL }}
 
-      # 다른 팀원 계정 연결 필요
-
       - name: Jira 이슈 키 찾기
         id: issue-key
         uses: atlassian/gajira-find-issue-key@master
