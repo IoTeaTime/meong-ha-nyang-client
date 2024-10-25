@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -52,30 +53,38 @@ fun SubTopBar(
     text: String,
     onBack: () -> Unit = {}
 ){
-    Row(
+    Column (
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight(),
-        horizontalArrangement = Arrangement.spacedBy(21.dp, alignment = Alignment.Start),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center
     ){
-        IconButton(
-            modifier = Modifier
-                .size(30.dp)
-                .padding(start = 10.dp),
-            onClick = onBack
-        ) {
-            Icon(
-                modifier = Modifier.size(9.dp, 15.dp),
-                painter = painterResource(id = R.drawable.navigate_before),
-                contentDescription = null)
+        Row(
+            modifier = modifier
+                .wrapContentSize()
+                .padding(horizontal = 10.dp, vertical = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(21.dp, alignment = Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            IconButton(
+                modifier = modifier
+                    .size(30.dp),
+                onClick = onBack
+            ) {
+                Icon(
+                    modifier = modifier.size(9.dp, 15.dp),
+                    painter = painterResource(id = R.drawable.navigate_before),
+                    contentDescription = null)
+            }
+            Text(
+                modifier = modifier,
+                text = text,
+                style = Typography.titleMedium
+            )
         }
-        Text(
-            modifier = Modifier.padding(vertical = 10.dp),
-            text = text,
-            style = Typography.titleMedium
-        )
     }
+    
 }
 
 @Preview(showBackground = true)
@@ -83,7 +92,9 @@ fun SubTopBar(
 fun MainTopBarPreview() {
     Column (
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         MainTopBar(text = "그룹 1")
         SubTopBar(text = "로그인")
