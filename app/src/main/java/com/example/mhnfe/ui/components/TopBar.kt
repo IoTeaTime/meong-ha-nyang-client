@@ -71,6 +71,7 @@ fun SubTopBar(
                 contentDescription = null)
         }
         Text(
+            modifier = Modifier.padding(vertical = 10.dp),
             text = text,
             style = Typography.titleMedium
         )
