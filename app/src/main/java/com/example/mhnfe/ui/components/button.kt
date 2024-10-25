@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainYellow
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.mhnfe.ui.theme.mainBlack
 
 @Composable
 fun SmallButton(
@@ -34,12 +35,12 @@ fun SmallButton(
             containerColor = Color.White
         ),
         onClick = onClick,
-        border = BorderStroke(1.dp, Color.Black)
+        border = BorderStroke(1.dp, mainBlack)
     ) {
         Text(
             style = Typography.labelLarge,
             text = text,
-            color = Color.Black)
+            color = mainBlack)
     }
 }
 
