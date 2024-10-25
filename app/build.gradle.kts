@@ -66,4 +66,13 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    val nav_version = "2.8.0"
+
+    //화면 이동 의존성 추가
+    implementation("androidx.navigation:navigation-compose:$nav_version")
+    //QR 생성, 리더기 의존성 추가
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.zxing:core:3.5.3")
+
 }
