@@ -87,16 +87,16 @@ fun SubTopBar(
     
 }
 
-@Preview(showBackground = true)
-@Composable
-fun MainTopBarPreview() {
-    Column (
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        MainTopBar(text = "그룹 1")
-        SubTopBar(text = "로그인")
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun MainTopBarPreview() {
+//    Column (
+//        modifier = Modifier
+//            .fillMaxSize(),
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.spacedBy(10.dp)
+//    ) {
+//        MainTopBar(text = "그룹 1")
+//        SubTopBar(text = "로그인")
+//    }
+//}
