@@ -142,19 +142,19 @@ fun MainTextBox(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun MainTextBoxPreview(){
-    val focusManager = LocalFocusManager.current
-
-    Column (
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        MainTextBox(
-            focusManager = focusManager
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun MainTextBoxPreview(){
+//    val focusManager = LocalFocusManager.current
+//
+//    Column (
+//        modifier = Modifier
+//            .fillMaxSize(),
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.spacedBy(10.dp)
+//    ) {
+//        MainTextBox(
+//            focusManager = focusManager
+//        )
+//    }
+//}
