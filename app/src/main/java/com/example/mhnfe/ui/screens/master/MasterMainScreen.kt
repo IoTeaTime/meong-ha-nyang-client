@@ -9,19 +9,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun MasterMainScreen(
     modifier: Modifier = Modifier,
     qrViewModel: QRViewModel = viewModel(),
-    onQRButtonClick: () -> Unit
+    onQRButtonClick: () -> Unit,
+    onCCTVButtonClick: () -> Unit,
+    onViewerButtonClick:() -> Unit
 ){
     Column (
         modifier = modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
     ){
         Button(
             onClick = {
@@ -31,6 +34,22 @@ fun MasterMainScreen(
         ) {
             Text(text = "QR 생성")
         }
+
+        Button(
+            onClick = {
+                onCCTVButtonClick()
+            }
+        ) {
+            Text(text = "CCTV")
+        }
+
+        Button(
+            onClick = {
+                onViewerButtonClick()
+            }
+        ) {
+            Text(text = "Viewer")
+        }
     }
 
 }
@@ -38,6 +57,6 @@ fun MasterMainScreen(
 @Preview(showBackground = true)
 @Composable
 fun MasterPreview(){
-    MasterMainScreen(onQRButtonClick = {})
+    MasterMainScreen(onQRButtonClick = {}, onCCTVButtonClick = {}, onViewerButtonClick = {})
 
 }

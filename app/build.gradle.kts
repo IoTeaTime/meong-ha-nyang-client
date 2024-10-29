@@ -74,5 +74,20 @@ dependencies {
     //QR 생성, 리더기 의존성 추가
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.zxing:core:3.5.3")
+    //Add CameraX dependency
+    val cameraxVersion = "1.4.0-alpha02"
+    implementation("androidx.camera:camera-core:${cameraxVersion}")
+    implementation("androidx.camera:camera-camera2:${cameraxVersion}")
+    implementation("androidx.camera:camera-lifecycle:${cameraxVersion}")
+    implementation("androidx.camera:camera-video:${cameraxVersion}")
+    implementation("androidx.camera:camera-view:${cameraxVersion}")
+
+    //Add awsKVS dependency
+    val kvsVersion = "2.77.0"
+    implementation("com.amazonaws:aws-android-sdk-kinesisvideo:${kvsVersion}")
+    implementation("com.amazonaws:aws-android-sdk-kinesisvideo-signaling:${kvsVersion}")
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:${kvsVersion}")
+
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
 }
