@@ -89,5 +89,6 @@ dependencies {
     implementation("com.amazonaws:aws-android-sdk-mobile-client:${kvsVersion}")
 
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
+    implementation(kotlin("script-runtime"))
 
 }
