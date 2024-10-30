@@ -7,7 +7,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import android.util.Log
 import com.example.mhnfe.data.signaling.SignalingListener
-import com.example.mhnfe.data.di.utils.Constants
+import com.example.mhnfe.utils.Constants
 import org.awaitility.Awaitility.await
 import java.util.concurrent.TimeUnit
 
