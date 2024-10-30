@@ -6,16 +6,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.ui.screens.cctv.CCTVScreen
-import com.example.mhnfe.ui.screens.cctv.CameraViewModel
 import com.example.mhnfe.ui.screens.master.MasterMainScreen
 import com.example.mhnfe.ui.screens.master.QRGenerateScreen
 import com.example.mhnfe.ui.screens.master.QRViewModel
+//import com.example.mhnfe.ui.screens.master.ViewerScreen
 
 //NavGraph에서 사용할 route 상수 정의
 object NavRoutes {
     const val MASTER_MAIN = "master_main"
     const val QR_GENERATE = "qr_generate"
     const val CCTV_STREAM = "cctv_stream"
+    const val CCTV_VIEWER = "cctv_viewer"
 
     fun cctvStream(streamId: String) = "cctv_stream/$streamId"
 }
@@ -39,7 +40,7 @@ fun MasterNavigation(){
                 onCCTVButtonClick = {
                     navController.navigate(NavRoutes.CCTV_STREAM)  // CCTV 화면으로 네비게이션
                 },
-                onViewerButtonClick = {}
+                onViewerButtonClick = { navController.navigate(NavRoutes.CCTV_VIEWER)}
             )
         }
         //qr_generate
@@ -55,6 +56,13 @@ fun MasterNavigation(){
                     navController.popBackStack()  // 이전 화면으로 돌아가기
                 }
             )
+        }
+        composable(NavRoutes.CCTV_VIEWER) {
+//            ViewerScreen(
+//                onNavigateBack = {
+//                    navController.popBackStack()
+//                }
+//            )
         }
         //cctv_stream
 //        composable(
