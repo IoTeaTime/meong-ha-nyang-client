@@ -94,4 +94,9 @@ dependencies {
     // 로컬 WebRTC.aar 파일 사용
     implementation(files("libs/libwebrtc-123.0.0.aar"))
 
+    //Add OkHttp dependency
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+
+    //Add Awaitility dependency
+    implementation("org.awaitility:awaitility:4.2.0")
 }
