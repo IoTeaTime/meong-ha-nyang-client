@@ -67,17 +67,17 @@ fun middleButton(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun NewQuizPreview(){
-    Column (
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
-    ){
-            SmallButton(text = "CCTV 추가") { }
-            middleButton(text = "회원가입") { }
-    }
-
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun NewQuizPreview(){
+//    Column (
+//        modifier = Modifier
+//            .fillMaxSize(),
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
+//    ){
+//            SmallButton(text = "CCTV 추가") { }
+//            middleButton(text = "회원가입") { }
+//    }
+//
+//}
