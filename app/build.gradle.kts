@@ -13,7 +13,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -51,6 +50,10 @@ android {
 
 dependencies {
 
+    //webRTC 공식 지원 종료
+    // 로컬 WebRTC.aar 파일 사용
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -82,15 +85,30 @@ dependencies {
     implementation("androidx.camera:camera-video:${cameraxVersion}")
     implementation("androidx.camera:camera-view:${cameraxVersion}")
 
-    //Add awsKVS dependency
-    val kvsVersion = "2.77.0"
-    implementation("com.amazonaws:aws-android-sdk-kinesisvideo:${kvsVersion}")
-    implementation("com.amazonaws:aws-android-sdk-kinesisvideo-signaling:${kvsVersion}")
-    implementation("com.amazonaws:aws-android-sdk-mobile-client:${kvsVersion}")
-    implementation("com.amazonaws:aws-android-sdk-cognito:2.20.1")
+    val awsVersion = "2.77.0"
+    implementation("com.amazonaws:aws-android-sdk-kinesisvideo:${awsVersion}@aar") { isTransitive = true }
+    implementation("com.amazonaws:aws-android-sdk-kinesisvideo-signaling:${awsVersion}@aar") { isTransitive = true }
+    implementation("com.amazonaws:aws-android-sdk-kinesisvideo-webrtcstorage:${awsVersion}@aar") { isTransitive = true }
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:${awsVersion}@aar") { isTransitive = true }
+    implementation("com.amazonaws:aws-android-sdk-auth-userpools:${awsVersion}@aar") { isTransitive = true }
+    implementation("com.amazonaws:aws-android-sdk-auth-ui:${awsVersion}@aar") { isTransitive = true }
 
-    //webRTC 공식 지원 종료
-    // 로컬 WebRTC.aar 파일 사용
-    implementation(files("libs/libwebrtc-123.0.0.aar"))
+    implementation("org.awaitility:awaitility:4.2.0")
+    implementation("org.json:json:20190722")
+    implementation("com.google.guava:guava:28.1-android")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.apache.commons:commons-lang3:3.9")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+
+
+
 
 }
