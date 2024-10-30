@@ -87,8 +87,10 @@ dependencies {
     implementation("com.amazonaws:aws-android-sdk-kinesisvideo:${kvsVersion}")
     implementation("com.amazonaws:aws-android-sdk-kinesisvideo-signaling:${kvsVersion}")
     implementation("com.amazonaws:aws-android-sdk-mobile-client:${kvsVersion}")
+    implementation("com.amazonaws:aws-android-sdk-cognito:2.20.1")
 
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
-    implementation(kotlin("script-runtime"))
+    //webRTC 공식 지원 종료
+    // 로컬 WebRTC.aar 파일 사용
+    implementation(files("libs/libwebrtc-123.0.0.aar"))
 
 }
