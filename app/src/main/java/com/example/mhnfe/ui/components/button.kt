@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,17 +69,58 @@ fun middleButton(
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun NewQuizPreview(){
-//    Column (
-//        modifier = Modifier
-//            .fillMaxSize(),
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
-//    ){
-//            SmallButton(text = "CCTV 추가") { }
-//            middleButton(text = "회원가입") { }
-//    }
-//
-//}
+@Preview(showBackground = true)
+@Composable
+fun NewQuizPreview(){
+    Column (
+        modifier = Modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
+    ){
+            SmallButton(text = "CCTV 추가") { }
+            middleButton(text = "회원가입") { }
+    }
+
+}
+
+
+// components/CommonComponents.kt
+@Composable
+fun ErrorDialog(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Error") },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("OK")
+            }
+        }
+    )
+}
+
+@Composable
+fun PermissionDialog(
+    onDismiss: () -> Unit,
+    onGranted: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Permissions Required") },
+        text = { Text("Camera and microphone permissions are required for WebRTC.") },
+        confirmButton = {
+            TextButton(onClick = onGranted) {
+                Text("Grant")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
