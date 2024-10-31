@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -37,28 +36,64 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.mhnfe.ui.navigation.MasterNavigation
+import com.amazonaws.mobile.client.AWSMobileClient
+import com.amazonaws.mobile.client.Callback
+import com.amazonaws.mobile.client.UserStateDetails
+import com.example.mhnfe.ui.navigation.AppNavigation
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoCapturer
 import org.webrtc.VideoSource
 import org.webrtc.VideoTrack
+import java.util.concurrent.CountDownLatch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        val auth = AWSMobileClient.getInstance()
+        initializeMobileClient(auth, this@MainActivity)
+        //로그아웃
+        AWSMobileClient.getInstance().signOut()
+
         setContent {
             MhnFETheme {
-                MasterNavigation()
-//                WebRTCTestScreen()
-//                AppNavigation()
-
+                AppNavigation()
             }
         }
     }
 }
+
+//Cognito 인증 초기화 (json 파일 사용)
+private fun initializeMobileClient(client: AWSMobileClient, context: ComponentActivity) {
+    val latch = CountDownLatch(1)
+    client.initialize(context, object : Callback<UserStateDetails> {
+        override fun onResult(result: UserStateDetails) {
+            Log.d(
+                "awskinesisvideo",
+                "onResult: user state: " + result.userState
+            )
+            latch.countDown()
+        }
+
+        override fun onError(e: Exception) {
+            Log.e(
+                "awskinesisvideo",
+                "onError: Initialization error of the mobile client",
+                e
+            )
+            latch.countDown()
+        }
+    })
+    try {
+        latch.await()
+    } catch (e: InterruptedException) {
+        e.printStackTrace()
+    }
+}
+
+
 
 
 //webRTC테스트용 나중에 지울 것
