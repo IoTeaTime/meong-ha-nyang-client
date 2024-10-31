@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.mhnfe.ui.navigation.MasterNavigation
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
@@ -50,7 +51,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MhnFETheme {
-                //MasterNavigation()
+                MasterNavigation()
 //                WebRTCTestScreen()
 //                AppNavigation()
 
