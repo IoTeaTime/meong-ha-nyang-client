@@ -108,7 +108,7 @@ fun StartUpScreen(
 
                     try {
                         withContext(Dispatchers.IO) {
-                            auth.signIn(username, password, null)
+                            AWSMobileClient.getInstance().signIn(username, password, null)
                         }
 
                         withContext(Dispatchers.Main) {
