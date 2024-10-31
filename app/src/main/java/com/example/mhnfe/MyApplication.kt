@@ -1,3 +1,4 @@
+package com.example.mhnfe
 import android.app.Application
 import android.util.Log
 import com.amazonaws.auth.AWSCredentialsProvider
