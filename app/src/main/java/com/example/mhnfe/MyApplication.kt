@@ -21,7 +21,7 @@ class MyApplication : Application() {
             AWSMobileClient.getInstance()
 
         /**
-         * awsconfiguration.json 파일을 파싱하여 AWS 리전을 추출합니다.
+         *  파일을 파싱하여 AWS 리전을 추출합니다.
          *
          * @return AWS 리전 문자열, 설정이 없는 경우 null
          * @throws IllegalStateException awsconfiguration.json 파일이 올바르게 설정되지 않은 경우
