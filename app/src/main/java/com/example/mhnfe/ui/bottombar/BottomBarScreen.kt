@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.bottombar
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -33,6 +34,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.data.model.UserType
+import com.example.mhnfe.ui.navigation.NavRoutes
 //import com.example.mhnfe.ui.screens.master.GroupScreen
 //import com.example.mhnfe.ui.screens.master.HomeScreen
 //import com.example.mhnfe.ui.screens.mypage.MyPageScreen
@@ -48,55 +50,6 @@ sealed class NavigationItem(var route: String, var icon: Int, var title: String)
     data object MyPage : NavigationItem("myPage", R.drawable.mypage, "마이페이지")
 }
 
-
-@Composable
-fun BottomBarScreen(
-    mainNavController: NavController,
-    userType: UserType  // 유저 타입 전달 받음
-) {
-    val bottomNavController = rememberNavController()
-    val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    val showBottomBar = currentRoute in listOf(
-        NavigationItem.Monitoring.route,
-        NavigationItem.Report.route,
-        NavigationItem.MyPage.route
-    )
-
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                BottomNavigationBar(navController = bottomNavController)
-            }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = bottomNavController,
-            startDestination = NavigationItem.Monitoring.route,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(NavigationItem.Monitoring.route) {
-//                GroupScreen(
-//                    userType = userType,  // 전달받은 유저 타입 전달
-//                    navController = mainNavController
-//                )
-            }
-            composable(NavigationItem.Report.route) {
-//                ReportScreen()
-            }
-            composable(NavigationItem.MyPage.route) {
-//                MyPageScreen()
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
 @Composable
 fun BottomNavigationBar(
     modifier: Modifier = Modifier,
@@ -111,7 +64,7 @@ fun BottomNavigationBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+//        val currentRoute = navBackStackEntry?.destination?.route
 
         val items = listOf(
             NavigationItem.Monitoring,
@@ -119,21 +72,41 @@ fun BottomNavigationBar(
             NavigationItem.MyPage,
         )
 
+        val currentRoute = navBackStackEntry?.destination?.route
+        Log.d("Navigation", "Current Route: $currentRoute")
+
         items.forEach { item ->
+            val isSelected = when (item) {
+                is NavigationItem.Monitoring -> {
+                    currentRoute == "group"  // 실제 라우트 값과 매칭
+                }
+
+                is NavigationItem.Report -> {
+                    currentRoute == "report_detail"
+                }
+
+                is NavigationItem.MyPage -> {
+                    currentRoute == "myPage/profile"
+                }
+            }
+
+            // isSelected 상태 디버깅
+            Log.d("Navigation", "Item: ${item.title}, IsSelected: $isSelected")
+
             Box(
                 modifier = modifier
                     .weight(1f)
                     .fillMaxHeight()
                     .background(
-                        color = if (currentRoute == item.route) mainYellow else hoverYellow
+                        color = if (isSelected) mainYellow else hoverYellow
                     )
                     .noRippleClickable {
+                        // 네비게이션 로직 수정
                         navController.navigate(item.route) {
-                            navController.graph.startDestinationRoute?.let { route ->
-                                popUpTo(route) {
-                                    saveState = true
-                                }
+                            popUpTo(NavRoutes.Monitoring.Group.route) {
+                                saveState = true
                             }
+                            launchSingleTop = true
                             restoreState = true
                         }
                     },
@@ -144,12 +117,12 @@ fun BottomNavigationBar(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                        Icon(
-                            modifier = modifier.size(30.dp),
-                            painter = painterResource(id = item.icon),
-                            contentDescription = item.title,
-                            tint = mainBlack
-                        )
+                    Icon(
+                        modifier = modifier.size(30.dp),
+                        painter = painterResource(id = item.icon),
+                        contentDescription = item.title,
+                        tint = mainBlack
+                    )
                     Text(
                         text = item.title,
                         style = Typography.labelSmall,
@@ -170,20 +143,6 @@ fun Modifier.noRippleClickable(
         interactionSource = remember { MutableInteractionSource() }
     ) {
         onClick()
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-private fun BottomBarScreenPreview() {
-    val context = LocalContext.current
-    val navController = remember {
-        NavController(context)
-    }
-
-    Column {
-        BottomBarScreen(mainNavController = navController, userType = UserType.MASTER)
     }
 }
 
