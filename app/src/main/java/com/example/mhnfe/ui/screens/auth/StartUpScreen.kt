@@ -32,7 +32,7 @@ import com.amazonaws.mobile.client.results.SignInState
 import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException
 import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException
-import com.example.mhnfe.data.model.UserType
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.navigation.NavRoutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

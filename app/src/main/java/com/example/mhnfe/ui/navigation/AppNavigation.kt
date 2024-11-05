@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -21,12 +19,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.amazonaws.mobile.client.AWSMobileClient
-import com.example.mhnfe.data.model.UserType
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
-import com.example.mhnfe.ui.screens.auth.SelectScreen
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
-import com.example.mhnfe.ui.screens.master.MasterMainScreen
-import com.example.mhnfe.ui.screens.master.QRViewModel
+import com.example.mhnfe.ui.screens.monitoring.GroupScreen
+import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
+import com.example.mhnfe.ui.screens.qr.QRViewModel
 
 sealed class NavRoutes(val route: String) {
     object Auth : NavRoutes("auth") {
@@ -40,10 +38,12 @@ sealed class NavRoutes(val route: String) {
     }
 
     object Monitoring : NavRoutes("monitoring") {
-        object Group : NavRoutes("group")
+        object Group : NavRoutes("monitoring/group")
         object DeviceInformation : NavRoutes("device_information")
         object QRScanner : NavRoutes("qr_scanner")
-        object QRGenerate : NavRoutes("qr_generate")
+        object QRGenerate : NavRoutes("qr_generate/{userType}") {  // monitoring/ 접두어 제거
+            fun createRoute(userType: UserType) = "qr_generate/${userType.name.lowercase()}"
+        }
     }
     object Report : NavRoutes("report") {
         object ReportDetail : NavRoutes("report_detail")
@@ -96,7 +96,7 @@ fun AppNavigation() {
         ) { backStackEntry ->
             val userType = UserType.fromString(backStackEntry.arguments?.getString("userType"))
             MainContent(
-                navController = navController,
+                mainNavController = navController,
                 auth = auth,
                 userType = userType
             )
@@ -116,7 +116,7 @@ fun AppNavigation() {
 
 @Composable
 fun MainContent(
-    navController: NavController,
+    mainNavController: NavController,
     auth: AWSMobileClient,
     userType: UserType
 ) {
@@ -132,12 +132,6 @@ fun MainContent(
 
     val showBottomBar = currentRoute in mainScreens
 
-//    LaunchedEffect(Unit) {
-//        bottomNavController.navigate(NavRoutes.Monitoring.Group.route) {
-//            popUpTo(0) { inclusive = true }
-//        }
-//    }
-
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
@@ -146,18 +140,36 @@ fun MainContent(
         }
     ) { innerPadding ->
         NavHost(
-            navController = bottomNavController,
+            navController = bottomNavController,  // 여기서는 bottomNavController 사용
             startDestination = NavRoutes.Monitoring.route,
             modifier = Modifier.padding(innerPadding)
         ) {
+            // QR Generate 화면을 별도의 navigation block 밖으로 이동
+            composable(
+                route = NavRoutes.Monitoring.QRGenerate.route,
+                arguments = listOf(
+                    navArgument("userType") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                val qrUserType = backStackEntry.arguments?.getString("userType")
+                QRGenerateScreen(
+                    navController = bottomNavController,  // bottomNavController 사용
+                    userType = UserType.fromString(qrUserType)
+                )
+            }
+
             // Monitoring Graph
             navigation(
                 startDestination = NavRoutes.Monitoring.Group.route,
                 route = NavRoutes.Monitoring.route
             ) {
                 composable(NavRoutes.Monitoring.Group.route) {
-                    TestContent()
-                    // GroupScreen
+                    GroupScreen(
+                        userType = userType,
+                        navController = bottomNavController  // bottomNavController 전달
+                    )
                 }
                 composable(NavRoutes.Monitoring.DeviceInformation.route) {
                     // DeviceInformationScreen
@@ -165,8 +177,19 @@ fun MainContent(
                 composable(NavRoutes.Monitoring.QRScanner.route) {
                     // QRScannerScreen
                 }
-                composable(NavRoutes.Monitoring.QRGenerate.route) {
-                    // QRGenerateScreen
+                composable(
+                    route = NavRoutes.Monitoring.QRGenerate.route,
+                    arguments = listOf(
+                        navArgument("userType") {
+                            type = NavType.StringType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val qrUserType = backStackEntry.arguments?.getString("userType")
+                    QRGenerateScreen(
+                        navController = bottomNavController,
+                        userType = UserType.fromString(qrUserType)
+                    )
                 }
             }
 
