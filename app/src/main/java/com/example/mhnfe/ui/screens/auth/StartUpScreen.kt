@@ -21,12 +21,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.amazonaws.mobile.client.AWSMobileClient
+import com.amazonaws.mobile.client.results.SignInState
+import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException
+import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException
+import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException
+import com.example.mhnfe.data.model.UserType
+import com.example.mhnfe.ui.navigation.NavRoutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -41,6 +48,7 @@ fun StartUpScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     // 코루틴 스코프 생성
     val scope = rememberCoroutineScope()
@@ -63,10 +71,10 @@ fun StartUpScreen(
                 username = it
                 errorMessage = null
             },
-            label = { Text("전화번호") },
+            label = { Text("이메일") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Phone,
+                keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
             ),
             modifier = Modifier
@@ -108,24 +116,55 @@ fun StartUpScreen(
 
                     try {
                         withContext(Dispatchers.IO) {
-                            AWSMobileClient.getInstance().signIn(username, password, null)
-                        }
+                            Log.d("awskinesisvideo", "로그인 시도 시작 - username: $username")
 
-                        withContext(Dispatchers.Main) {
-                            if (auth.isSignedIn) {
-                                Log.d("awskinesisvideo", "isSignedIn success")
-                                navController.navigate("main") {
-                                    popUpTo("login") { inclusive = true }
+                            val signInResult = AWSMobileClient.getInstance().signIn(username, password, null)
+                            Log.d("awskinesisvideo", "로그인 응답: ${signInResult.signInState}")
+
+                            if (signInResult.signInState == SignInState.NEW_PASSWORD_REQUIRED) {
+                                // 강제로 새 비밀번호 설정
+                                val parameters = hashMapOf<String, String>()
+                                parameters["newPassword"] = "qqww1122"
+
+                                try {
+                                    AWSMobileClient.getInstance()
+                                    Log.d("awskinesisvideo", "새 비밀번호 설정 성공")
+
+                                    withContext(Dispatchers.Main) {
+                                        navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                                            popUpTo(NavRoutes.Auth.route) {
+                                                inclusive = true
+                                            }
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("awskinesisvideo", "새 비밀번호 설정 실패", e)
+                                    withContext(Dispatchers.Main) {
+                                        errorMessage = "비밀번호 변경 실패: ${e.message}"
+                                    }
                                 }
-                            } else {
-                                Log.d("awskinesisvideo", "isSignedIn failed")
-                                errorMessage = "로그인에 실패했습니다"
+                            } else if (signInResult.signInState == SignInState.DONE) {
+                                withContext(Dispatchers.Main) {
+                                    //화면 이동
+                                    navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                                        // Auth 플로우를 백스택에서 제거
+                                        popUpTo(NavRoutes.Auth.route) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
                             }
                         }
+
                     } catch (e: Exception) {
-                        Log.d("awskinesisvideo", "login fail ${e}")
+                        Log.e("awskinesisvideo", "로그인 실패", e)
                         withContext(Dispatchers.Main) {
-                            errorMessage = e.message ?: "로그인 중 오류가 발생했습니다"
+                            errorMessage = when (e) {
+                                is UserNotConfirmedException -> "이메일 인증이 필요합니다"
+                                is NotAuthorizedException -> "아이디 또는 비밀번호가 올바르지 않습니다"
+                                is UserNotFoundException -> "존재하지 않는 사용자입니다"
+                                else -> "로그인 중 오류가 발생했습니다: ${e.message}"
+                            }
                         }
                     } finally {
                         isLoading = false
