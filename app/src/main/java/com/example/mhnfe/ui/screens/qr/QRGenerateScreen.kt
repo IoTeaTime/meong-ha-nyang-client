@@ -29,7 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.theme.Typography
-
+import com.example.mhnfe.ui.theme.mainBlack
 
 
 @Composable
@@ -75,14 +75,15 @@ fun QRGenerateScreen(
                 Text(
                     textAlign = TextAlign.Center,
                     style = Typography.bodyMedium,
+                    color = mainBlack,
                     text = uiState.message
                 )
                 Image(
                     bitmap = qrBitmap.asImageBitmap(),
                     contentDescription = "QR Code",
-                    modifier = Modifier
+                    modifier = modifier
                         .size(200.dp)
-                        .border(1.dp, Color.Gray)
+                        .border(1.dp, mainBlack)
                 )
             }
         }
