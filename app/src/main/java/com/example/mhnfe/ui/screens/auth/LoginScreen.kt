@@ -1,100 +1,145 @@
 package com.example.mhnfe.ui.screens.auth
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.Scaffold
-
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
+import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
+import com.example.mhnfe.ui.theme.mainGray3
 
 @Composable
 fun LoginScreen(
-    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    navController: NavController,
     onLoginClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     var isAutoLogin by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = Modifier
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier = modifier,
         topBar = {
             SubTopBar(
                 text = "로그인",
-                onBack = onBackClick
+                onBack = { navController.popBackStack() }
             )
         }
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = modifier
                 .padding(paddingValues)
-                .padding(horizontal = 20.dp)
-                .padding(top = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally  // 중앙 정렬 추가
+                .fillMaxSize()
+                .padding(horizontal = 34.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(110.dp, alignment = Alignment.Top)
         ) {
-            // 입력 필드들
+            // 상단부 (로고)
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = modifier.padding(vertical = 50.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(40.dp, alignment = Alignment.CenterVertically)
             ) {
-                MainTextBox(
-                    focusManager = focusManager,
-                    hintText = "아이디"
+                // 로고 이미지
+                Image(
+                    painter = painterResource(id = R.drawable.logo2),
+                    contentDescription = "로고",
+                    modifier = modifier.size(250.dp),
+                    contentScale = ContentScale.Fit
                 )
 
-                MainTextBox(
-                    focusManager = focusManager,
-                    hintText = "비밀번호"
-                )
-
-                // 자동 로그인 체크박스
-                Row(
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // 입력 필드들과 자동로그인을 포함하는 Column
+                Column(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.Start
                 ) {
-                    Checkbox(
-                        checked = isAutoLogin,
-                        onCheckedChange = { isAutoLogin = it },
-                        colors = CheckboxDefaults.colors(checkedColor = mainYellow)
+                    MainTextBox(
+                        focusManager = focusManager,
+                        hintText = "아이디"
                     )
-                    Text("자동로그인")
+
+                    MainTextBox(
+                        focusManager = focusManager,
+                        hintText = "비밀번호"
+                    )
+
+                    // 자동 로그인 체크박스
+                    Row(
+                        modifier = modifier.offset((-12).dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = isAutoLogin,
+                            onCheckedChange = { isAutoLogin = it },
+                            colors = CheckboxDefaults.colors(checkedColor = mainYellow)
+                        )
+                        Text(
+                            text = "자동로그인",
+                            color = mainGray
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            // 하단부 버튼과 텍스트를 포함하는 Column
+            Column(
+                modifier = modifier.fillMaxWidth().wrapContentHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 로그인 버튼
+                MiddleButton(
+                    text = "로그인",
+                    onClick = onLoginClick
+                )
 
-            // 로그인 버튼
-            MiddleButton(
-                text = "로그인",
-                onClick = onLoginClick,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+                // 비밀번호 찾기 텍스트
+                Text(
+                    text = "비밀번호를 잊어버리셨나요?",
+                    textAlign = TextAlign.Center,
+                    color = mainGray,
+                    modifier = modifier
+                        .clickable { navController.navigate("forgot_password") }
 
-            // 비밀번호 찾기 텍스트
-            Text(
-                text = "비밀번호를 잊어버리셨나요?",
-                modifier = Modifier
-                    .padding(vertical = 16.dp),  // fillMaxWidth 제거
-                textAlign = TextAlign.Center,
-                color = mainGray
-            )
-
-            // 하단 여백
-            Spacer(modifier = Modifier.height(20.dp))
+                )
+            }
         }
     }
 }
+
+@Preview(
+    name = "Login Screen",
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=411dp,height=891dp"
+)
+@Composable
+fun LoginScreenPreview() {
+    LoginScreen(
+        navController = rememberNavController(),
+        onLoginClick = {}
+    )
+}
+

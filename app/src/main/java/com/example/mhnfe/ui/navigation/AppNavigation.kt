@@ -41,12 +41,12 @@ sealed class NavRoutes(val route: String) {
         object Group : NavRoutes("monitoring/group")
         object DeviceInformation : NavRoutes("device_information")
         object QRScanner : NavRoutes("qr_scanner")
-        object QRGenerate : NavRoutes("qr_generate/{userType}") {  // monitoring/ 접두어 제거
+        object QRGenerate : NavRoutes("qr_generate/{userType}") {
             fun createRoute(userType: UserType) = "qr_generate/${userType.name.lowercase()}"
         }
     }
     object Report : NavRoutes("report") {
-        object ReportDetail : NavRoutes("report_detail")
+        object ReportDetail : NavRoutes("report/report_detail")
         //추후에 화면이 추가 될 수 있기 때문에 이렇게 따로 빼서 구현 추후 화면 추가가 없을 시 삭제
     }
     object MyPage : NavRoutes("myPage") {
@@ -60,7 +60,6 @@ sealed class NavRoutes(val route: String) {
 fun AppNavigation() {
     val auth = remember { AWSMobileClient.getInstance() }
     val navController = rememberNavController()
-    val viewModel: QRViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -144,21 +143,6 @@ fun MainContent(
             startDestination = NavRoutes.Monitoring.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // QR Generate 화면을 별도의 navigation block 밖으로 이동
-            composable(
-                route = NavRoutes.Monitoring.QRGenerate.route,
-                arguments = listOf(
-                    navArgument("userType") {
-                        type = NavType.StringType
-                    }
-                )
-            ) { backStackEntry ->
-                val qrUserType = backStackEntry.arguments?.getString("userType")
-                QRGenerateScreen(
-                    navController = bottomNavController,  // bottomNavController 사용
-                    userType = UserType.fromString(qrUserType)
-                )
-            }
 
             // Monitoring Graph
             navigation(
@@ -187,7 +171,7 @@ fun MainContent(
                 ) { backStackEntry ->
                     val qrUserType = backStackEntry.arguments?.getString("userType")
                     QRGenerateScreen(
-                        navController = bottomNavController,
+                        navController = bottomNavController,  // bottomNavController 사용
                         userType = UserType.fromString(qrUserType)
                     )
                 }
