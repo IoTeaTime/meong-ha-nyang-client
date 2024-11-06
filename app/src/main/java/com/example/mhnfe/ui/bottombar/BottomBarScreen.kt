@@ -66,7 +66,7 @@ fun BottomNavigationBar(
         items.forEach { item ->
             val isSelected = when (item) {
                 is NavigationItem.Monitoring -> {
-                    currentRoute == "group"  // 실제 라우트 값과 매칭
+                    currentRoute == "monitoring/group"
                 }
 
                 is NavigationItem.Report -> {

@@ -30,11 +30,8 @@ fun MhnFETheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colors = if (!darkTheme) {
-        LightColorScheme
-    } else {
-        DarkColorScheme
-    }
+    val colors = LightColorScheme  // 항상 라이트 모드 색상 사용
+
     MaterialTheme(
         colorScheme = colors,
         content = content,
