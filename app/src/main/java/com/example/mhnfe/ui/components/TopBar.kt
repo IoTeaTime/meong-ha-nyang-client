@@ -38,7 +38,8 @@ fun MainTopBar(
         verticalAlignment = Alignment.CenterVertically
     ){
         Text(
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 9.dp),
+            modifier = modifier
+                .padding(horizontal = 28.dp, vertical = 9.dp),
             text = text,
             style = Typography.titleMedium,
             color = Color.White,
