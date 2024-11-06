@@ -63,13 +63,13 @@ fun LoginScreen(
                 Image(
                     painter = painterResource(id = R.drawable.logo2),
                     contentDescription = "로고",
-                    modifier = Modifier.size(250.dp),
+                    modifier = modifier.size(250.dp),
                     contentScale = ContentScale.Fit
                 )
 
                 // 입력 필드들과 자동로그인을 포함하는 Column
                 Column(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
                         .wrapContentHeight(),
                     verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
@@ -87,8 +87,8 @@ fun LoginScreen(
 
                     // 자동 로그인 체크박스
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.offset((-12).dp)
+                        modifier = modifier.offset((-12).dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
                             checked = isAutoLogin,
@@ -106,7 +106,7 @@ fun LoginScreen(
 
             // 하단부 버튼과 텍스트를 포함하는 Column
             Column(
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxWidth().wrapContentHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -121,7 +121,7 @@ fun LoginScreen(
                     text = "비밀번호를 잊어버리셨나요?",
                     textAlign = TextAlign.Center,
                     color = mainGray,
-                    modifier = Modifier
+                    modifier = modifier
                         .clickable { navController.navigate("forgot_password") }
 
                 )
