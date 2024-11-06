@@ -4,7 +4,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -30,9 +35,9 @@ fun SmallButton(
 ) {
     Button(
         modifier = modifier
-            .wrapContentSize(),
+            .defaultMinSize(130.dp, 56.dp),
         shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(vertical = 18.dp, horizontal = 40.dp),
+        contentPadding = PaddingValues(vertical = 18.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.White
         ),
@@ -47,16 +52,17 @@ fun SmallButton(
 }
 
 @Composable
-fun middleButton(
+fun MiddleButton(
     modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit
 ) {
     Button(
         modifier = modifier
-            .wrapContentSize(),
+            .wrapContentHeight()
+            .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(vertical = 15.dp, horizontal = 140.dp),
+        contentPadding = PaddingValues(vertical = 15.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = mainYellow
         ),
@@ -74,14 +80,21 @@ fun middleButton(
 fun NewQuizPreview(){
     Column (
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .padding(horizontal = 34.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
     ){
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             SmallButton(text = "CCTV 추가") { }
-            middleButton(text = "회원가입") { }
+            SmallButton(text = "참여자 추가") { }
+        }
+        MiddleButton(text = "회원가입") { }
     }
-
 }
 
 
