@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.screens.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -15,6 +16,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
@@ -27,7 +30,7 @@ import com.example.mhnfe.ui.theme.mainGray3
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onBackClick: () -> Unit,
+    navController: NavController,
     onLoginClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
@@ -38,7 +41,7 @@ fun LoginScreen(
         topBar = {
             SubTopBar(
                 text = "로그인",
-                onBack = onBackClick
+                onBack = { navController.popBackStack() }
             )
         }
     ) { paddingValues ->
@@ -48,14 +51,14 @@ fun LoginScreen(
                 .fillMaxSize()
                 .padding(horizontal = 34.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween  // 최상위 Column에 SpaceBetween 적용
+            verticalArrangement = Arrangement.spacedBy(110.dp, alignment = Alignment.Top)
         ) {
             // 상단부 (로고)
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = modifier.padding(vertical = 50.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(40.dp, alignment = Alignment.CenterVertically)
             ) {
-                Spacer(modifier = Modifier.height(40.dp))
-
                 // 로고 이미지
                 Image(
                     painter = painterResource(id = R.drawable.logo2),
@@ -64,12 +67,12 @@ fun LoginScreen(
                     contentScale = ContentScale.Fit
                 )
 
-                Spacer(modifier = Modifier.height(60.dp))
-
                 // 입력 필드들과 자동로그인을 포함하는 Column
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
                     horizontalAlignment = Alignment.Start
                 ) {
                     MainTextBox(
@@ -83,7 +86,7 @@ fun LoginScreen(
                     )
 
                     // 자동 로그인 체크박스
-                    Row(  // Column을 Row로 변경
+                    Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.offset((-12).dp)
                     ) {
@@ -100,20 +103,16 @@ fun LoginScreen(
                 }
             }
 
-
             // 하단부 버튼과 텍스트를 포함하는 Column
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 20.dp),
+                modifier = modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // 로그인 버튼
                 middleButton(
                     text = "로그인",
-                    onClick = onLoginClick,
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = onLoginClick
                 )
 
                 // 비밀번호 찾기 텍스트
@@ -121,6 +120,8 @@ fun LoginScreen(
                     text = "비밀번호를 잊어버리셨나요?",
                     textAlign = TextAlign.Center,
                     color = mainGray,
+                    modifier = Modifier
+                        .clickable { navController.navigate("forgot_password") }
 
                 )
             }
@@ -137,7 +138,8 @@ fun LoginScreen(
 @Composable
 fun LoginScreenPreview() {
     LoginScreen(
-        onBackClick = {},
+        navController = rememberNavController(),
         onLoginClick = {}
     )
 }
+
