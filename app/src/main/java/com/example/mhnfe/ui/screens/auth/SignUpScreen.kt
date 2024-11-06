@@ -10,7 +10,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
-import com.example.mhnfe.ui.components.middleButton
+import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.theme.mainGray
 import androidx.compose.ui.Alignment  // Import 추가
 import androidx.compose.foundation.Image
@@ -130,7 +130,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // 하단 버튼과 텍스트
-            middleButton(
+            MiddleButton(
                 text = if (currentStep == 3) "완료" else "다음",
                 onClick = {
                     if (currentStep < 3) {
