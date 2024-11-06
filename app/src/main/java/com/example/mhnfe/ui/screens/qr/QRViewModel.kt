@@ -1,23 +1,66 @@
-package com.example.mhnfe.ui.screens.master
+package com.example.mhnfe.ui.screens.qr
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
+import com.example.mhnfe.di.UserType
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.util.UUID
 
-class QRViewModel : ViewModel() {
-    private val _qrContent = mutableStateOf(UUID.randomUUID().toString())
-    val qrContent: State<String> = _qrContent
+data class QRScreenUiState(
+    val title: String = "",
+    val message: String = "",
+    val qrContent: String = UUID.randomUUID().toString(),
+    val qrBitmap: ImageBitmap? = null,
+    val userType: UserType = UserType.CCTV
+)
 
-    fun generateNewQRCode() {
-        _qrContent.value = UUID.randomUUID().toString()
+class QRViewModel : ViewModel() {
+    private val _uiState = MutableStateFlow(QRScreenUiState())
+    val uiState = _uiState.asStateFlow()
+
+    init {
+        // 초기 QR 코드 생성
+        generateNewQRCode()
     }
 
-    // QR 코드 생성 로직
+
+    fun setUserType(type: UserType) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                userType = type,
+                title = when (type) {
+                    UserType.CCTV -> "CCTV 등록"
+                    UserType.VIEWER -> "뷰어 등록"
+                    UserType.MASTER -> ""
+                },
+                message = when (type) {
+                    UserType.CCTV -> "CCTV로 사용할 기기에서\nQR 인증을 해주세요"
+                    UserType.VIEWER -> "뷰어로 사용할 기기에서\nQR 인증을 해주세요"
+                    UserType.MASTER -> ""
+                }
+            )
+        }
+    }
+
+    // QR 코드에 들어갈 내용을 생성
+    fun generateNewQRCode() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                qrContent = UUID.randomUUID().toString()
+            )
+        }
+    }
+
+
+    // QR Content를 QR 코드 이미지로 변환
     fun generateQRBitmap(size: Int): Bitmap {
         val hints = hashMapOf<EncodeHintType, Any>().apply {
             put(EncodeHintType.MARGIN, 1)
@@ -27,7 +70,7 @@ class QRViewModel : ViewModel() {
         return try {
             val writer = QRCodeWriter()
             val bitMatrix = writer.encode(
-                _qrContent.value,  // 현재 UUID 값 사용
+                uiState.value.qrContent,  // uiState에서 qrContent 가져오기
                 BarcodeFormat.QR_CODE,
                 size,
                 size,
