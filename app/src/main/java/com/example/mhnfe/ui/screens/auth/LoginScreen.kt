@@ -21,7 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
-import com.example.mhnfe.ui.components.middleButton
+import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
@@ -111,7 +111,7 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // 로그인 버튼
-                middleButton(
+                MiddleButton(
                     text = "로그인",
                     onClick = onLoginClick
                 )
