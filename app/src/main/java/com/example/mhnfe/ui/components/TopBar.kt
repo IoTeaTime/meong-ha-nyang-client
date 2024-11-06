@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mhnfe.R
 import com.example.mhnfe.ui.theme.Typography
+import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainYellow
 
 @Composable
@@ -38,11 +39,10 @@ fun MainTopBar(
         verticalAlignment = Alignment.CenterVertically
     ){
         Text(
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 9.dp),
+            modifier = modifier
+                .padding(horizontal = 28.dp, vertical = 9.dp),
             text = text,
-            style = Typography.titleMedium,
-            color = Color.White,
-
+            style = Typography.titleMedium.copy(color = Color.White)
         )
     }
 }
@@ -56,7 +56,8 @@ fun SubTopBar(
     Column (
         modifier = modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .background(Color.White),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Center
     ){
@@ -75,16 +76,17 @@ fun SubTopBar(
                 Icon(
                     modifier = modifier.size(9.dp, 15.dp),
                     painter = painterResource(id = R.drawable.navigate_before),
-                    contentDescription = null)
+                    contentDescription = null,
+                    tint = Color.Unspecified
+                )
             }
             Text(
                 modifier = modifier,
                 text = text,
-                style = Typography.titleMedium
+                style = Typography.titleMedium.copy(color = mainBlack)
             )
         }
     }
-    
 }
 
 //@Preview(showBackground = true)

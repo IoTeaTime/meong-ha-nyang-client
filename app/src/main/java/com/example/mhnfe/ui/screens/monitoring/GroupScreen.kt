@@ -33,6 +33,7 @@ import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
+import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray3
 
 @Composable
@@ -83,7 +84,11 @@ fun GroupScreen(
                 }
             }
             if (cctv.isEmpty()) {
-                Text(style = Typography.bodyMedium, text = "등록된 CCTV가 없습니다.")
+                Text(
+                    style = Typography.bodyMedium,
+                    text = "등록된 CCTV가 없습니다.",
+                    color = mainBlack
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
