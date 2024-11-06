@@ -53,7 +53,7 @@ fun MainTextBox(
     inputText: String,
     onInputTextChange: (String) -> Unit,
     hintText: String = "", // setting hint text
-    warningText: String = "" // setting warning text
+//    warningText: String = "" // setting warning text
 ) {
     var isFocused by remember { mutableStateOf(false) } // focus state
     val backgroundColor = Color.White
@@ -133,13 +133,13 @@ fun MainTextBox(
             }
         )
         // Print warning text under text box
-        if (isError) {
-            Text(
-                text = warningText,
-                color = mainRed,
-                style = Typography.bodySmall.copy(fontSize = 12.sp)
-            )
-        }
+//        if (isError) {
+//            Text(
+//                text = warningText,
+//                color = mainRed,
+//                style = Typography.bodySmall.copy(fontSize = 12.sp)
+//            )
+//        }
     }
 }
 
