@@ -7,7 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.mhnfe.ui.components.middleButton
+import com.example.mhnfe.ui.components.MiddleButton
 
 @Composable
 fun StartScreen(
@@ -46,14 +46,14 @@ fun StartScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 로그인 버튼
-            middleButton(
+            MiddleButton(
                 text = "로그인",
                 onClick = onLoginClick,
                 modifier = Modifier.fillMaxWidth()
             )
 
             // Cam 회원 버튼
-            middleButton(
+            MiddleButton(
                 text = "회원가입",
                 onClick = onSignUpClick,
                 modifier = Modifier.fillMaxWidth()
