@@ -48,13 +48,14 @@ import com.example.mhnfe.ui.theme.mainRed
 fun MainTextBox(
     modifier: Modifier = Modifier,
     focusManager: FocusManager,
+    isError: Boolean = false,
+    onIsErrorChange: (Boolean) -> Unit = {},
+    inputText: String,
+    onInputTextChange: (String) -> Unit,
     hintText: String = "", // setting hint text
     warningText: String = "" // setting warning text
 ) {
-    var inputText by remember { mutableStateOf("") } // input text
     var isFocused by remember { mutableStateOf(false) } // focus state
-    var isError by rememberSaveable { mutableStateOf(false) } // error state
-
     val backgroundColor = Color.White
 
     // borderColor changed by conditions
@@ -71,20 +72,20 @@ fun MainTextBox(
         horizontalAlignment = Alignment.Start
     ) {
         BasicTextField(
-            modifier = Modifier
+            modifier = modifier
                 .height(39.dp)
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused }
                 .fillMaxWidth()
                 .background(color = backgroundColor, shape = RoundedCornerShape(4.dp))
                 .border(
-                    width = if (isFocused) 3.dp else 1.dp,
+                    width = 1.dp,
                     color = if (isFocused) mainBlack else borderColor,
                     shape = RoundedCornerShape(4.dp)
                 ),
             value = inputText,
-            onValueChange = {
-                newText -> inputText = newText
+            onValueChange = { newText ->
+                onInputTextChange(newText)
             },
             cursorBrush = SolidColor(Color.Black),
             singleLine = true,
@@ -99,13 +100,13 @@ fun MainTextBox(
             // innerTextField settings
             decorationBox = { innerTextField ->
                 Row(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
                         .padding(start = 8.dp, end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Place holder
-                    Box(modifier = Modifier.weight(1f)) {
+                    Box(modifier = modifier.weight(1f)) {
                         if (inputText.isEmpty() && !isFocused) {
                             Text(
                                 text = hintText,
@@ -119,11 +120,11 @@ fun MainTextBox(
                     }
                     // cancel button
                     if (inputText.isNotEmpty()) {
-                        IconButton(onClick = { inputText = "" }) {
+                        IconButton(onClick = { onInputTextChange("") }) {
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.cancel_button),
                                 contentDescription = "Clear text",
-                                modifier = Modifier.size(20.dp),
+                                modifier = modifier.size(20.dp),
                                 tint = Color.Unspecified
                             )
                         }
