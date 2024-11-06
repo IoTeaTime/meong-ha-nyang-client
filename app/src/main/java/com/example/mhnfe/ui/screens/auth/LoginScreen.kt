@@ -14,7 +14,7 @@ import androidx.compose.material3.Scaffold
 
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
-import com.example.mhnfe.ui.components.middleButton
+import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
 
@@ -78,7 +78,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // 로그인 버튼
-            middleButton(
+            MiddleButton(
                 text = "로그인",
                 onClick = onLoginClick,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
