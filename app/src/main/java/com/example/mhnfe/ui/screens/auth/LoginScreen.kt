@@ -22,10 +22,8 @@ import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
-import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
-import com.example.mhnfe.ui.theme.mainGray3
 
 @Composable
 fun LoginScreen(
@@ -61,7 +59,7 @@ fun LoginScreen(
             ) {
                 // 로고 이미지
                 Image(
-                    painter = painterResource(id = R.drawable.logo2),
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "로고",
                     modifier = modifier.size(250.dp),
                     contentScale = ContentScale.Fit

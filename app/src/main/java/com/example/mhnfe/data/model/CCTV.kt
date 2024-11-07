@@ -41,5 +41,5 @@ val sampleCCTVList = listOf(
         appVersion = "1.5.2",
         batteryStatus = 95,
         networkStatus = "나쁨"
-    )
+    ),
 )
