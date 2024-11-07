@@ -1,135 +1,129 @@
 package com.example.mhnfe.ui.screens.auth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import com.example.mhnfe.R
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.mhnfe.R
+import com.example.mhnfe.ui.components.SubTopBar
+import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.theme.mainYellow
+import com.example.mhnfe.ui.theme.mainGray
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextAlign
+
+// 그룹 생성용 버튼 컴포넌트
+@Composable
+fun GroupCreateButton(
+    onClick: () -> Unit
+) {
+    Button(
+        modifier = Modifier
+            .wrapContentSize(),
+        shape = RoundedCornerShape(16.dp),
+        contentPadding = PaddingValues(vertical = 15.dp, horizontal = 140.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = mainGray
+        ),
+        onClick = onClick,
+    ) {
+        Text(
+            text = "그룹 생성",
+        )
+    }
+}
 
 @Composable
 fun SelectScreen(
-    onBackClick: () -> Unit
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    onQrScanClick: () -> Unit,
+    onCreateGroupClick: () -> Unit
 ) {
-    var showQrDialog by remember { mutableStateOf(false) }
-    var showGroupDialog by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val interactionSource = remember { MutableInteractionSource() }
 
-    // 참여 QR AlertDialog
-    if (showQrDialog) {
-        AlertDialog(
-            onDismissRequest = { showQrDialog = false },
-            title = { Text("QR 생성") },
-            text = { Text("참여 QR을 생성하시겠습니까?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showQrDialog = false
-                        // 여기에 QR 생성 로직 추가
-                    }
-                ) {
-                    Text("확인")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showQrDialog = false }
-                ) {
-                    Text("취소")
-                }
-            }
-        )
-    }
-
-    // 그룹 생성 AlertDialog
-    if (showGroupDialog) {
-        AlertDialog(
-            onDismissRequest = { showGroupDialog = false },
-            title = { Text("그룹 생성") },
-            text = { Text("새로운 그룹을 생성하시겠습니까?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showGroupDialog = false
-                        // 여기에 그룹 생성 로직 추가
-                    }
-                ) {
-                    Text("확인")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showGroupDialog = false }
-                ) {
-                    Text("취소")
-                }
-            }
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp)
-            .statusBarsPadding()
-            .navigationBarsPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        // 로고 이미지
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "로고",
-            modifier = Modifier
-                .weight(1f)
-                .padding(vertical = 32.dp)
-                .size(200.dp),
-            contentScale = ContentScale.Fit
-        )
-
-        // 버튼들
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            SubTopBar(
+                text = "",
+                onBack = { navController.popBackStack() }
+            )
+        }
+    ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = modifier
+                .background(color = Color.White)
+                .padding(paddingValues)
+                .fillMaxSize()
+                .padding(horizontal = 34.dp)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) {
+                    focusManager.clearFocus()
+                },
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // 참여 QR 버튼
-            Button(
-                onClick = { showQrDialog = true },
+            // 로고 이미지
+            Image(
+                painter = painterResource(id = R.drawable.logo2),
+                contentDescription = "로고",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = mainYellow  // 메인 색상
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(text = "참여 QR")
-            }
+                    .padding(top = 80.dp)
+                    .size(300.dp),
+                contentScale = ContentScale.Fit
+            )
 
-            // 그룹 생성 버튼
-            Button(
-                onClick = { showGroupDialog = true },
+            // 버튼들
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.LightGray
-                ),
-                shape = RoundedCornerShape(8.dp)
+                    .padding(bottom = 48.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(30.dp)
             ) {
-                Text(text = "그룹 생성")
+                // QR 스캔 버튼
+                MiddleButton(
+                    text = "참여 QR",
+                    onClick = onQrScanClick
+                )
+
+                // 그룹 생성 버튼
+                GroupCreateButton(
+                    onClick = onCreateGroupClick
+                )
             }
         }
-
-        // 하단 여백
-        Spacer(modifier = Modifier.height(48.dp))
     }
+}
+
+@Preview(
+    name = "Select Screen",
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=411dp,height=891dp"
+)
+@Composable
+fun SelectScreenPreview() {
+    SelectScreen(
+        navController = rememberNavController(),
+        onQrScanClick = {},
+        onCreateGroupClick = {}
+    )
 }
