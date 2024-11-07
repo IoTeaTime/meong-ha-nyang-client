@@ -79,7 +79,7 @@ fun ProfileScreen(
                             .wrapContentHeight()
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(18.dp)
+                        horizontalArrangement = Arrangement.spacedBy(18.dp, alignment = Alignment.CenterHorizontally)
                     ) {
                         Image(
                             modifier = modifier.size(35.dp),
@@ -92,7 +92,7 @@ fun ProfileScreen(
                             modifier = modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight(),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp, alignment = Alignment.CenterVertically),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
@@ -125,7 +125,7 @@ fun ProfileScreen(
 
                             Row(
                                 modifier = modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(100.dp),
+                                horizontalArrangement = Arrangement.spacedBy(100.dp, alignment = Alignment.CenterHorizontally),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -146,7 +146,7 @@ fun ProfileScreen(
                                 modifier = modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
-                                horizontalArrangement = Arrangement.spacedBy(71.dp),
+                                horizontalArrangement = Arrangement.spacedBy(71.dp, alignment = Alignment.CenterHorizontally),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
