@@ -34,7 +34,7 @@ fun StartScreen(
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(id = R.drawable.logo2),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = "명하냥 로고",
                 modifier = Modifier.size(200.dp)
             )
