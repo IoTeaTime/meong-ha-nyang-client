@@ -24,6 +24,7 @@ import com.example.mhnfe.ui.bottombar.BottomNavigationBar
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
 import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
 import com.example.mhnfe.ui.screens.monitoring.GroupScreen
+import com.example.mhnfe.ui.screens.mypage.PasswordEditScreen
 import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.QRViewModel
@@ -212,7 +213,9 @@ fun MainContent(
                     )
                 }
                 composable(NavRoutes.MyPage.ChangePassword.route) {
-                    // ChangePasswordScreen
+                    PasswordEditScreen(
+                        navController = bottomNavController
+                    ) {}
                 }
                 composable(NavRoutes.MyPage.DeviceManagement.route) {
                     // DeviceManagementScreen
