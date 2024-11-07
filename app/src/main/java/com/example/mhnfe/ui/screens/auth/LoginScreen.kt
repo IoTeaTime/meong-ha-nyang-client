@@ -14,14 +14,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
-import com.example.mhnfe.ui.components.middleButton
+import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
@@ -35,6 +36,14 @@ fun LoginScreen(
 ) {
     val focusManager = LocalFocusManager.current
     var isAutoLogin by remember { mutableStateOf(false) }
+
+    // 로그인 입력값 상태 관리
+    var id by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    // 에러 상태 관리
+    var isIdError by remember { mutableStateOf(false) }
+    var isPasswordError by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -77,11 +86,19 @@ fun LoginScreen(
                 ) {
                     MainTextBox(
                         focusManager = focusManager,
+                        inputText = id,
+                        onInputTextChange = { id = it },
+                        isError = isIdError,
+                        onIsErrorChange = { isIdError = it },
                         hintText = "아이디"
                     )
 
                     MainTextBox(
                         focusManager = focusManager,
+                        inputText = password,
+                        onInputTextChange = { password = it },
+                        isError = isPasswordError,
+                        onIsErrorChange = { isPasswordError = it },
                         hintText = "비밀번호"
                     )
 
@@ -110,9 +127,12 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // 로그인 버튼
-                middleButton(
+                MiddleButton(
                     text = "로그인",
-                    onClick = onLoginClick
+                    onClick = {
+                        // 로그인 validation 로직 추가 가능
+                        onLoginClick()
+                    }
                 )
 
                 // 비밀번호 찾기 텍스트
@@ -122,7 +142,6 @@ fun LoginScreen(
                     color = mainGray,
                     modifier = Modifier
                         .clickable { navController.navigate("forgot_password") }
-
                 )
             }
         }
@@ -142,4 +161,3 @@ fun LoginScreenPreview() {
         onLoginClick = {}
     )
 }
-

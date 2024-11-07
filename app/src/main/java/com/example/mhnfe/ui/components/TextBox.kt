@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -48,13 +50,14 @@ import com.example.mhnfe.ui.theme.mainRed
 fun MainTextBox(
     modifier: Modifier = Modifier,
     focusManager: FocusManager,
+    isError: Boolean = false,
+    onIsErrorChange: (Boolean) -> Unit = {},
+    inputText: String = "",
+    onInputTextChange: (String) -> Unit = {},
     hintText: String = "", // setting hint text
     warningText: String = "" // setting warning text
 ) {
-    var inputText by remember { mutableStateOf("") } // input text
     var isFocused by remember { mutableStateOf(false) } // focus state
-    var isError by rememberSaveable { mutableStateOf(false) } // error state
-
     val backgroundColor = Color.White
 
     // borderColor changed by conditions
@@ -71,41 +74,44 @@ fun MainTextBox(
         horizontalAlignment = Alignment.Start
     ) {
         BasicTextField(
-            modifier = Modifier
+            modifier = modifier
                 .height(39.dp)
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused }
                 .fillMaxWidth()
                 .background(color = backgroundColor, shape = RoundedCornerShape(4.dp))
                 .border(
-                    width = if (isFocused) 3.dp else 1.dp,
+                    width = 1.dp,
                     color = if (isFocused) mainBlack else borderColor,
                     shape = RoundedCornerShape(4.dp)
                 ),
             value = inputText,
-            onValueChange = {
-                newText -> inputText = newText
+            onValueChange = { newText ->
+                onInputTextChange(newText)
             },
             cursorBrush = SolidColor(Color.Black),
             singleLine = true,
             // focus out when click enter
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            // focus out when enter
             keyboardActions = KeyboardActions(
                 onDone = {
                     focusManager.clearFocus()
                 }
             ),
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             // innerTextField settings
             decorationBox = { innerTextField ->
                 Row(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
-                        .padding(start = 8.dp, end = 8.dp),
+                        .padding(start = 8.dp, end = 8.dp)
+                        .wrapContentHeight(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp , alignment = Alignment.Start),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Place holder
-                    Box(modifier = Modifier.weight(1f)) {
+                    Box(modifier = modifier
+                        .weight(1f)
+                    ) {
                         if (inputText.isEmpty() && !isFocused) {
                             Text(
                                 text = hintText,
@@ -119,11 +125,11 @@ fun MainTextBox(
                     }
                     // cancel button
                     if (inputText.isNotEmpty()) {
-                        IconButton(onClick = { inputText = "" }) {
+                        IconButton(onClick = { onInputTextChange("") }) {
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.cancel_button),
                                 contentDescription = "Clear text",
-                                modifier = Modifier.size(20.dp),
+                                modifier = modifier.size(20.dp),
                                 tint = Color.Unspecified
                             )
                         }
@@ -133,28 +139,58 @@ fun MainTextBox(
         )
         // Print warning text under text box
         if (isError) {
-            Text(
-                text = warningText,
-                color = mainRed,
-                style = Typography.bodySmall.copy(fontSize = 12.sp)
-            )
+            Row(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp , alignment = Alignment.Start),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    modifier = modifier.size(16.dp),
+                    painter = painterResource(id = R.drawable.cautionicon),
+                    contentDescription = null,
+                    tint = mainRed
+                )
+                Text(
+                    text = "warningText",
+                    color = mainRed,
+                    style = Typography.bodySmall.copy(fontSize = 12.sp)
+                )
+            }
+
         }
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun MainTextBoxPreview(){
-//    val focusManager = LocalFocusManager.current
-//
-//    Column (
-//        modifier = Modifier
-//            .fillMaxSize(),
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.spacedBy(10.dp)
-//    ) {
-//        MainTextBox(
-//            focusManager = focusManager
-//        )
-//    }
-//}
+@Preview(showBackground = true)
+@Composable
+fun MainTextBoxPreview() {
+    // FocusManager를 로컬로 가져옵니다.
+    val focusManager = LocalFocusManager.current
+    var text by rememberSaveable { mutableStateOf("") }
+    var isError by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        MainTextBox(
+            modifier = Modifier,
+            focusManager = focusManager,
+            isError = isError,
+            onIsErrorChange = { isError = it },
+            inputText = text,
+            onInputTextChange = { newText ->
+                text = newText
+                // 예시로 오류 조건을 text 길이로 설정
+                isError = newText.length > 3
+            },
+            hintText = "Enter text here...",
+            warningText = "Text must be at least 3 characters"
+        )
+    }
+}
