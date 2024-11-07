@@ -22,6 +22,7 @@ import com.amazonaws.mobile.client.AWSMobileClient
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
+import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
 import com.example.mhnfe.ui.screens.monitoring.GroupScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.QRViewModel
@@ -39,7 +40,9 @@ sealed class NavRoutes(val route: String) {
 
     object Monitoring : NavRoutes("monitoring") {
         object Group : NavRoutes("monitoring/group")
-        object DeviceInformation : NavRoutes("device_information")
+        object DeviceInformation : NavRoutes("device_information/{cctvId}") {
+            fun createRoute(cctvId: String) = "device_information/$cctvId"
+        }
         object QRScanner : NavRoutes("qr_scanner")
         object QRGenerate : NavRoutes("qr_generate/{userType}") {
             fun createRoute(userType: UserType) = "qr_generate/${userType.name.lowercase()}"
@@ -155,8 +158,17 @@ fun MainContent(
                         navController = bottomNavController  // bottomNavController 전달
                     )
                 }
-                composable(NavRoutes.Monitoring.DeviceInformation.route) {
-                    // DeviceInformationScreen
+                composable(
+                    route = NavRoutes.Monitoring.DeviceInformation.route,
+                    arguments = listOf(
+                        navArgument("cctvId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val cctvId = backStackEntry.arguments?.getString("cctvId") ?: return@composable
+                    DeviceInfoScreen(
+                        cctvId = cctvId,
+                        navController = bottomNavController
+                    )
                 }
                 composable(NavRoutes.Monitoring.QRScanner.route) {
                     // QRScannerScreen
