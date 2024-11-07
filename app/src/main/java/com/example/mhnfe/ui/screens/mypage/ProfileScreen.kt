@@ -2,8 +2,10 @@ package com.example.mhnfe.ui.screens.mypage
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,203 +58,198 @@ fun ProfileScreen(
                 .padding(horizontal = 34.dp, vertical = 46.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(35.dp, alignment = Alignment.CenterVertically)
-        ) {
-            Row(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(color = mainGray2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            verticalArrangement = Arrangement.SpaceBetween
+        ){
+            Column (
+                modifier = modifier,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(35.dp, alignment = Alignment.CenterVertically)
+            ){
                 Row(
                     modifier = modifier
                         .fillMaxWidth()
                         .wrapContentHeight()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(18.dp)
+                        .background(color = mainGray2, shape = RoundedCornerShape(12.dp)),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        modifier = modifier.size(35.dp),
-                        painter = painterResource(id = R.drawable.profile),
-                        contentDescription = "로고",
-                        contentScale = ContentScale.Fit
-                    )
-
-                    Column(
+                    Row(
                         modifier = modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .wrapContentHeight()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(18.dp)
                     ) {
-                        Row(
+                        Image(
+                            modifier = modifier.size(35.dp),
+                            painter = painterResource(id = R.drawable.profile),
+                            contentDescription = "로고",
+                            contentScale = ContentScale.Fit
+                        )
+
+                        Column(
                             modifier = modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                modifier = modifier,
-                                text = nickname,
-                                style = Typography.bodyMedium,
-                                color = mainBlack
-                            )
-
-                            IconButton(
+                            Row(
                                 modifier = modifier
-                                    .size(22.dp),
-                                onClick = {}
+                                    .fillMaxWidth()
+                                    .wrapContentHeight(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    modifier = modifier.size(16.dp, 16.dp),
-                                    painter = painterResource(id = R.drawable.edit),
-                                    contentDescription = null,
-                                    tint = Color.Unspecified
+                                Text(
+                                    modifier = modifier,
+                                    text = nickname,
+                                    style = Typography.bodyMedium,
+                                    color = mainBlack
+                                )
+
+                                IconButton(
+                                    modifier = modifier
+                                        .size(22.dp),
+                                    onClick = {}
+                                ) {
+                                    Icon(
+                                        modifier = modifier.size(16.dp, 16.dp),
+                                        painter = painterResource(id = R.drawable.edit),
+                                        contentDescription = null,
+                                        tint = Color.Unspecified
+                                    )
+                                }
+                            }
+
+                            Row(
+                                modifier = modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(100.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    modifier = modifier,
+                                    text = "ID",
+                                    style = Typography.bodyMedium,
+                                    color = mainBlack
+                                )
+                                Text(
+                                    modifier = modifier,
+                                    text = id,
+                                    style = Typography.bodyMedium,
+                                    color = mainBlack
+                                )
+                            }
+
+                            Row(
+                                modifier = modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight(),
+                                horizontalArrangement = Arrangement.spacedBy(71.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    modifier = modifier,
+                                    text = "그룹명",
+                                    style = Typography.bodyMedium,
+                                    color = mainBlack
+                                )
+                                Text(
+                                    modifier = modifier,
+                                    text = groupId,
+                                    style = Typography.bodyMedium,
+                                    color = mainBlack
                                 )
                             }
                         }
+                    }
+                }
+                Row(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
+                        .clickable(onClick = {}),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "비밀번호 변경",
+                            style = Typography.bodyMedium
+                        )
 
-                        Row(
-                            modifier = modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(100.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                modifier = modifier,
-                                text = "ID",
-                                style = Typography.bodyMedium,
-                                color = mainBlack
-                            )
-                            Text(
-                                modifier = modifier,
-                                text = id,
-                                style = Typography.bodyMedium,
-                                color = mainBlack
-                            )
-                        }
-
-                        Row(
+                        IconButton(
                             modifier = modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(),
-                            horizontalArrangement = Arrangement.spacedBy(71.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .size(22.dp),
+                            onClick = {}
                         ) {
-                            Text(
-                                modifier = modifier,
-                                text = "그룹명",
-                                style = Typography.bodyMedium,
-                                color = mainBlack
+                            Icon(
+                                modifier = modifier.size(16.dp, 16.dp),
+                                painter = painterResource(id = R.drawable.navigate_after),
+                                contentDescription = null,
+                                tint = Color.Unspecified
                             )
-                            Text(
-                                modifier = modifier,
-                                text = groupId,
-                                style = Typography.bodyMedium,
-                                color = mainBlack
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
+                        .clickable(onClick = {}),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "기기 관리",
+                            style = Typography.bodyMedium
+                        )
+
+                        IconButton(
+                            modifier = modifier
+                                .size(22.dp),
+                            onClick = {}
+                        ) {
+                            Icon(
+                                modifier = modifier.size(16.dp, 16.dp),
+                                painter = painterResource(id = R.drawable.navigate_after),
+                                contentDescription = null,
+                                tint = Color.Unspecified
                             )
                         }
                     }
                 }
             }
-            Row(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(color = mainGray2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "비밀번호 변경",
-                        style = Typography.bodyMedium
-                    )
 
-                    IconButton(
-                        modifier = modifier
-                            .size(22.dp),
-                        onClick = {}
-                    ) {
-                        Icon(
-                            modifier = modifier.size(16.dp, 16.dp),
-                            painter = painterResource(id = R.drawable.navigate_after),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
-                    }
-                }
-            }
-
-            Row(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(color = mainGray2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+            TextButton(
+                onClick = {},
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Row(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "기기 관리",
-                        style = Typography.bodyMedium
-                    )
-
-                    IconButton(
-                        modifier = modifier
-                            .size(22.dp),
-                        onClick = {}
-                    ) {
-                        Icon(
-                            modifier = modifier.size(16.dp, 16.dp),
-                            painter = painterResource(id = R.drawable.navigate_after),
-                            contentDescription = null,
-                            tint = Color.Unspecified
-                        )
-                    }
-                }
-            }
-            Row(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(top = 350.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                    onClick = {}
-                ) {
-                    Text(
-                        text = "회원탈퇴",
-                        style = Typography.bodyMedium,
-                        color = mainGray,
-                        textDecoration = TextDecoration.Underline
-                    )
-                }
+                Text(
+                    text = "회원탈퇴",
+                    style = Typography.bodyMedium,
+                    color = mainGray,
+                    textDecoration = TextDecoration.Underline
+                )
             }
         }
     }
