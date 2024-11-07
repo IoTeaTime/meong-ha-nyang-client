@@ -35,13 +35,12 @@ import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainGray2
 
 @Composable
-fun MypageMainScreen(
+fun ProfileScreen(
     modifier: Modifier = Modifier,
     nickname: String = "막내가짱이야",
     id: String = "nahaha",
     groupId: String = "IoTeatime",
     navController: NavController,
-    onBack: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier
@@ -53,22 +52,24 @@ fun MypageMainScreen(
         Column(
             modifier = modifier
                 .padding(innerPadding)
-                .padding(horizontal = 34.dp)
-                .padding(top = 46.dp)
+                .padding(horizontal = 34.dp, vertical = 46.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(35.dp)
+            verticalArrangement = Arrangement.spacedBy(35.dp, alignment = Alignment.CenterVertically)
         ) {
             Row(
                 modifier = modifier
                     .fillMaxWidth()
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(12.dp))
                     .background(color = mainGray2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     modifier = modifier
                         .fillMaxWidth()
+                        .wrapContentHeight()
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(18.dp)
@@ -81,14 +82,18 @@ fun MypageMainScreen(
                     )
 
                     Column(
-                        modifier = modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(
                             modifier = modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 modifier = modifier,
@@ -100,7 +105,7 @@ fun MypageMainScreen(
                             IconButton(
                                 modifier = modifier
                                     .size(22.dp),
-                                onClick = onBack
+                                onClick = {}
                             ) {
                                 Icon(
                                     modifier = modifier.size(16.dp, 16.dp),
@@ -113,7 +118,8 @@ fun MypageMainScreen(
 
                         Row(
                             modifier = modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(100.dp)
+                            horizontalArrangement = Arrangement.spacedBy(100.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 modifier = modifier,
@@ -130,8 +136,11 @@ fun MypageMainScreen(
                         }
 
                         Row(
-                            modifier = modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(71.dp)
+                            modifier = modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                            horizontalArrangement = Arrangement.spacedBy(71.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 modifier = modifier,
@@ -152,13 +161,16 @@ fun MypageMainScreen(
             Row(
                 modifier = modifier
                     .fillMaxWidth()
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(12.dp))
                     .background(color = mainGray2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     modifier = modifier
                         .fillMaxWidth()
+                        .wrapContentHeight()
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -171,7 +183,7 @@ fun MypageMainScreen(
                     IconButton(
                         modifier = modifier
                             .size(22.dp),
-                        onClick = onBack
+                        onClick = {}
                     ) {
                         Icon(
                             modifier = modifier.size(16.dp, 16.dp),
@@ -186,13 +198,16 @@ fun MypageMainScreen(
             Row(
                 modifier = modifier
                     .fillMaxWidth()
+                    .wrapContentHeight()
                     .clip(RoundedCornerShape(12.dp))
                     .background(color = mainGray2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
                     modifier = modifier
                         .fillMaxWidth()
+                        .wrapContentHeight()
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -205,7 +220,7 @@ fun MypageMainScreen(
                     IconButton(
                         modifier = modifier
                             .size(22.dp),
-                        onClick = onBack
+                        onClick = {}
                     ) {
                         Icon(
                             modifier = modifier.size(16.dp, 16.dp),
@@ -219,15 +234,24 @@ fun MypageMainScreen(
             Row(
                 modifier = modifier
                     .fillMaxWidth()
+                    .wrapContentHeight()
                     .padding(top = 350.dp),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "회원탈퇴",
-                    style = Typography.bodyMedium,
-                    color = mainGray,
-                    textDecoration = TextDecoration.Underline
-                )
+                IconButton(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    onClick = {}
+                ) {
+                    Text(
+                        text = "회원탈퇴",
+                        style = Typography.bodyMedium,
+                        color = mainGray,
+                        textDecoration = TextDecoration.Underline
+                    )
+                }
             }
         }
     }
@@ -235,9 +259,9 @@ fun MypageMainScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun MypageMainScreenPreview() {
+private fun ProfileScreenPreview() {
     val navController = rememberNavController()
-    MypageMainScreen(
+    ProfileScreen(
         navController = navController
     )
 }

@@ -24,6 +24,7 @@ import com.example.mhnfe.ui.bottombar.BottomNavigationBar
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
 import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
 import com.example.mhnfe.ui.screens.monitoring.GroupScreen
+import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.QRViewModel
 
@@ -206,8 +207,9 @@ fun MainContent(
                 route = NavRoutes.MyPage.route
             ) {
                 composable(NavRoutes.MyPage.Profile.route) {
-                    TestContent()
-                    // ProfileScreen
+                    ProfileScreen(
+                        navController = bottomNavController
+                    )
                 }
                 composable(NavRoutes.MyPage.ChangePassword.route) {
                     // ChangePasswordScreen
