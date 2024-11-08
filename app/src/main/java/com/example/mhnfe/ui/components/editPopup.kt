@@ -5,6 +5,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,127 +29,142 @@ fun DialogWithTextFields(
     modifier: Modifier = Modifier,
     onConfirmation: () -> Unit,
     onDismissRequest: () -> Unit,
+    isDialogVisible: Boolean
 ) {
     val focusManager = LocalFocusManager.current
     val (nickname, onNicknameChange) = remember { mutableStateOf("") }
     val (groupName, onGroupNameChange) = remember { mutableStateOf("") }
+    val (name, onNameChange) = remember { mutableStateOf("") }
 
-    Dialog(onDismissRequest = { onDismissRequest() }) {
-        Card(
-            modifier = modifier
-                .wrapContentHeight()
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Column(
+        Dialog(onDismissRequest = { onDismissRequest() }) {
+            Card(
                 modifier = modifier
                     .wrapContentHeight()
                     .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Row(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Icon(
-                        modifier = modifier
-                            .height(14.dp),
-                        painter = painterResource(id = R.drawable.x),
-                        contentDescription = null
-                    )
-                }
-
-                Text(
-                    modifier = modifier.padding(PaddingValues(top = 15.dp)),
-                    text = "수정하실 이름으로 바꿔주세요",
-                    color = mainBlack,
-                    style = Typography.bodyMedium
-                )
-
                 Column(
                     modifier = modifier
-                        .padding(PaddingValues(top = 30.dp, bottom = 36.dp))
-                        .wrapContentSize(),
-                    verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // 첫 번째 Row - 닉네임
-                    Row(
-                        modifier = modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "닉네임",
-                            color = mainBlack,
-                            style = Typography.bodyMedium
-                        )
-                        Spacer(modifier = modifier.width(12.dp))
-                        MainTextBox(
-                            modifier = modifier,
-                            focusManager = focusManager,
-                            inputText = nickname,
-                            onInputTextChange = onNicknameChange,
-                        )
-                    }
-
-                    // 두 번째 Row - 그룹명
-                    Row(
-                        modifier = modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "그룹명",
-                            color = mainBlack,
-                            style = Typography.bodyMedium
-                        )
-                        Spacer(modifier = modifier.width(12.dp))
-                        MainTextBox(
-                            modifier = modifier,
-                            focusManager = focusManager,
-                            inputText = groupName,
-                            onInputTextChange = onGroupNameChange,
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = modifier
+                        .wrapContentHeight()
                         .fillMaxWidth()
-                        .wrapContentHeight(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    TextButton(
-                        onClick = { onConfirmation() },
-                        shape = RoundedCornerShape(16.dp),
-                        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                        border = BorderStroke(1.dp, mainBlack)
+                    Row(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text(
-                            "확인",
-                            style = Typography.labelLarge,
-                            color = mainBlack
-                        )
+                        IconButton(
+                            modifier = modifier.size(24.dp),
+                            onClick = { onDismissRequest() }
+                        ) {
+                            Icon(
+                                modifier = modifier.height(14.dp),
+                                painter = painterResource(id = R.drawable.x),
+                                contentDescription = null
+                            )
+                        }
+                    }
+
+                    Text(
+                        modifier = modifier.padding(PaddingValues(top = 15.dp)),
+                        text = "수정하실 이름으로 바꿔주세요",
+                        color = mainBlack,
+                        style = Typography.bodyMedium
+                    )
+
+                    Column(
+                        modifier = modifier
+                            .padding(PaddingValues(top = 30.dp, bottom = 36.dp))
+                            .wrapContentSize(),
+                        verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // 첫 번째 Row - 닉네임
+                        if (isDialogVisible) {
+                            Row(
+                                modifier = modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "닉네임",
+                                    color = mainBlack,
+                                    style = Typography.bodyMedium
+                                )
+                                Spacer(modifier = modifier.width(12.dp))
+                                MainTextBox(
+                                    modifier = modifier,
+                                    focusManager = focusManager,
+                                    inputText = nickname,
+                                    onInputTextChange = onNicknameChange,
+                                )
+                            }
+
+                        // 두 번째 Row - 그룹명 - isDialogVisible에 따라 표시 결정
+                            Row(
+                                modifier = modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "그룹명",
+                                    color = mainBlack,
+                                    style = Typography.bodyMedium
+                                )
+                                Spacer(modifier = modifier.width(12.dp))
+                                MainTextBox(
+                                    modifier = modifier,
+                                    focusManager = focusManager,
+                                    inputText = groupName,
+                                    onInputTextChange = onGroupNameChange,
+                                )
+                            }
+                        } else {
+                            MainTextBox(
+                                modifier = modifier,
+                                focusManager = focusManager,
+                                inputText = name,
+                                onInputTextChange = onNameChange,
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        TextButton(
+                            onClick = { onConfirmation() },
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            border = BorderStroke(1.dp, mainBlack)
+                        ) {
+                            Text(
+                                "확인",
+                                style = Typography.labelLarge,
+                                color = mainBlack
+                            )
+                        }
                     }
                 }
             }
         }
     }
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -159,6 +175,10 @@ private fun DialogWithTextFieldsPreview() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        DialogWithTextFields(onConfirmation = {}) { }
+        DialogWithTextFields(onConfirmation = {},
+            onDismissRequest = {},
+            isDialogVisible = false
+        )
     }
 }
+
