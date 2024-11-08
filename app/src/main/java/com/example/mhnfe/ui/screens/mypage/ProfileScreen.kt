@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.mypage
 
+import DialogWithTextFields
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,9 +20,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -45,6 +47,8 @@ fun ProfileScreen(
     groupId: String = "IoTeatime",
     navController: NavController,
 ) {
+    val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier
             .fillMaxSize(),
@@ -112,7 +116,7 @@ fun ProfileScreen(
                                 IconButton(
                                     modifier = modifier
                                         .size(22.dp),
-                                    onClick = {}
+                                    onClick = { setDialogVisible(true) }
                                 ) {
                                     Icon(
                                         modifier = modifier.size(16.dp, 16.dp),
@@ -165,6 +169,15 @@ fun ProfileScreen(
                         }
                     }
                 }
+
+                if (dialogVisible) {
+                    DialogWithTextFields(
+                        onConfirmation = { setDialogVisible(false) },
+                        onDismissRequest = { setDialogVisible(false) },
+                        isDialogVisible = dialogVisible
+                    )
+                }
+
                 Row(
                     modifier = modifier
                         .fillMaxWidth()
