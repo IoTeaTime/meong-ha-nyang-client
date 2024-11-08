@@ -5,13 +5,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -23,13 +24,14 @@ import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.R
 
 @Composable
-fun DialogWithImage(
+fun deletePopup(
+    modifier: Modifier = Modifier,
     onConfirmation: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
-            modifier = Modifier
+            modifier = modifier
                 .wrapContentHeight()
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -37,34 +39,38 @@ fun DialogWithImage(
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Column(
-                modifier = Modifier
+                modifier = modifier
                     .wrapContentHeight()
                     .padding(20.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Row(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Icon(
-                        modifier = Modifier
-                            .height(14.dp),
-                        painter = painterResource(id = R.drawable.x),
-                        contentDescription = null
-                    )
+                    IconButton(
+                        modifier = modifier.size(24.dp),
+                        onClick = { onDismissRequest() }
+                    ) {
+                        Icon(
+                            modifier = modifier.height(14.dp),
+                            painter = painterResource(id = R.drawable.x),
+                            contentDescription = null
+                        )
+                    }
                 }
                 Icon(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
                         .height(84.dp),
                     painter = painterResource(id = R.drawable.delete_dog),
                     contentDescription = null,
                 )
                 Text(
-                    modifier = Modifier.padding(PaddingValues(top = 17.dp)),
+                    modifier = modifier.padding(PaddingValues(top = 17.dp)),
                     text = buildAnnotatedString {
                         append("회원탈퇴")
                         withStyle(style = SpanStyle(color = mainBlack)) {
@@ -74,13 +80,13 @@ fun DialogWithImage(
                     color = Color.Red
                 )
                 Text(
-                    modifier = Modifier
+                    modifier = modifier
                         .padding(PaddingValues(bottom = 30.dp)),
                     text = "진행하시겠습니까?",
                     color = mainBlack
                 )
                 Row(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
@@ -113,6 +119,6 @@ fun NewQuizPreview() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        DialogWithImage(onConfirmation = {}) { }
+        deletePopup(onConfirmation = {}) { }
     }
 }
