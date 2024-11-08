@@ -183,7 +183,7 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
-                        .clickable(onClick = {}),
+                        .clickable(onClick = { navController.navigate("myPage/change_password") }),
                     horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
