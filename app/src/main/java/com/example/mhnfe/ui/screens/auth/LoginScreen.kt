@@ -127,17 +127,17 @@ fun LoginScreen(
     }
 }
 
-@Preview(
-    name = "Login Screen",
-    showBackground = true,
-    showSystemUi = true,
-    device = "spec:width=411dp,height=891dp"
-)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        navController = rememberNavController(),
-        onLoginClick = {}
-    )
-}
+//@Preview(
+//    name = "Login Screen",
+//    showBackground = true,
+//    showSystemUi = true,
+//    device = "spec:width=411dp,height=891dp"
+//)
+//@Composable
+//fun LoginScreenPreview() {
+//    LoginScreen(
+//        navController = rememberNavController(),
+//        onLoginClick = {}
+//    )
+//}
 
