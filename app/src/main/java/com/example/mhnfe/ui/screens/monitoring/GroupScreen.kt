@@ -117,33 +117,33 @@ fun GroupScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun GroupScreenPreview() {
-    val navController = rememberNavController()
-    GroupScreen(
-        userType = UserType.VIEWER,
-        navController = navController,
-        cctv = sampleCCTVList
-    )
-}
-@Preview(showBackground = true)
-@Composable
-private fun GroupScreenPreview2() {
-    val navController = rememberNavController()
-    GroupScreen(
-        userType = UserType.VIEWER,
-        navController = navController,
-        cctv = emptyCCTVList
-    )
-}
-@Preview(showBackground = true)
-@Composable
-private fun GroupScreenPreview3() {
-    val navController = rememberNavController()
-    GroupScreen(
-        userType = UserType.MASTER,
-        navController = navController,
-        cctv = sampleCCTVList
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//private fun GroupScreenPreview() {
+//    val navController = rememberNavController()
+//    GroupScreen(
+//        userType = UserType.VIEWER,
+//        navController = navController,
+//        cctv = sampleCCTVList
+//    )
+//}
+//@Preview(showBackground = true)
+//@Composable
+//private fun GroupScreenPreview2() {
+//    val navController = rememberNavController()
+//    GroupScreen(
+//        userType = UserType.VIEWER,
+//        navController = navController,
+//        cctv = emptyCCTVList
+//    )
+//}
+//@Preview(showBackground = true)
+//@Composable
+//private fun GroupScreenPreview3() {
+//    val navController = rememberNavController()
+//    GroupScreen(
+//        userType = UserType.MASTER,
+//        navController = navController,
+//        cctv = sampleCCTVList
+//    )
+//}

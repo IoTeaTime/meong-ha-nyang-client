@@ -1,5 +1,7 @@
 package com.example.mhnfe.data.model
 
+import java.time.LocalDateTime
+
 data class CCTV(
     val id: String,
     val deviceName: String,   // 기기명
@@ -43,3 +45,13 @@ val sampleCCTVList = listOf(
         networkStatus = "나쁨"
     ),
 )
+
+data class ReportItem(
+    val date: LocalDateTime, // 나중에 형식 바꾸기
+)
+
+val reportItems = listOf(
+        ReportItem(LocalDateTime.of(2024, 10, 22, 13, 0)),
+        ReportItem(LocalDateTime.of(2024, 10, 23, 14, 30)),
+        ReportItem(LocalDateTime.of(2024, 10, 24, 15, 45))
+    )

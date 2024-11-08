@@ -28,6 +28,7 @@ import com.example.mhnfe.ui.screens.mypage.PasswordEditScreen
 import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.QRViewModel
+import com.example.mhnfe.ui.screens.report.ReportDetailScreen
 
 sealed class NavRoutes(val route: String) {
     object Auth : NavRoutes("auth") {
@@ -197,7 +198,7 @@ fun MainContent(
                 route = NavRoutes.Report.route
             ) {
                 composable(NavRoutes.Report.ReportDetail.route) {
-                    // ReportDetailScreen
+                    ReportDetailScreen(navController = bottomNavController)
                 }
                 //추후에 화면이 추가 될 수 있기 때문에 이렇게 따로 빼서 구현 추후 화면 추가가 없을 시 삭제
             }
@@ -225,9 +226,4 @@ fun MainContent(
     }
 }
 
-@Composable
-fun TestContent() {
-    Column (modifier = Modifier.fillMaxSize()){ Text("테스트 입니다")  }
-
-}
 

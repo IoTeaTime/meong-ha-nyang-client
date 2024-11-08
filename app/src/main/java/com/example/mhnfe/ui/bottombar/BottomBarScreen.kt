@@ -70,7 +70,7 @@ fun BottomNavigationBar(
                 }
 
                 is NavigationItem.Report -> {
-                    currentRoute == "report_detail"
+                    currentRoute == "report/report_detail"
                 }
 
                 is NavigationItem.MyPage -> {
