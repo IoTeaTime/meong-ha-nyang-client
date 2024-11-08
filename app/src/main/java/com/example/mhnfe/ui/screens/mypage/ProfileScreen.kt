@@ -1,10 +1,11 @@
 package com.example.mhnfe.ui.screens.mypage
 
-import DialogWithTextFields
+import EditPopup
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -38,6 +39,7 @@ import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainGray2
+import deletePopup
 
 @Composable
 fun ProfileScreen(
@@ -48,6 +50,7 @@ fun ProfileScreen(
     navController: NavController,
 ) {
     val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
+    val (dialogVisible1, setDialogVisible1) = remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier
@@ -171,10 +174,17 @@ fun ProfileScreen(
                 }
 
                 if (dialogVisible) {
-                    DialogWithTextFields(
+                    EditPopup(
                         onConfirmation = { setDialogVisible(false) },
                         onDismissRequest = { setDialogVisible(false) },
                         isDialogVisible = dialogVisible
+                    )
+                }
+
+                if (dialogVisible1) {
+                    deletePopup(
+                        onConfirmation = { setDialogVisible1(false) },
+                        onDismissRequest = { setDialogVisible1(false) },
                     )
                 }
 
@@ -200,13 +210,14 @@ fun ProfileScreen(
                             style = Typography.bodyMedium
                         )
 
-                        IconButton(
+                        Box(
                             modifier = modifier
                                 .size(22.dp),
-                            onClick = {}
                         ) {
                             Icon(
-                                modifier = modifier.size(16.dp, 16.dp),
+                                modifier = modifier
+                                    .size(16.dp, 16.dp)
+                                    .align(Alignment.Center),
                                 painter = painterResource(id = R.drawable.navigate_after),
                                 contentDescription = null,
                                 tint = Color.Unspecified
@@ -237,13 +248,14 @@ fun ProfileScreen(
                             style = Typography.bodyMedium
                         )
 
-                        IconButton(
+                        Box(
                             modifier = modifier
                                 .size(22.dp),
-                            onClick = {}
                         ) {
                             Icon(
-                                modifier = modifier.size(16.dp, 16.dp),
+                                modifier = modifier
+                                    .size(16.dp, 16.dp)
+                                    .align(Alignment.Center),
                                 painter = painterResource(id = R.drawable.navigate_after),
                                 contentDescription = null,
                                 tint = Color.Unspecified
@@ -254,7 +266,7 @@ fun ProfileScreen(
             }
 
             TextButton(
-                onClick = {},
+                onClick = { setDialogVisible1(true) },
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Text(
