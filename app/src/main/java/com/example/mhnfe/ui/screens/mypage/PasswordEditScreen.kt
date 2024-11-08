@@ -15,6 +15,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -35,6 +40,9 @@ fun PasswordEditScreen(
     navController: NavController,
     onClick: () -> Unit
 ) {
+    var textConfig by rememberSaveable { mutableStateOf("") }
+    var textPW by rememberSaveable { mutableStateOf("") }
+    var textPWComfirm by rememberSaveable { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     Scaffold(
         topBar = {
@@ -70,6 +78,10 @@ fun PasswordEditScreen(
                 ) {
                     MainTextBox(
                         focusManager = focusManager,
+                        inputText = textConfig,
+                        onInputTextChange = { newText ->
+                            textConfig = newText
+                        },
                         hintText = "인증코드"
                     )
                     Row(
@@ -118,11 +130,19 @@ fun PasswordEditScreen(
                 }
                 MainTextBox(
                     focusManager = focusManager,
-                    hintText = "새 비밀번호"
+                    hintText = "새 비밀번호",
+                    inputText = textPW,
+                    onInputTextChange = { newText ->
+                        textPW = newText
+                    }
                 )
                 MainTextBox(
                     focusManager = focusManager,
-                    hintText = "새 비밀번호 확인"
+                    hintText = "새 비밀번호 확인",
+                    inputText = textPWComfirm,
+                    onInputTextChange = { newText ->
+                        textPWComfirm = newText
+                    }
                 )
             }
             MiddleButton(
