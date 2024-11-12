@@ -21,20 +21,24 @@ import androidx.navigation.navigation
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
+import com.example.mhnfe.ui.screens.auth.MainScreen
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
 import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
 import com.example.mhnfe.ui.screens.monitoring.GroupScreen
 import com.example.mhnfe.ui.screens.mypage.PasswordEditScreen
 import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
+import com.example.mhnfe.ui.screens.qr.QRScanningScreen
 import com.example.mhnfe.ui.screens.qr.QRViewModel
 import com.example.mhnfe.ui.screens.report.ReportDetailScreen
 
 sealed class NavRoutes(val route: String) {
     object Auth : NavRoutes("auth") {
+        object Main : NavRoutes("main")
         object Login : NavRoutes("login")
         object SignUp : NavRoutes("signup")
         object Select : NavRoutes("select")
+        object QRScanner : NavRoutes("qr_scanner")
     }
 
     object Main : NavRoutes("main/{userType}") {
@@ -46,7 +50,6 @@ sealed class NavRoutes(val route: String) {
         object DeviceInformation : NavRoutes("device_information/{cctvId}") {
             fun createRoute(cctvId: String) = "device_information/$cctvId"
         }
-        object QRScanner : NavRoutes("qr_scanner")
         object QRGenerate : NavRoutes("qr_generate/{userType}") {
             fun createRoute(userType: UserType) = "qr_generate/${userType.name.lowercase()}"
         }
@@ -73,9 +76,14 @@ fun AppNavigation() {
     ) {
         // Auth Graph
         navigation(
-            startDestination = NavRoutes.Auth.Login.route,
+            startDestination = NavRoutes.Auth.Main.route,
             route = NavRoutes.Auth.route
         ) {
+            composable(NavRoutes.Auth.Main.route) {
+                MainScreen(
+                    navController = navController,
+                )
+            }
             composable(NavRoutes.Auth.Login.route) {
                 StartUpScreen(
                     auth = auth,
@@ -87,6 +95,12 @@ fun AppNavigation() {
             }
             composable(NavRoutes.Auth.Select.route) {
 //                SelectScreen(onBackClick = {})
+            }
+            composable(NavRoutes.Auth.QRScanner.route) {
+                // QRScannerScreen
+                QRScanningScreen(
+                    navController = navController
+                )
             }
         }
 
@@ -173,9 +187,7 @@ fun MainContent(
                         navController = bottomNavController
                     )
                 }
-                composable(NavRoutes.Monitoring.QRScanner.route) {
-                    // QRScannerScreen
-                }
+
                 composable(
                     route = NavRoutes.Monitoring.QRGenerate.route,
                     arguments = listOf(
