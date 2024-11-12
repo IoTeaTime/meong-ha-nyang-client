@@ -82,7 +82,7 @@ fun SelectScreen(
         ) {
             // 로고 이미지
             Image(
-                painter = painterResource(id = R.drawable.logo2),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = "로고",
                 modifier = Modifier
                     .padding(top = 80.dp)
