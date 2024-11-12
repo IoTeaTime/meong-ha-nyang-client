@@ -30,16 +30,27 @@ import org.webrtc.EglBase
 import org.webrtc.PeerConnectionFactory
 import android.Manifest
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavController
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobile.client.Callback
 import com.amazonaws.mobile.client.UserStateDetails
+import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.ui.navigation.AppNavigation
+import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
+import com.example.mhnfe.ui.screens.master.WebRTCUiState
+import kotlinx.coroutines.launch
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
@@ -60,6 +71,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MhnFETheme {
                 AppNavigation()
+
             }
         }
     }
@@ -94,6 +106,91 @@ private fun initializeMobileClient(client: AWSMobileClient, context: ComponentAc
 }
 
 
+@Composable
+fun SignalingChannelTest(
+    navController :NavController,
+    viewModel: KVSSignalingViewModel = KVSSignalingViewModel(),
+) {
+    var channelName by remember { mutableStateOf("demo-channel23") }
+    val scope = rememberCoroutineScope()
+    val webRTCState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(webRTCState) {
+        when (webRTCState) {
+            is WebRTCUiState.Success -> {
+                // 채널 생성/접속 성공
+                val role = (webRTCState as WebRTCUiState.Success).role
+                // 역할에 따라 적절한 화면으로 이동
+                when (role) {
+                    ChannelRole.MASTER -> navController.navigate(NavRoutes.Monitoring.Master.route)
+                    ChannelRole.VIEWER -> navController.navigate(NavRoutes.Monitoring.Viewer.route)
+                }
+            }
+            else -> {}
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        OutlinedTextField(
+            value = channelName,
+            onValueChange = { channelName = it },
+            label = { Text("Channel Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(
+            onClick = {
+                scope.launch {
+                    viewModel.updateSignalingChannelInfo(
+                        channelName = channelName,
+                        role = ChannelRole.MASTER,
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("채널 생성")
+        }
+
+        // Master 버튼
+        Button(
+            onClick = {
+
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Create Channel as Master")
+        }
+
+        // Viewer 버튼
+        Button(
+            onClick = {
+
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Join Channel as Viewer")
+        }
+        // 현재 상태 표시
+        when (webRTCState) {
+            WebRTCUiState.Loading -> {
+                CircularProgressIndicator()
+            }
+            is WebRTCUiState.Error -> {
+                Text(
+                    text = (webRTCState as WebRTCUiState.Error).message,
+                )
+            }
+            else -> {}
+        }
+
+    }
+}
 
 
 //webRTC테스트용 나중에 지울 것
