@@ -50,6 +50,7 @@ import com.example.mhnfe.ui.navigation.AppNavigation
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
 import com.example.mhnfe.ui.screens.master.WebRTCUiState
+import com.example.mhnfe.utils.PermissionManager
 import kotlinx.coroutines.launch
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceTextureHelper
@@ -60,19 +61,31 @@ import org.webrtc.VideoTrack
 import java.util.concurrent.CountDownLatch
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var permissionManager: PermissionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        permissionManager = PermissionManager(this)
 
         val auth = AWSMobileClient.getInstance()
         initializeMobileClient(auth, this@MainActivity)
         //로그아웃
-        AWSMobileClient.getInstance().signOut()
+//        AWSMobileClient.getInstance().signOut()
+        //권한 요청
+        permissionManager.checkAndRequestPermissions()
 
         setContent {
             MhnFETheme {
                 AppNavigation()
 
             }
+        }
+    }
+    override fun onResume() {
+        super.onResume()
+        if (::permissionManager.isInitialized) {
+            permissionManager.checkAndRequestPermissions()
         }
     }
 }
