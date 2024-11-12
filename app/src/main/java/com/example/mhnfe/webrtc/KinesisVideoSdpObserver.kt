@@ -8,7 +8,7 @@ import org.webrtc.SessionDescription
  * WebRTC의 SDP (Session Description Protocol) 관련 이벤트를 처리하는 옵저버 클래스입니다.
  * SDP는 피어 간의 미디어 세션 정보를 교환하는 데 사용됩니다.
  */
-class KinesisVideoSdpObserver : SdpObserver {
+open class KinesisVideoSdpObserver : SdpObserver {
 
     companion object {
         private val TAG = KinesisVideoSdpObserver::class.java.simpleName

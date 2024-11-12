@@ -11,7 +11,7 @@ import org.webrtc.RtpReceiver
 /**
  * Listener for Peer connection events. Prints event info to the logs at debug level.
  */
-class KinesisVideoPeerConnection : PeerConnection.Observer {
+open class KinesisVideoPeerConnection : PeerConnection.Observer {
 
     companion object {
         private const val TAG = "KVSPeerConnection"
