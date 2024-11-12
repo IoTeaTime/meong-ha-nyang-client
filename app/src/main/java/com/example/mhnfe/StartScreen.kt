@@ -6,8 +6,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mhnfe.ui.components.MiddleButton
+
+
 
 @Composable
 fun StartScreen(
@@ -47,16 +50,16 @@ fun StartScreen(
         ) {
             // 로그인 버튼
             MiddleButton(
-                text = "로그인",
+                text = " 로그인",
                 onClick = onLoginClick,
-                modifier = Modifier.fillMaxWidth()
+                //modifier = Modifier.padding(horizontal = 34.dp).height(48.dp)
             )
 
             // Cam 회원 버튼
             MiddleButton(
                 text = "회원가입",
                 onClick = onSignUpClick,
-                modifier = Modifier.fillMaxWidth()
+                //modifier = Modifier.padding(horizontal = 34.dp).height(48.dp)
             )
 
             // 소셜 로그인 버튼들
@@ -73,9 +76,10 @@ fun StartScreen(
                     modifier = Modifier.size(40.dp)
                 )
                 Image(
-                    painter = painterResource(id = R.drawable.google),
+                    painter = painterResource(id = R.drawable.google1),
                     contentDescription = "구글 로그인",
                     modifier = Modifier.size(40.dp)
+
                 )
                 Image(
                     painter = painterResource(id = R.drawable.naver),
@@ -85,4 +89,20 @@ fun StartScreen(
             }
         }
     }
+}
+
+@Preview(
+    name = "Start Screen",
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=411dp,height=891dp"
+)
+@Composable
+fun StartScreenPreview() {
+
+    StartScreen(
+        onLoginClick = {},
+        onSignUpClick = {}
+    )
+
 }
