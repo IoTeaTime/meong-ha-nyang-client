@@ -91,12 +91,12 @@ fun QRGenerateScreen(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun QRGeneratePreview(){
-    val navController = rememberNavController()
-    val viewModel: QRViewModel = viewModel()
-
-    QRGenerateScreen(viewModel = viewModel, navController = navController)
-
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun QRGeneratePreview(){
+//    val navController = rememberNavController()
+//    val viewModel: QRViewModel = viewModel()
+//
+//    QRGenerateScreen(viewModel = viewModel, navController = navController)
+//
+//}
