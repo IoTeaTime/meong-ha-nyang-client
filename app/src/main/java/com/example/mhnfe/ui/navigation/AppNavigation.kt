@@ -1,15 +1,12 @@
 package com.example.mhnfe.ui.navigation
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.amazonaws.mobile.client.AWSMobileClient
+import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
 import com.example.mhnfe.ui.screens.auth.MainScreen
@@ -29,7 +27,6 @@ import com.example.mhnfe.ui.screens.mypage.PasswordEditScreen
 import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.QRScanningScreen
-import com.example.mhnfe.ui.screens.qr.QRViewModel
 import com.example.mhnfe.ui.screens.report.ReportDetailScreen
 
 sealed class NavRoutes(val route: String) {
@@ -47,6 +44,9 @@ sealed class NavRoutes(val route: String) {
 
     object Monitoring : NavRoutes("monitoring") {
         object Group : NavRoutes("monitoring/group")
+        object Master : NavRoutes("monitoring/master")
+        object Viewer : NavRoutes("monitoring/viewer")
+
         object DeviceInformation : NavRoutes("device_information/{cctvId}") {
             fun createRoute(cctvId: String) = "device_information/$cctvId"
         }
@@ -170,10 +170,17 @@ fun MainContent(
                 route = NavRoutes.Monitoring.route
             ) {
                 composable(NavRoutes.Monitoring.Group.route) {
-                    GroupScreen(
-                        userType = userType,
-                        navController = bottomNavController  // bottomNavController 전달
-                    )
+                    SignalingChannelTest(navController = bottomNavController)
+//                    GroupScreen(
+//                        userType = userType,
+//                        navController = bottomNavController  // bottomNavController 전달
+//                    )
+                }
+                composable(NavRoutes.Monitoring.Master.route){
+                 //cctv화면
+                }
+                composable(NavRoutes.Monitoring.Viewer.route){
+                    //뷰어 화면
                 }
                 composable(
                     route = NavRoutes.Monitoring.DeviceInformation.route,
