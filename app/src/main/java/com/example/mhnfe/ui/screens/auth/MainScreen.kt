@@ -1,4 +1,4 @@
-package com.example.mhnfe
+package com.example.mhnfe.ui.screens.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -8,83 +8,83 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MiddleButton
-
+import com.example.mhnfe.ui.navigation.NavRoutes
 
 
 @Composable
-fun StartScreen(
-    onLoginClick: () -> Unit,
-    onSignUpClick: () -> Unit
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(20.dp),
+            .padding(vertical = 20.dp, horizontal = 34.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // 로고 영역
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "명하냥 로고",
-                modifier = Modifier.size(200.dp)
+                modifier = modifier.size(315.dp, 358.dp)
             )
-        }
 
         // 버튼 영역
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
-                .padding(bottom = 50.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .wrapContentHeight(),
+            verticalArrangement = Arrangement.spacedBy(38.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 로그인 버튼
             MiddleButton(
                 text = " 로그인",
-                onClick = onLoginClick,
-                //modifier = Modifier.padding(horizontal = 34.dp).height(48.dp)
+                onClick = {
+                    navController.navigate(NavRoutes.Auth.Login.route)
+                },
             )
-
             // Cam 회원 버튼
             MiddleButton(
                 text = "회원가입",
-                onClick = onSignUpClick,
-                //modifier = Modifier.padding(horizontal = 34.dp).height(48.dp)
+                onClick = {},
+            )
+            MiddleButton(
+                text = "Cam 참여",
+                onClick = {
+                    navController.navigate(NavRoutes.Auth.QRScanner.route)
+                },
             )
 
             // 소셜 로그인 버튼들
             Row(
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxWidth()
-                    .padding(top = 20.dp),
+                    .wrapContentHeight(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.kakao),
                     contentDescription = "카카오 로그인",
-                    modifier = Modifier.size(40.dp)
+                    modifier = modifier.size(50.dp)
                 )
                 Image(
                     painter = painterResource(id = R.drawable.google1),
                     contentDescription = "구글 로그인",
-                    modifier = Modifier.size(40.dp)
+                    modifier = modifier.size(50.dp)
 
                 )
                 Image(
                     painter = painterResource(id = R.drawable.naver),
                     contentDescription = "네이버 로그인",
-                    modifier = Modifier.size(40.dp)
+                    modifier = modifier.size(50.dp)
                 )
             }
         }
@@ -100,9 +100,9 @@ fun StartScreen(
 @Composable
 fun StartScreenPreview() {
 
-    StartScreen(
-        onLoginClick = {},
-        onSignUpClick = {}
+
+    MainScreen(
+        navController = rememberNavController(),
     )
 
 }
