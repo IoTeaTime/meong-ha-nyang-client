@@ -25,7 +25,7 @@ import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
 
 @Composable
-fun DialogWithTextFields(
+fun EditPopup(
     modifier: Modifier = Modifier,
     onConfirmation: () -> Unit,
     onDismissRequest: () -> Unit,
@@ -168,14 +168,14 @@ fun DialogWithTextFields(
 
 @Preview(showBackground = true)
 @Composable
-private fun DialogWithTextFieldsPreview() {
+private fun EditPopupPreview() {
     Column(
         modifier = Modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        DialogWithTextFields(onConfirmation = {},
+        EditPopup(onConfirmation = {},
             onDismissRequest = {},
             isDialogVisible = false
         )
