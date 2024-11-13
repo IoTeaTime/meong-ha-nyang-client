@@ -61,7 +61,8 @@ fun DeviceManagementScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             DeviceSection(
                 title = "CCTV 기기 관리",
@@ -116,7 +117,9 @@ private fun DeviceSection(
             modifier = modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .background(color = mainGray2, shape = RoundedCornerShape(8.dp))
+                .background(color = mainGray2, shape = RoundedCornerShape(8.dp)),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             devices.forEachIndexed { index, device ->
                 if (index > 0) {
@@ -160,7 +163,7 @@ private fun DeviceItem(
             )
             // 연필 아이콘
             Icon(
-                painter = painterResource(id = R.drawable.pencil),  // 연필 아이콘 리소스 필요
+                painter = painterResource(id = R.drawable.edit),  // 연필 아이콘 리소스 필요
                 contentDescription = "수정",
                 tint = Color.Gray,
                 modifier = Modifier
