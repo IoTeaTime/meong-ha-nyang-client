@@ -104,7 +104,8 @@ private fun DeviceSection(
             .fillMaxWidth()
             .wrapContentHeight()
             .padding(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = title,
@@ -196,6 +197,7 @@ private fun DeviceItem(
 
 @Composable
 private fun EditDeviceDialog(
+    modifier: Modifier = Modifier,
     initialName: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
@@ -204,14 +206,15 @@ private fun EditDeviceDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "기기 이름 수정",
@@ -227,7 +230,7 @@ private fun EditDeviceDialog(
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
