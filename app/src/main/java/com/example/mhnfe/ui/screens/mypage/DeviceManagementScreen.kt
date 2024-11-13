@@ -53,85 +53,60 @@ fun DeviceManagementScreen(
 
     Scaffold(
         topBar = {
-            SubTopBar(text = "기기 관리 페이지", onBack = { navController.popBackStack() })
+            SubTopBar(
+                text = "기기 관리 페이지",
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     ) { innerPadding ->
         Column(
             modifier = modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 20.dp)
         ) {
-            DeviceSection(
-                title = "CCTV 기기 관리",
-                devices = cctvDevices,
-                onDeleteDevice = { device ->
-                    cctvDevices = cctvDevices.filter { it.id != device.id }
-                },
-                onUpdateDevice = { updatedDevice ->
-                    cctvDevices = cctvDevices.map {
-                        if (it.id == updatedDevice.id) updatedDevice else it
-                    }
-                }
+            // CCTV Section
+            Text(
+                text = "CCTV 기기 관리",
+                style = Typography.titleMedium,
+                modifier = modifier.padding(vertical = 16.dp)
             )
-            DeviceSection(
-                title = "Viewer 기기 관리",
-                devices = viewerDevices,
-                onDeleteDevice = { device ->
-                    viewerDevices = viewerDevices.filter { it.id != device.id }
-                },
-                onUpdateDevice = { updatedDevice ->
-                    viewerDevices = viewerDevices.map {
-                        if (it.id == updatedDevice.id) updatedDevice else it
-                    }
-                }
-            )
-        }
-    }
-}
 
-@Composable
-private fun DeviceSection(
-    modifier: Modifier = Modifier,
-    title: String,
-    devices: List<Device>,
-    onDeleteDevice: (Device) -> Unit,
-    onUpdateDevice: (Device) -> Unit
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = title,
-            style = Typography.bodyMedium
-        )
-
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .background(color = mainGray2, shape = RoundedCornerShape(8.dp)),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            devices.forEachIndexed { index, device ->
-                if (index > 0) {
-                    HorizontalDivider(color = Color.White, thickness = 1.dp)
-                }
+            // CCTV Devices
+            cctvDevices.forEach { device ->
                 DeviceItem(
                     device = device,
-                    onDelete = { onDeleteDevice(device) },
-                    onUpdate = { newName ->
-                        onUpdateDevice(device.copy(name = newName))
+                    onDelete = { cctvDevices = cctvDevices.filter { it.id != device.id } },
+                    onUpdate = { updatedDevice ->
+                        cctvDevices = cctvDevices.map {
+                            if (it.id == updatedDevice.id) updatedDevice else it
+                        }
                     }
                 )
+                Spacer(modifier = modifier.height(8.dp))
+            }
+
+            // Viewer Section
+            Text(
+                text = "Viewer 기기 관리",
+                style = Typography.titleMedium,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+
+            // Viewer Devices
+            viewerDevices.forEach { device ->
+                DeviceItem(
+                    device = device,
+                    onDelete = { viewerDevices = viewerDevices.filter { it.id != device.id } },
+                    onUpdate = { updatedDevice ->
+                        viewerDevices = viewerDevices.map {
+                            if (it.id == updatedDevice.id) updatedDevice else it
+                        }
+                    }
+                )
+                Spacer(modifier = modifier.height(8.dp))
             }
         }
     }
@@ -142,46 +117,47 @@ private fun DeviceItem(
     modifier: Modifier = Modifier,
     device: Device,
     onDelete: () -> Unit,
-    onUpdate: (String) -> Unit
+    onUpdate: (Device) -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF5F5F5)
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 34.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = device.name,
-                style = Typography.bodyMedium
-            )
-            // 연필 아이콘
-            Icon(
-                painter = painterResource(id = R.drawable.edit),  // 연필 아이콘 리소스 필요
-                contentDescription = "수정",
-                tint = Color.Gray,
-                modifier = Modifier
-                    .size(16.dp)
-                    .clickable { showEditDialog = true }
-            )
-        }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = device.name,
+                    style = Typography.bodyMedium
+                )
 
-        TextButton(
-            onClick = onDelete,
-            contentPadding = PaddingValues(horizontal = 8.dp),
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = Color.Gray
-            )
-        ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.edit),
+                    contentDescription = "수정",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { showEditDialog = true },
+                    tint = Color.Gray
+                )
+            }
+
             Text(
-                text = "기기 삭제",
-                style = Typography.bodySmall
+                text = "기기삭제",
+                style = Typography.bodySmall.copy(color = Color.Gray),
+                modifier = modifier.clickable { onDelete() }
             )
         }
     }
@@ -191,7 +167,7 @@ private fun DeviceItem(
             initialName = device.name,
             onDismiss = { showEditDialog = false },
             onConfirm = { newName ->
-                onUpdate(newName)
+                onUpdate(device.copy(name = newName))
                 showEditDialog = false
             }
         )
@@ -216,8 +192,7 @@ private fun EditDeviceDialog(
         ) {
             Column(
                 modifier = modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
                     text = "기기 이름 수정",
@@ -227,15 +202,14 @@ private fun EditDeviceDialog(
                 TextField(
                     value = deviceName,
                     onValueChange = { deviceName = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = modifier.fillMaxWidth(),
                     label = { Text("기기 이름") },
                     singleLine = true
                 )
 
                 Row(
                     modifier = modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
                         Text("취소")
