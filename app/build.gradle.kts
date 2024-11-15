@@ -73,6 +73,11 @@ dependencies {
 
     val nav_version = "2.8.0"
 
+    // Retrofit library for making HTTP requests to the server
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    // Gson converter library
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
     //화면 이동 의존성 추가
     implementation("androidx.navigation:navigation-compose:$nav_version")
     //QR 생성, 리더기 의존성 추가

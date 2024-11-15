@@ -1,6 +1,8 @@
 package com.example.mhnfe.ui.screens.auth
 
-
+import com.example.mhnfe.data.repository.AuthRepository
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 
@@ -21,7 +23,6 @@ import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
-import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainYellow
 import androidx.compose.foundation.clickable
@@ -34,12 +35,25 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mhnfe.data.model.ApiResponse
+
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    onLoginClick: () -> Unit
+    onLoginClick: () -> Unit,
+    signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository()))
 ) {
+
+    val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
+    val errorMessage by signUpViewModel.errorMessage.collectAsState()
+
+    val scope = rememberCoroutineScope()
+    var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
+
     val focusManager = LocalFocusManager.current
     var currentStep by remember { mutableIntStateOf(0) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -160,6 +174,9 @@ fun SignUpScreen(
         }
     }
 
+    // Create an instance of the Repository for calling the Sign-Up API
+    val authRepository = AuthRepository()
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -210,14 +227,14 @@ fun SignUpScreen(
                         )
                         MainTextBox(
                             focusManager = focusManager,
+                            isError = isEmailError,
+                            onIsErrorChange = { isEmailError = it },
                             inputText = email,
                             onInputTextChange = {
                                 email = it
                                 isEmailError = false
                                 emailErrorMessage = ""
                             },
-                            isError = isEmailError,
-                            onIsErrorChange = { isEmailError = it },
                             hintText = "example@example.com",
                             warningText = emailErrorMessage
                         )
@@ -226,14 +243,14 @@ fun SignUpScreen(
                         Text(text = "인증번호를 입력해주세요")
                         MainTextBox(
                             focusManager = focusManager,
+                            isError = isVerificationError,
+                            onIsErrorChange = { isVerificationError = it },
                             inputText = verificationCode,
                             onInputTextChange = {
                                 verificationCode = it
                                 isVerificationError = false
                                 verificationErrorMessage = ""
                             },
-                            isError = isVerificationError,
-                            onIsErrorChange = { isVerificationError = it },
                             hintText = "인증번호 6자리",
                             warningText = verificationErrorMessage
                         )
@@ -242,14 +259,14 @@ fun SignUpScreen(
                         Text(text = "비밀번호를 입력해주세요")
                         MainTextBox(
                             focusManager = focusManager,
+                            isError = isPasswordError,
+                            onIsErrorChange = { isPasswordError = it },
                             inputText = password,
                             onInputTextChange = {
                                 password = it
                                 isPasswordError = false
                                 passwordErrorMessage = ""
                             },
-                            isError = isPasswordError,
-                            onIsErrorChange = { isPasswordError = it },
                             hintText = "8자리 이상 입력해주세요",
                             warningText = passwordErrorMessage
                         )
@@ -257,13 +274,13 @@ fun SignUpScreen(
                         Text(text = "비밀번호 확인")
                         MainTextBox(
                             focusManager = focusManager,
+                            isError = isConfirmPasswordError,
+                            onIsErrorChange = { isConfirmPasswordError = it },
                             inputText = confirmPassword,
                             onInputTextChange = {
                                 confirmPassword = it
                                 isConfirmPasswordError = false
                             },
-                            isError = isConfirmPasswordError,
-                            onIsErrorChange = { isConfirmPasswordError = it },
                             hintText = "비밀번호를 한번 더 입력해주세요",
                             warningText = if (isConfirmPasswordError) "비밀번호가 일치하지 않습니다." else ""
                         )
@@ -319,18 +336,42 @@ fun SignUpScreen(
                             if (currentStep < 3) {
                                 currentStep++
                             } else {
-                                onLoginClick()
+                                // Call the Sign-Up API
+                                scope.launch {
+                                    try {
+
+                                        // Log before calling the Sign-Up API
+                                        //Log.d("SignUpScreen", "회원가입 데이터: email=$email, password=$password, passwordConfirm=$confirmPassword, nickname=$nickname")
+
+                                        apiResponse = authRepository.signUp(
+                                            email = email,
+                                            password = password,
+                                            passwordConfirm = confirmPassword,
+                                            nickname = nickname
+                                        )
+                                        if (apiResponse?.result?.code == 201) {
+//                                            Log.d("SignUpScreen", "회원가입 성공: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                            onLoginClick()
+                                        } else {
+                                            Log.e("SignUpScreen", "회원가입 실패: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("SignUpScreen", "회원가입 중 오류 발생: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                    }
+                                }
                             }
                         }
                     }
                 )
-
-                if (currentStep == 0) {
-                    Text(
-                        text = "아이디가 있으신가요?",
-                        textAlign = TextAlign.Center,
-                        color = mainGray
-                    )
+                // Call onLoginClick on successful sign-up
+                if (signUpResponse?.result?.code == 0) {
+                    LaunchedEffect(Unit) {
+                        onLoginClick()
+                    }
+                }
+                // Handle error message
+                errorMessage?.let {
+                    Text(text = it, color = Color.Red, textAlign = TextAlign.Center)
                 }
             }
         }
