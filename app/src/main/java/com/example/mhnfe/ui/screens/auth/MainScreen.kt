@@ -53,7 +53,9 @@ fun MainScreen(
             // Cam 회원 버튼
             MiddleButton(
                 text = "회원가입",
-                onClick = {},
+                onClick = {
+                    navController.navigate(NavRoutes.Auth.SignUp.route)
+                },
             )
             MiddleButton(
                 text = "Cam 참여",

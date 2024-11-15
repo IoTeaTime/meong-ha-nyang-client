@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -130,19 +129,19 @@ fun PasswordEditScreen(
                 }
                 MainTextBox(
                     focusManager = focusManager,
-                    hintText = "새 비밀번호",
                     inputText = textPW,
                     onInputTextChange = { newText ->
                         textPW = newText
-                    }
+                    },
+                    hintText = "새 비밀번호"
                 )
                 MainTextBox(
                     focusManager = focusManager,
-                    hintText = "새 비밀번호 확인",
                     inputText = textPWComfirm,
                     onInputTextChange = { newText ->
                         textPWComfirm = newText
-                    }
+                    },
+                    hintText = "새 비밀번호 확인"
                 )
             }
             MiddleButton(

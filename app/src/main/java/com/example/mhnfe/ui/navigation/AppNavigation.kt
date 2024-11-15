@@ -20,6 +20,7 @@ import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
 import com.example.mhnfe.ui.screens.auth.MainScreen
+import com.example.mhnfe.ui.screens.auth.SignUpScreen
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
 import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
 import com.example.mhnfe.ui.screens.monitoring.GroupScreen
@@ -91,7 +92,14 @@ fun AppNavigation() {
                 )
             }
             composable(NavRoutes.Auth.SignUp.route) {
-                // SignUp Screen
+                SignUpScreen(
+                    navController = navController,
+                    onLoginClick = {
+                        navController.navigate(NavRoutes.Auth.Login.route) {
+                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
+                        }
+                    }
+                )
             }
             composable(NavRoutes.Auth.Select.route) {
 //                SelectScreen(onBackClick = {})
