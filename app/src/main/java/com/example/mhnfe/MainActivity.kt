@@ -29,6 +29,8 @@ import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.PeerConnectionFactory
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
@@ -41,6 +43,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -119,6 +123,21 @@ private fun initializeMobileClient(client: AWSMobileClient, context: ComponentAc
         e.printStackTrace()
     }
 }
+
+//class WebRtcViewModelFactory(
+//    private val context: Context,
+//    private val notificationManager: NotificationManager,
+//    private val kvsSignalingViewModel: KVSSignalingViewModel
+//) : ViewModelProvider.Factory {
+//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+//        if (modelClass.isAssignableFrom(WebRtcViewModel::class.java)) {
+//            @Suppress("UNCHECKED_CAST")
+//            return WebRtcViewModel(kvsSignalingViewModel, context, notificationManager) as T
+//        }
+//        throw IllegalArgumentException("Unknown ViewModel class")
+//    }
+//}
+//private const val WEBRTC_VIEW_MODEL_KEY = "webrtc_view_model"
 
 
 @Composable

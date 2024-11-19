@@ -1,13 +1,19 @@
 package com.example.mhnfe.ui.navigation
 
 
+
+import android.app.NotificationManager
+import android.content.Context
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -22,17 +28,15 @@ import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
 import com.example.mhnfe.ui.screens.auth.MainScreen
-import com.example.mhnfe.ui.screens.auth.SignUpScreen
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
 import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
 import com.example.mhnfe.ui.screens.master.WebRtcScreen
-import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
-import com.example.mhnfe.ui.screens.monitoring.GroupScreen
 import com.example.mhnfe.ui.screens.mypage.PasswordEditScreen
 import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.QRScanningScreen
 import com.example.mhnfe.ui.screens.report.ReportDetailScreen
+
 
 sealed class NavRoutes(val route: String) {
     object Auth : NavRoutes("auth") {
@@ -96,14 +100,7 @@ fun AppNavigation() {
                 )
             }
             composable(NavRoutes.Auth.SignUp.route) {
-                SignUpScreen(
-                    navController = navController,
-                    onLoginClick = {
-                        navController.navigate(NavRoutes.Auth.Login.route) {
-                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
-                        }
-                    }
-                )
+                // SignUp Screen
             }
             composable(NavRoutes.Auth.Select.route) {
 //                SelectScreen(onBackClick = {})
@@ -144,6 +141,17 @@ fun AppNavigation() {
     }
 }
 
+//class MonitoringViewModelFactory(
+//    private val context: Context,
+//    private val notificationManager: NotificationManager
+//) {
+//    fun createWebRtcViewModelFactory(kvsViewModel: KVSSignalingViewModel) = WebRtcViewModelFactory(
+//        context = context,
+//        notificationManager = notificationManager,
+//        kvsSignalingViewModel = kvsViewModel
+//    )
+//}
+
 
 @Composable
 fun MainContent(
@@ -154,6 +162,10 @@ fun MainContent(
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val context = LocalContext.current
+    val notificationManager = remember {
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
 
     val mainScreens = listOf(
         NavRoutes.Monitoring.Group.route,
@@ -181,16 +193,13 @@ fun MainContent(
                 startDestination = NavRoutes.Monitoring.Group.route,
                 route = NavRoutes.Monitoring.route
             ) {
+
                 composable(NavRoutes.Monitoring.Group.route) { entry ->
                     val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
                     SignalingChannelTest(
                         navController = bottomNavController,
                         kvsViewModel = kvsViewModel,
                     )
-//                    GroupScreen(
-//                        userType = userType,
-//                        navController = bottomNavController  // bottomNavController 전달
-//                    )
                 }
                 composable(NavRoutes.Monitoring.Master.route) {
                     val parentEntry = remember(bottomNavController) {
@@ -210,6 +219,7 @@ fun MainContent(
                         role = role
                     )
                 }
+
                 composable(NavRoutes.Monitoring.Viewer.route) {
                     val parentEntry = remember(bottomNavController) {
                         bottomNavController.getBackStackEntry(NavRoutes.Monitoring.Group.route)
@@ -229,18 +239,79 @@ fun MainContent(
                         role = role
                     )
                 }
-                composable(
-                    route = NavRoutes.Monitoring.DeviceInformation.route,
-                    arguments = listOf(
-                        navArgument("cctvId") { type = NavType.StringType }
-                    )
-                ) { backStackEntry ->
-                    val cctvId = backStackEntry.arguments?.getString("cctvId") ?: return@composable
-                    DeviceInfoScreen(
-                        cctvId = cctvId,
-                        navController = bottomNavController
-                    )
-                }
+
+//                composable(NavRoutes.Monitoring.Master.route) {
+//                    val parentEntry = remember(bottomNavController) {
+//                        bottomNavController.getBackStackEntry(NavRoutes.Monitoring.Group.route)
+//                    }
+//                    val webRtcViewModel: WebRtcViewModel = viewModel(
+//                        viewModelStoreOwner = parentEntry,
+//                        factory = WebRtcViewModelFactory(
+//                            context = context,
+//                            notificationManager = notificationManager,
+//                            kvsSignalingViewModel = viewModel(viewModelStoreOwner = parentEntry)
+//                        )
+//                    )
+//                    WebRtcScreen(
+//                        navController = bottomNavController,
+//                        channelName = "demo-channel",
+//                        viewModel = webRtcViewModel,
+//                    )
+//                }
+//
+//                composable(NavRoutes.Monitoring.Viewer.route) {
+//                    val parentEntry = remember(bottomNavController) {
+//                        bottomNavController.getBackStackEntry(NavRoutes.Monitoring.Group.route)
+//                    }
+//                    val webRtcViewModel: WebRtcViewModel = viewModel(
+//                        viewModelStoreOwner = parentEntry,
+//                        factory = WebRtcViewModelFactory(
+//                            context = context,
+//                            notificationManager = notificationManager,
+//                            kvsSignalingViewModel = viewModel(viewModelStoreOwner = parentEntry)
+//                        )
+//                    )
+//                    WebRtcScreen(
+//                        navController = bottomNavController,
+//                        viewModel = webRtcViewModel,
+//                    )
+//                }
+//                composable(NavRoutes.Monitoring.Group.route) {
+//                    SignalingChannelTest(navController = bottomNavController)
+////                    GroupScreen(
+////                        userType = userType,
+////                        navController = bottomNavController  // bottomNavController 전달
+////                    )
+//                }
+//                composable(NavRoutes.Monitoring.Master.route) {
+//                    val webRtcViewModel: WebRtcViewModel = it.sharedViewModel<WebRtcViewModel>(
+//                        navController = bottomNavController
+//                    )
+//                    WebRtcScreen(
+//                        viewModel = webRtcViewModel,
+//                    )
+//                }
+//
+//                composable(NavRoutes.Monitoring.Viewer.route) {
+//                    val webRtcViewModel: WebRtcViewModel = it.sharedViewModel<WebRtcViewModel>(
+//                        navController = bottomNavController
+//                    )
+//                    WebRtcScreen(
+//                        viewModel = webRtcViewModel,
+//                    )
+//                }
+//                composable(
+//                    route = NavRoutes.Monitoring.DeviceInformation.route,
+//                    arguments = listOf(
+//                        navArgument("cctvId") { type = NavType.StringType }
+//                    )
+//                ) { backStackEntry ->
+//                    val cctvId = backStackEntry.arguments?.getString("cctvId") ?: return@composable
+//                    DeviceInfoScreen(
+//                        cctvId = cctvId,
+//                        navController = bottomNavController
+//                    )
+//                }
 
                 composable(
                     route = NavRoutes.Monitoring.QRGenerate.route,
@@ -290,6 +361,18 @@ fun MainContent(
             }
         }
     }
+
+}
+
+@Composable
+inline fun <reified T: ViewModel> NavBackStackEntry.sharedViewModel(
+    navController: NavController
+): T {
+    val navGraphRoute = destination.parent?.route ?: return viewModel()
+    val parentEntry = remember(this) {
+        navController.getBackStackEntry(navGraphRoute)
+    }
+    return viewModel(viewModelStoreOwner = parentEntry)
 }
 
 

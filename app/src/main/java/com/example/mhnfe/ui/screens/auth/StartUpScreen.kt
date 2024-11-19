@@ -45,8 +45,8 @@ fun StartUpScreen(
     navController: NavController
 ) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("lsh235s@naver.com") }
+    var password by remember { mutableStateOf("Qwer1234!") }
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
