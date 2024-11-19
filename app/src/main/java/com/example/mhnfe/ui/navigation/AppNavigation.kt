@@ -21,6 +21,7 @@ import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
 import com.example.mhnfe.ui.screens.auth.LoginScreen
 import com.example.mhnfe.ui.screens.auth.MainScreen
+import com.example.mhnfe.ui.screens.auth.SelectScreen
 import com.example.mhnfe.ui.screens.auth.SignUpScreen
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
 import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
@@ -92,7 +93,7 @@ fun AppNavigation() {
                 LoginScreen(
                     navController = navController,
                     onLoginClick = {
-                        navController.navigate(NavRoutes.Auth.Cognito.route)
+                        navController.navigate(NavRoutes.Monitoring.Group.route)
                     }
                 )
             }
@@ -113,7 +114,19 @@ fun AppNavigation() {
                 )
             }
             composable(NavRoutes.Auth.Select.route) {
-//                SelectScreen(onBackClick = {})
+                SelectScreen(
+                    navController = navController,
+                    onQrScanClick = {
+                        navController.navigate(NavRoutes.Auth.QRScanner.route) {
+                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
+                        }
+                    },
+                    onCreateGroupClick = {
+                        navController.navigate(NavRoutes.Monitoring.Group.route) {
+                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
+                        }
+                    }
+                )
             }
             composable(NavRoutes.Auth.QRScanner.route) {
                 // QRScannerScreen
