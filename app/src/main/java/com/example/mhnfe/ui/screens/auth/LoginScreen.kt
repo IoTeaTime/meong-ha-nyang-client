@@ -22,9 +22,15 @@ import androidx.navigation.NavController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.amazonaws.mobile.client.AWSMobileClient
+import com.amazonaws.mobile.client.results.SignInState
+import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException
+import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException
+import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException
 import com.example.mhnfe.R
 import com.example.mhnfe.data.model.ApiResponse
 import com.example.mhnfe.data.repository.AuthRepository
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
@@ -33,7 +39,9 @@ import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
 import com.example.mhnfe.ui.theme.mainGray3
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun LoginScreen(
@@ -204,11 +212,6 @@ fun LoginScreen(
 //                        }
 //                    }
 //                }
-
-                // Handle error message
-                errorMessage?.let {
-                    Text(text = it, color = Color.Red, textAlign = TextAlign.Center)
-                }
 
                 // 비밀번호 찾기 텍스트
                 Text(
