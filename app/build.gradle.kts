@@ -114,9 +114,6 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
 
-
-
-
     //Add OkHttp dependency
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
 

@@ -19,6 +19,7 @@ import com.amazonaws.mobile.client.AWSMobileClient
 import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
+import com.example.mhnfe.ui.screens.auth.LoginScreen
 import com.example.mhnfe.ui.screens.auth.MainScreen
 import com.example.mhnfe.ui.screens.auth.SignUpScreen
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
@@ -31,9 +32,11 @@ import com.example.mhnfe.ui.screens.qr.QRScanningScreen
 import com.example.mhnfe.ui.screens.report.ReportDetailScreen
 
 sealed class NavRoutes(val route: String) {
+
     object Auth : NavRoutes("auth") {
         object Main : NavRoutes("main")
         object Login : NavRoutes("login")
+        object Cognito : NavRoutes("cognito")
         object SignUp : NavRoutes("signup")
         object Select : NavRoutes("select")
         object QRScanner : NavRoutes("qr_scanner")
@@ -86,6 +89,14 @@ fun AppNavigation() {
                 )
             }
             composable(NavRoutes.Auth.Login.route) {
+                LoginScreen(
+                    navController = navController,
+                    onLoginClick = {
+                        navController.navigate(NavRoutes.Auth.Cognito.route)
+                    }
+                )
+            }
+            composable(NavRoutes.Auth.Cognito.route) {
                 StartUpScreen(
                     auth = auth,
                     navController = navController
