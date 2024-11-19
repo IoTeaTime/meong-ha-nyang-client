@@ -12,3 +12,12 @@ class SignUpViewModelFactory(private val authRepository: AuthRepository) : ViewM
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+class LoginViewModelFactory(private val authRepository: AuthRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
+            return LoginViewModel(authRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}

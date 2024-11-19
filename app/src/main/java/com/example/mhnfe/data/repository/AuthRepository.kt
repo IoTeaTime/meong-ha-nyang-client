@@ -3,6 +3,7 @@ package com.example.mhnfe.data.repository
 import com.example.mhnfe.data.api.ApiService
 import com.example.mhnfe.data.api.AuthApi
 import com.example.mhnfe.data.model.ApiResponse
+import com.example.mhnfe.data.model.LoginRequest
 import com.example.mhnfe.data.model.SignUpRequest
 
 class AuthRepository {
@@ -20,5 +21,13 @@ class AuthRepository {
     ): ApiResponse {
         val request = SignUpRequest(email, password, passwordConfirm, nickname)
         return api.signUp(request)
+    }
+
+    suspend fun login(
+        email: String,
+        password: String
+    ): ApiResponse {
+        val request = LoginRequest(email, password)
+        return api.login(request)
     }
 }
