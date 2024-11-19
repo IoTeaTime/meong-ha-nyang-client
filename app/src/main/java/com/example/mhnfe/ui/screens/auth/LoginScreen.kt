@@ -42,7 +42,6 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(AuthRepository())),
     onLoginClick: () -> Unit
 ) {
-
     val loginResponse by loginViewModel.loginResponse.collectAsState()
     val errorMessage by loginViewModel.errorMessage.collectAsState()
 
@@ -162,39 +161,49 @@ fun LoginScreen(
                     text = "로그인",
                     onClick = {
                         // 로그인 validation 로직 추가 가능
-//                        onLoginClick()
                         scope.launch {
-                            try{
+                            try {
                                 apiResponse = authRepository.login(
                                     email = id,
                                     password = password
                                 )
-                                if (apiResponse?.result?.code == 200){
-                                    Log.d("LoginScreen", "로그인 성공: " +
-                                            "code=${apiResponse?.result?.code}, " +
-                                            "message=${apiResponse?.result?.message}, " +
-                                            "description=${apiResponse?.result?.description}")
+                                if (apiResponse?.result?.code == 200) {
+                                    Log.d(
+                                        "LoginScreen", "로그인 성공: " +
+                                                "code=${apiResponse?.result?.code}, " +
+                                                "message=${apiResponse?.result?.message}, " +
+                                                "description=${apiResponse?.result?.description}"
+                                    )
+                                    navController.navigate(NavRoutes.Auth.Select.route)
                                 } else {
-                                    Log.e("LoginScreen", "로그인 실패: " +
-                                            "code=${apiResponse?.result?.code}, " +
-                                            "message=${apiResponse?.result?.message}, " +
-                                            "description=${apiResponse?.result?.description}")
+                                    Log.e(
+                                        "LoginScreen", "로그인 실패: " +
+                                                "code=${apiResponse?.result?.code}, " +
+                                                "message=${apiResponse?.result?.message}, " +
+                                                "description=${apiResponse?.result?.description}"
+                                    )
                                 }
                             } catch (e: Exception) {
-                                Log.e("LoginScreen", "로그인 중 오류 발생: " +
-                                        "code=${apiResponse?.result?.code}, " +
-                                        "message=${apiResponse?.result?.message}, " +
-                                        "description=${apiResponse?.result?.description}")
+                                Log.e(
+                                    "LoginScreen", "로그인 중 오류 발생: " +
+                                            "code=${apiResponse?.result?.code}, " +
+                                            "message=${apiResponse?.result?.message}, " +
+                                            "description=${apiResponse?.result?.description}"
+                                )
                             }
                         }
                     }
                 )
 
-                if (loginResponse?.result?.code == 200) {
-                    LaunchedEffect(Unit) {
-                        onLoginClick()
-                    }
-                }
+                // `loginResponse` 값이 성공적으로 변경되었을 때 네비게이션을 트리거하도록 수정
+//                if (loginResponse?.result?.code == 200) {
+//                    Log.d("LoginScreen", "Navigation Trigger 진입")
+//                    LaunchedEffect(loginResponse) {
+//                        navController.navigate(NavRoutes.Auth.Select.route) {
+//                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
+//                        }
+//                    }
+//                }
 
                 // Handle error message
                 errorMessage?.let {
@@ -213,6 +222,7 @@ fun LoginScreen(
         }
     }
 }
+
 
 
 @Preview(

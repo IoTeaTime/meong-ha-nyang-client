@@ -24,6 +24,7 @@ import com.example.mhnfe.ui.theme.mainYellow
 import com.example.mhnfe.ui.theme.mainGray
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
+import com.example.mhnfe.ui.components.MainTopBar
 
 // 그룹 생성용 버튼 컴포넌트
 @Composable
@@ -59,9 +60,8 @@ fun SelectScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            SubTopBar(
-                text = "",
-                onBack = { navController.popBackStack() }
+            MainTopBar(
+                text = "선택"
             )
         }
     ) { paddingValues ->
