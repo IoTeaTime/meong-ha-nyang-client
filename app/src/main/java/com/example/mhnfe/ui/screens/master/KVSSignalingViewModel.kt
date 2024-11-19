@@ -160,8 +160,8 @@ class KVSSignalingViewModel : ViewModel() {
     val uiState: StateFlow<WebRTCUiState> = _uiState.asStateFlow()
 
     //region은 서울로 고정
-    private val region = Region.getRegion(Regions.AP_NORTHEAST_1)
-    private val regionName = "ap-northeast-1"
+    private val region = Region.getRegion(Regions.AP_NORTHEAST_2)
+    private val regionName = "ap-northeast-2"
 
     // 내부 상태를 위한 변수들
     private var channelArn: String? = null
@@ -186,7 +186,7 @@ class KVSSignalingViewModel : ViewModel() {
     private var webrtcEndpoint: String? = null  // WebRTC 엔드포인트
     private var dataEndpoint: String? = null  // ICE 엔드포인트
     private var mStreamArn: String? = null  // 스트림 ARN
-    private var mRegion: String = "ap-northeast-1" // 리전
+    private var mRegion: String = "ap-northeast-2" // 리전
     private var gotException: Boolean = false  // 예외 발생 여부
     private var recipientClientId: String? = null  // 수신자 클라이언트 ID
     private var mNotificationId: Int = 0

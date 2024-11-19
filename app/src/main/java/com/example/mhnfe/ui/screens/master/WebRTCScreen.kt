@@ -1,3 +1,24 @@
+//import androidx.compose.foundation.layout.Box
+//import androidx.compose.foundation.layout.fillMaxSize
+//import androidx.compose.foundation.layout.height
+//import androidx.compose.foundation.layout.padding
+//import androidx.compose.foundation.layout.width
+//import androidx.compose.runtime.Composable
+//import androidx.compose.runtime.DisposableEffect
+//import androidx.compose.runtime.collectAsState
+//import androidx.compose.runtime.getValue
+//import androidx.compose.runtime.mutableStateOf
+//import androidx.compose.runtime.remember
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.platform.LocalConfiguration
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.viewinterop.AndroidView
+//import androidx.navigation.NavController
+//import com.amazonaws.services.kinesisvideo.model.ChannelRole
+//import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
+//import org.webrtc.SurfaceViewRenderer
+
 package com.example.mhnfe.ui.screens.master
 
 import android.util.Log
@@ -13,12 +34,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,7 +55,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import org.webrtc.EglBase
-
+//
 @Composable
 fun WebRtcScreen(
     viewModel: KVSSignalingViewModel,
@@ -109,40 +127,28 @@ fun WebRtcScreen(
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
+        // 상단에 비디오 화면 배치
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
         ) {
             if (isViewsInitialized) {
-                val isMaster = role == ChannelRole.MASTER
+                remoteView?.let { renderer ->
+                    AndroidView(
+                        factory = { renderer },
+                        modifier = Modifier.fillMaxSize().size(120.dp)
+                    )
+                }
 
-                if (isMaster) {
-                    // 마스터: 로컬 뷰만 전체 화면으로
-                    localView?.let { renderer ->
-                        AndroidView(
-                            factory = { renderer },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                } else {
-                    // 뷰어: 리모트 뷰 전체화면 + 로컬 뷰 PIP
-                    remoteView?.let { renderer ->
-                        AndroidView(
-                            factory = { renderer },
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-
-                    localView?.let { renderer ->
-                        AndroidView(
-                            factory = { renderer },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .size(120.dp)
-                                .padding(8.dp)
-                        )
-                    }
+                localView?.let { renderer ->
+                    AndroidView(
+                        factory = { renderer },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(120.dp)
+                            .padding(8.dp)
+                    )
                 }
             }
         }
@@ -200,3 +206,69 @@ fun WebRtcScreen(
         }
     }
 }
+
+//@Composable
+//fun WebRtcScreen(
+//    viewModel: KVSSignalingViewModel,
+//    navController: NavController,
+//    channelName: String,
+//    role: ChannelRole,
+//) {
+//    val remoteVideoTrack by viewModel.remoteVideoTrack.collectAsState()
+//    val localVideoTrack by viewModel.localVideoTrack.collectAsState()
+//
+//
+//    // 로컬 뷰와 리모트 뷰 레퍼런스 기억
+//    val localViewRef = remember { mutableStateOf<SurfaceViewRenderer?>(null) }
+//    val remoteViewRef = remember { mutableStateOf<SurfaceViewRenderer?>(null) }
+//
+//    // 화면 회전 감지를 위한 Configuration
+//    val configuration = LocalConfiguration.current
+//
+//    Box(modifier = Modifier.fillMaxSize()) {
+//        // Remote Video (큰 화면)
+//        AndroidView(
+//            factory = { context ->
+//                SurfaceViewRenderer(context).apply {
+//                    init(eglBaseContext, null)
+//                    setEnableHardwareScaler(true)
+//                    remoteViewRef.value = this
+//                }
+//            },
+//            modifier = Modifier.fillMaxSize(),
+//            update = { view ->
+//                // 새로운 remote track이 들어오면 sink 업데이트
+//                remoteVideoTrack?.addSink(view)
+//            }
+//        )
+//
+//        // Local Video (PIP)
+//        AndroidView(
+//            factory = { context ->
+//                SurfaceViewRenderer(context).apply {
+//                    init(eglBaseContext, null)
+//                    setEnableHardwareScaler(true)
+//                    setMirror(true)
+//                    localViewRef.value = this
+//                }
+//            },
+//            modifier = Modifier
+//                .width(configuration.screenWidthDp.dp * 0.25f)
+//                .height(configuration.screenHeightDp.dp * 0.25f)
+//                .align(Alignment.TopEnd)
+//                .padding(8.dp),
+//            update = { view ->
+//                // 새로운 local track이 들어오면 sink 업데이트
+//                localVideoTrack?.addSink(view)
+//            }
+//        )
+//    }
+//
+//    // Cleanup
+//    DisposableEffect(Unit) {
+//        onDispose {
+//            localViewRef.value?.release()
+//            remoteViewRef.value?.release()
+//        }
+//    }
+//}
