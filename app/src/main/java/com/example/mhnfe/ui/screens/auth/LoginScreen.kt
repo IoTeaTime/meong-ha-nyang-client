@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.auth
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -64,15 +66,15 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     // Cognito 로그인
-    val cognitoUsername = "dlawlstn1616@naver.com"
-    val cognitoPassword = "qqqq11"
-
-    // 에러 상태 관리
-    var isIdError by remember { mutableStateOf(false) }
-    var isPasswordError by remember { mutableStateOf(false) }
+//    val cognitoUsername = "dlawlstn1616@naver.com"
+//    val cognitoPassword = "qqqq11"
 
     // Create an instance of the Repository for calling the login API
     val authRepository = AuthRepository()
+
+    // SharedPreferences를 사용해 자동 로그인 상태와 사용자 정보를 저장
+    val sharedPreferences = LocalContext.current.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+    val editor = sharedPreferences.edit()
 
     Scaffold(
         modifier = modifier,
@@ -120,8 +122,7 @@ fun LoginScreen(
                         focusManager = focusManager,
                         inputText = id,
                         onInputTextChange = { id = it },
-                        isError = isIdError,
-                        onIsErrorChange = { isIdError = it },
+                        isError = errorMessage?.contains("아이디") == true,
                         hintText = "아이디"
                     )
 
@@ -129,8 +130,7 @@ fun LoginScreen(
                         focusManager = focusManager,
                         inputText = password,
                         onInputTextChange = { password = it },
-                        isError = isPasswordError,
-                        onIsErrorChange = { isPasswordError = it },
+                        isError = errorMessage?.contains("비밀번호") == true,
                         hintText = "비밀번호"
                     )
 
@@ -168,50 +168,26 @@ fun LoginScreen(
                 MiddleButton(
                     text = "로그인",
                     onClick = {
-                        // 로그인 validation 로직 추가 가능
-                        scope.launch {
-                            try {
-                                apiResponse = authRepository.login(
-                                    email = id,
-                                    password = password
-                                )
-                                if (apiResponse?.result?.code == 200) {
-                                    Log.d(
-                                        "LoginScreen", "로그인 성공: " +
-                                                "code=${apiResponse?.result?.code}, " +
-                                                "message=${apiResponse?.result?.message}, " +
-                                                "description=${apiResponse?.result?.description}"
-                                    )
-                                    navController.navigate(NavRoutes.Auth.Select.route)
-                                } else {
-                                    Log.e(
-                                        "LoginScreen", "로그인 실패: " +
-                                                "code=${apiResponse?.result?.code}, " +
-                                                "message=${apiResponse?.result?.message}, " +
-                                                "description=${apiResponse?.result?.description}"
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                Log.e(
-                                    "LoginScreen", "로그인 중 오류 발생: " +
-                                            "code=${apiResponse?.result?.code}, " +
-                                            "message=${apiResponse?.result?.message}, " +
-                                            "description=${apiResponse?.result?.description}"
-                                )
-                            }
+                        // ViewModel에 로그인 요청 전달
+                        loginViewModel.loginUser(id, password)
+
+                        // 자동 로그인 상태 저장
+                        if (isAutoLogin) {
+                            editor.putString("saved_id", id)
+                            editor.putString("saved_password", password)
+                            editor.apply()
                         }
                     }
                 )
 
-                // `loginResponse` 값이 성공적으로 변경되었을 때 네비게이션을 트리거하도록 수정
-//                if (loginResponse?.result?.code == 200) {
-//                    Log.d("LoginScreen", "Navigation Trigger 진입")
-//                    LaunchedEffect(loginResponse) {
-//                        navController.navigate(NavRoutes.Auth.Select.route) {
-//                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
-//                        }
-//                    }
-//                }
+                // 로그인 성공 시 화면 전환
+                LaunchedEffect(loginResponse) {
+                    if (loginResponse?.result?.code == 200) {
+                        navController.navigate(NavRoutes.Auth.Select.route) {
+                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                        }
+                    }
+                }
 
                 // 비밀번호 찾기 텍스트
                 Text(
