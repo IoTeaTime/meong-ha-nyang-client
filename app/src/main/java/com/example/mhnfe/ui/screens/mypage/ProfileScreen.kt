@@ -231,7 +231,8 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
-                        .clickable(onClick = {}),
+                        .clickable(onClick = { navController.navigate("myPage/device_management") }),
+
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
