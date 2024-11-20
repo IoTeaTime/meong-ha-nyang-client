@@ -78,7 +78,7 @@ fun LoginScreen(
             modifier = modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(horizontal = 34.dp),
+                .padding(horizontal = 34.dp, vertical = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -153,8 +153,7 @@ fun LoginScreen(
             Column(
                 modifier = modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(bottom = 30.dp),
+                    .wrapContentHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
