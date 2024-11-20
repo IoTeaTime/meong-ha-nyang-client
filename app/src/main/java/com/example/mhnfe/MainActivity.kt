@@ -29,9 +29,11 @@ import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.PeerConnectionFactory
 import android.Manifest
+import android.content.ContentValues.TAG
 import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,6 +45,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,12 +54,16 @@ import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobile.client.Callback
 import com.amazonaws.mobile.client.UserStateDetails
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
+import com.example.mhnfe.data.model.request.RequestFcmToken
+import com.example.mhnfe.data.service.FcmService
 import com.example.mhnfe.ui.navigation.AppNavigation
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
 import com.example.mhnfe.ui.screens.master.WebRTCUiState
 import com.example.mhnfe.ui.screens.master.WebRtcConfig
 import com.example.mhnfe.utils.PermissionManager
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceTextureHelper
@@ -69,10 +76,12 @@ import java.util.concurrent.CountDownLatch
 class MainActivity : ComponentActivity() {
 
     private lateinit var permissionManager: PermissionManager
+    private lateinit var fcmService: FcmService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         permissionManager = PermissionManager(this)
+        fcmService = FcmService()
 
         val auth = AWSMobileClient.getInstance()
         initializeMobileClient(auth, this@MainActivity)
@@ -80,6 +89,33 @@ class MainActivity : ComponentActivity() {
 //        AWSMobileClient.getInstance().signOut()
         //권한 요청
         permissionManager.checkAndRequestPermissions()
+
+        // FCM 토큰 확인
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            val token = task.result
+
+            // Log and toast
+            // TODO. 로그용, 로그인 구현 성공 후 리팩토링 필요
+            val msg = getString(R.string.msg_token_fmt, token)
+            Log.d(TAG, msg)
+            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            // TODO. 기기별로 발급되는 FCM 토큰을 발급 받은 후 이를 저장해 두었다가 로그인에 성공하면 saveFcmToken() 실행 필요 (하단 메서드)
+            /*
+            lifecycleScope.launch {
+                try {
+                    fcmService.saveFcmToken(RequestFcmToken(token))
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error saving FCM token", e)
+                }
+            }
+            */
+        })
 
         setContent {
             MhnFETheme {
