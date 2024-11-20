@@ -23,6 +23,7 @@ import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
 import com.example.mhnfe.ui.screens.auth.LoginScreen
 import com.example.mhnfe.ui.screens.auth.MainScreen
+import com.example.mhnfe.ui.screens.auth.SelectScreen
 import com.example.mhnfe.ui.screens.auth.SignUpScreen
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
 import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
@@ -34,8 +35,6 @@ import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.QRScanningScreen
 import com.example.mhnfe.ui.screens.report.ReportDetailScreen
-import com.example.mhnfe.ui.screens.auth.SelectScreen
-import com.example.mhnfe.ui.screens.auth.SignUpScreen
 import com.example.mhnfe.ui.screens.mypage.DeviceManagementScreen
 
 
@@ -43,6 +42,7 @@ sealed class NavRoutes(val route: String) {
     object Auth : NavRoutes("auth") {
         object Main : NavRoutes("main")
         object Login : NavRoutes("login")
+        object Cognito : NavRoutes("cognito")
         object SignUp : NavRoutes("signup")
         object Select : NavRoutes("select")
         object QRScanner : NavRoutes("qr_scanner")
@@ -94,15 +94,20 @@ fun AppNavigation() {
                     navController = navController,
                 )
             }
-
             composable(NavRoutes.Auth.Login.route) {
+                LoginScreen(
+                    navController = navController,
+                    onLoginClick = {
+                        navController.navigate(NavRoutes.Monitoring.Group.route)
+                    }
+                )
+            }
+            composable(NavRoutes.Auth.Cognito.route) {
                 StartUpScreen(
                     auth = auth,
                     navController = navController
                 )
             }
-
-
             composable(NavRoutes.Auth.SignUp.route) {
                 SignUpScreen(
                     navController = navController,
@@ -113,16 +118,18 @@ fun AppNavigation() {
                     }
                 )
             }
-
-            // 뷰어/마스터 선택 화면
             composable(NavRoutes.Auth.Select.route) {
                 SelectScreen(
                     navController = navController,
                     onQrScanClick = {
-                        navController.navigate(NavRoutes.Auth.QRScanner.route)
+                        navController.navigate(NavRoutes.Auth.QRScanner.route) {
+                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
+                        }
                     },
                     onCreateGroupClick = {
-                        navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER))
+                        navController.navigate(NavRoutes.Monitoring.Group.route) {
+                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
+                        }
                     }
                 )
             }
