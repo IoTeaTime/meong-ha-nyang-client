@@ -63,6 +63,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -99,6 +102,7 @@ dependencies {
     implementation("com.amazonaws:aws-android-sdk-auth-userpools:${awsVersion}@aar") { isTransitive = true }
     implementation("com.amazonaws:aws-android-sdk-auth-ui:${awsVersion}@aar") { isTransitive = true }
 
+    implementation (libs.androidx.lifecycle.runtime.ktx.v261)
     implementation("org.awaitility:awaitility:4.2.0")
     implementation("org.json:json:20190722")
     implementation("com.google.guava:guava:28.1-android")
@@ -113,8 +117,10 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
-
-
+    // ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.1.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.1.1")
+    implementation("androidx.media3:media3-ui:1.1.1")
 
 
     //Add OkHttp dependency
