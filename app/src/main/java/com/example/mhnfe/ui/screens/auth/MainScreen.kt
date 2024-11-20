@@ -1,16 +1,21 @@
 package com.example.mhnfe.ui.screens.auth
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 
@@ -20,6 +25,30 @@ fun MainScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
 ) {
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+    val savedId = sharedPreferences.getString("saved_id", null)
+    val savedPassword = sharedPreferences.getString("saved_password", null)
+
+    // 자동 로그인 로직
+    LaunchedEffect(Unit) {
+        if (!savedId.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
+            // 저장된 로그인 정보로 자동 로그인 시도
+            val authRepository = AuthRepository()
+            try {
+                val response = authRepository.login(savedId, savedPassword)
+                if (response.result.code == 200) {
+                    // 자동 로그인 성공 -> 다음 화면으로 이동
+                    navController.navigate(NavRoutes.Auth.Select.route) {
+                        popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainScreen", "자동 로그인 실패", e)
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -53,7 +82,9 @@ fun MainScreen(
             // Cam 회원 버튼
             MiddleButton(
                 text = "회원가입",
-                onClick = {},
+                onClick = {
+                    navController.navigate(NavRoutes.Auth.SignUp.route)
+                },
             )
             MiddleButton(
                 text = "Cam 참여",
