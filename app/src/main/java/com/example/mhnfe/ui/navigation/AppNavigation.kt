@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.amazonaws.mobile.client.AWSMobileClient
+import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.bottombar.BottomNavigationBar
@@ -24,6 +26,8 @@ import com.example.mhnfe.ui.screens.auth.MainScreen
 import com.example.mhnfe.ui.screens.auth.SelectScreen
 import com.example.mhnfe.ui.screens.auth.SignUpScreen
 import com.example.mhnfe.ui.screens.auth.StartUpScreen
+import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
+import com.example.mhnfe.ui.screens.master.WebRtcScreen
 import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
 import com.example.mhnfe.ui.screens.monitoring.GroupScreen
 import com.example.mhnfe.ui.screens.mypage.PasswordEditScreen
@@ -201,18 +205,54 @@ fun MainContent(
                 startDestination = NavRoutes.Monitoring.Group.route,
                 route = NavRoutes.Monitoring.route
             ) {
-                composable(NavRoutes.Monitoring.Group.route) {
-                    SignalingChannelTest(navController = bottomNavController)
+                composable(NavRoutes.Monitoring.Group.route) {entry ->
+                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
+                    SignalingChannelTest(
+                        navController = bottomNavController,
+                        kvsViewModel = kvsViewModel,
+                    )
 //                    GroupScreen(
 //                        userType = userType,
 //                        navController = bottomNavController  // bottomNavController 전달
 //                    )
                 }
-                composable(NavRoutes.Monitoring.Master.route){
-                 //cctv화면
+                composable(NavRoutes.Monitoring.Master.route) {
+                    val parentEntry = remember(bottomNavController) {
+                        bottomNavController.getBackStackEntry(NavRoutes.Monitoring.Group.route)
+                    }
+                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel(
+                        viewModelStoreOwner = parentEntry
+                    )
+
+                    val channelName = parentEntry.savedStateHandle.get<String>("channelName") ?: "demo-channel"
+                    val role = ChannelRole.MASTER  // Master route이므로 MASTER로 고정
+
+                    WebRtcScreen(
+                        navController = bottomNavController,
+                        viewModel = kvsSignalingViewModel,
+                        channelName = channelName,
+                        role = role
+                    )
                 }
-                composable(NavRoutes.Monitoring.Viewer.route){
-                    //뷰어 화면
+
+                composable(NavRoutes.Monitoring.Viewer.route) {
+                    val parentEntry = remember(bottomNavController) {
+                        bottomNavController.getBackStackEntry(NavRoutes.Monitoring.Group.route)
+                    }
+                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel(
+                        viewModelStoreOwner = parentEntry
+                    )
+
+
+                    val channelName = parentEntry.savedStateHandle.get<String>("channelName") ?: "demo-channel"
+                    val role = ChannelRole.VIEWER  // Master route이므로 MASTER로 고정
+
+                    WebRtcScreen(
+                        navController = bottomNavController,
+                        viewModel = kvsSignalingViewModel,
+                        channelName = channelName,
+                        role = role
+                    )
                 }
                 composable(
                     route = NavRoutes.Monitoring.DeviceInformation.route,
@@ -276,5 +316,4 @@ fun MainContent(
         }
     }
 }
-
 
