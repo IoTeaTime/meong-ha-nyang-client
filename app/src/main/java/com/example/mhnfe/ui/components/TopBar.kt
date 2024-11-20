@@ -77,7 +77,7 @@ fun SubTopBar(
                     modifier = modifier.size(9.dp, 15.dp),
                     painter = painterResource(id = R.drawable.navigate_before),
                     contentDescription = null,
-                    tint = Color.Unspecified
+                    tint = Color.Unspecified,
                 )
             }
             Text(
