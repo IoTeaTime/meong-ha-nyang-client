@@ -1,7 +1,6 @@
 package com.example.mhnfe.ui.screens.auth
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -25,26 +23,14 @@ import androidx.navigation.NavController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.amazonaws.mobile.client.AWSMobileClient
-import com.amazonaws.mobile.client.results.SignInState
-import com.amazonaws.services.cognitoidentityprovider.model.NotAuthorizedException
-import com.amazonaws.services.cognitoidentityprovider.model.UserNotConfirmedException
-import com.amazonaws.services.cognitoidentityprovider.model.UserNotFoundException
 import com.example.mhnfe.R
-import com.example.mhnfe.data.model.ApiResponse
 import com.example.mhnfe.data.repository.AuthRepository
-import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
-import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
-import com.example.mhnfe.ui.theme.mainGray3
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun LoginScreen(
@@ -67,8 +53,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     // Cognito 로그인
-//    val cognitoUsername = "dlawlstn1616@naver.com"
-//    val cognitoPassword = "qqqq11"
+//    val cognitoUsername = ""
+//    val cognitoPassword = ""
 
     // Create an instance of the Repository for calling the login API
     val authRepository = AuthRepository()
