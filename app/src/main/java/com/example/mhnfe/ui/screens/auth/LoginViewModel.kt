@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.model.ApiResponse
+import com.example.mhnfe.data.model.LoginResponse
 import com.example.mhnfe.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,8 +13,8 @@ import kotlinx.coroutines.launch
 class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
     // 로그인 결과 상태
-    private val _loginResponse = MutableStateFlow<ApiResponse?>(null)
-    val loginResponse: StateFlow<ApiResponse?> = _loginResponse
+    private val _loginResponse = MutableStateFlow<LoginResponse?>(null)
+    val loginResponse: StateFlow<LoginResponse?> = _loginResponse
 
     // 에러 메시지 상태
     private val _errorMessage = MutableStateFlow<String?>(null)

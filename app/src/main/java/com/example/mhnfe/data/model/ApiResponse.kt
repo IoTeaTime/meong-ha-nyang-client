@@ -18,4 +18,13 @@ data class User(
     val nickname: String
 )
 
+data class LoginResponse(
+    val result: Result,
+    val body: Jwt
+)
 
+data class Jwt(
+    val memberId: Int,
+    val accessToken: String,
+    val refreshToken: String
+)
