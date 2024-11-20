@@ -56,12 +56,8 @@ fun LoginScreen(
     val loginResponse by loginViewModel.loginResponse.collectAsState()
     val errorMessage by loginViewModel.errorMessage.collectAsState()
 
-    val loginError by remember(errorMessage) {
-        derivedStateOf { errorMessage?.contains("아이디") == true }
-    }
-    val passwordError by remember(errorMessage) {
-        derivedStateOf { errorMessage?.contains("비밀번호") == true }
-    }
+    var loginError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     var isAutoLogin by remember { mutableStateOf(false) }
@@ -128,8 +124,8 @@ fun LoginScreen(
                         inputText = id,
                         onInputTextChange = { id = it },
                         isError = loginError,
-                        onIsErrorChange = {},
-                        warningText = "회원 정보를 찾을 수 없습니다. 다시 확인해주세요.",
+                        onIsErrorChange = {loginError = it},
+                        warningText = errorMessage ?: "",
                         hintText = "아이디"
                     )
 
@@ -138,8 +134,8 @@ fun LoginScreen(
                         inputText = password,
                         onInputTextChange = { password = it },
                         isError = passwordError,
-                        onIsErrorChange = {},
-                        warningText = "비밀번호가 일치하지 않습니다. 다시 입력해주세요.",
+                        onIsErrorChange = {passwordError = it},
+                        warningText = errorMessage ?: "",
                         hintText = "비밀번호",
                         visualTransformation = PasswordVisualTransformation()
                     )

@@ -35,23 +35,25 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 // 서버로 로그인 요청
                 val response = authRepository.login(email, password)
 
-                Log.d("LoginViewModel","response: " + response)
+                Log.d("LoginViewModel","response: " + response.result.message)
                 if (response.result.code == 200) {
                     // 성공적으로 로그인한 경우
                     _loginResponse.value = response
                     Log.d("LoginViewModel","_loginResponse.value: " + _loginResponse.value)
                     _errorMessage.value = null
                 } else {
+                    Log.d("LoginViewModel","response: " + response.result.message)
                     // 실패한 경우 사용자 친화적인 에러 메시지 생성
-                    val userFriendlyMessage = mapErrorMessage(
+                    _errorMessage.value = mapErrorMessage(
                         response.result.code,
                         response.result.message,
                         response.result.description
                     )
-                    _errorMessage.value = userFriendlyMessage
+                    Log.e("LoginViewModel","Error: " + _errorMessage.value)
                 }
             } catch (e: Exception) {
                 // 네트워크 오류 등 예외 처리
+                Log.e("LoginViewModel", "Login error", e)
                 _errorMessage.value = "로그인 중 오류가 발생했습니다. ${e.message}"
             }
         }
