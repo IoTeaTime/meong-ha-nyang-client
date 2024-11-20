@@ -35,9 +35,10 @@ import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.QRScanningScreen
 import com.example.mhnfe.ui.screens.report.ReportDetailScreen
+import com.example.mhnfe.ui.screens.mypage.DeviceManagementScreen
+
 
 sealed class NavRoutes(val route: String) {
-
     object Auth : NavRoutes("auth") {
         object Main : NavRoutes("main")
         object Login : NavRoutes("login")
@@ -310,7 +311,9 @@ fun MainContent(
                     ) {}
                 }
                 composable(NavRoutes.MyPage.DeviceManagement.route) {
-                    // DeviceManagementScreen
+                    DeviceManagementScreen(
+                        navController = bottomNavController
+                    )
                 }
             }
         }
