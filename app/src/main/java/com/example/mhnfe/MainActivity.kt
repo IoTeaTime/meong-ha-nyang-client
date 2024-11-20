@@ -29,6 +29,8 @@ import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.PeerConnectionFactory
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
@@ -41,6 +43,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobile.client.Callback
@@ -50,6 +55,7 @@ import com.example.mhnfe.ui.navigation.AppNavigation
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
 import com.example.mhnfe.ui.screens.master.WebRTCUiState
+import com.example.mhnfe.ui.screens.master.WebRtcConfig
 import com.example.mhnfe.utils.PermissionManager
 import kotlinx.coroutines.launch
 import org.webrtc.RendererCommon
@@ -118,25 +124,52 @@ private fun initializeMobileClient(client: AWSMobileClient, context: ComponentAc
     }
 }
 
+//class WebRtcViewModelFactory(
+//    private val context: Context,
+//    private val notificationManager: NotificationManager,
+//    private val kvsSignalingViewModel: KVSSignalingViewModel
+//) : ViewModelProvider.Factory {
+//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+//        if (modelClass.isAssignableFrom(WebRtcViewModel::class.java)) {
+//            @Suppress("UNCHECKED_CAST")
+//            return WebRtcViewModel(kvsSignalingViewModel, context, notificationManager) as T
+//        }
+//        throw IllegalArgumentException("Unknown ViewModel class")
+//    }
+//}
+//private const val WEBRTC_VIEW_MODEL_KEY = "webrtc_view_model"
+
 
 @Composable
 fun SignalingChannelTest(
-    navController :NavController,
-    viewModel: KVSSignalingViewModel = KVSSignalingViewModel(),
+    navController: NavController,
+    kvsViewModel: KVSSignalingViewModel = viewModel(),
 ) {
-    var channelName by remember { mutableStateOf("demo-channel23") }
-    val scope = rememberCoroutineScope()
-    val webRTCState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    LaunchedEffect(webRTCState) {
-        when (webRTCState) {
+    LaunchedEffect(Unit) {
+        kvsViewModel.initialize(context)
+    }
+
+
+    var channelName by remember { mutableStateOf("demo-channel") }
+    val scope = rememberCoroutineScope()
+    val kvsState by kvsViewModel.uiState.collectAsState()
+    val webRtcConfig by kvsViewModel.webRtcConfig.collectAsState()
+
+    // 상태가 변경될 때마다 실행되는 효과
+    LaunchedEffect(kvsState) {
+        when (kvsState) {
             is WebRTCUiState.Success -> {
-                // 채널 생성/접속 성공
-                val role = (webRTCState as WebRTCUiState.Success).role
-                // 역할에 따라 적절한 화면으로 이동
-                when (role) {
-                    ChannelRole.MASTER -> navController.navigate(NavRoutes.Monitoring.Master.route)
-                    ChannelRole.VIEWER -> navController.navigate(NavRoutes.Monitoring.Viewer.route)
+                val successState = kvsState as WebRTCUiState.Success
+
+                when (successState.role) {
+                    ChannelRole.MASTER -> {
+                        navController.navigate(NavRoutes.Monitoring.Master.route)
+                    }
+                    ChannelRole.VIEWER -> {
+                        navController.navigate(NavRoutes.Monitoring.Viewer.route)
+                    }
                 }
             }
             else -> {}
@@ -153,55 +186,47 @@ fun SignalingChannelTest(
         OutlinedTextField(
             value = channelName,
             onValueChange = { channelName = it },
-            label = { Text("Channel Name") },
+            label = { Text("채널 이름") },
             modifier = Modifier.fillMaxWidth()
         )
-        Button(
-            onClick = {
-                scope.launch {
-                    viewModel.updateSignalingChannelInfo(
-                        channelName = channelName,
-                        role = ChannelRole.MASTER,
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("채널 생성")
-        }
 
         // Master 버튼
         Button(
             onClick = {
-
+                navController.currentBackStackEntry?.savedStateHandle?.set("channelName", channelName)
+                navController.currentBackStackEntry?.savedStateHandle?.set("role", ChannelRole.MASTER)
+                navController.navigate(NavRoutes.Monitoring.Master.route)
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Create Channel as Master")
+            Text("마스터로 입장")
         }
 
         // Viewer 버튼
         Button(
             onClick = {
-
+                navController.currentBackStackEntry?.savedStateHandle?.set("channelName", channelName)
+                navController.currentBackStackEntry?.savedStateHandle?.set("role", ChannelRole.VIEWER)
+                navController.navigate(NavRoutes.Monitoring.Viewer.route)
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Join Channel as Viewer")
+            Text("시청자로 입장")
         }
+
         // 현재 상태 표시
-        when (webRTCState) {
+        when (kvsState) {
             WebRTCUiState.Loading -> {
                 CircularProgressIndicator()
             }
             is WebRTCUiState.Error -> {
                 Text(
-                    text = (webRTCState as WebRTCUiState.Error).message,
+                    text = (kvsState as WebRTCUiState.Error).message,
+                    color = Color.Red
                 )
             }
             else -> {}
         }
-
     }
 }
 
