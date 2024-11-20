@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mhnfe.data.model.ApiResponse
+import retrofit2.HttpException
 
 @Composable
 fun SignUpScreen(
@@ -48,13 +49,42 @@ fun SignUpScreen(
     signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository()))
 ) {
 
+    suspend fun checkEmailStatus(email: String): Pair<Int, String> {
+//        Log.d("SignUpScreen", "checkEmailDuplicate 호출, email=$email")
+        val authRepository = AuthRepository()
+        return try {
+            // API call
+            val response = authRepository.checkEmailDuplicate(email)
+//            Log.d("SignUpScreen", "checkEmailDuplicate 응답1: $response")
+
+            // Response handling
+            when (response.result.code) {
+                200 -> Pair(200, "사용 가능한 이메일입니다.")
+                500 -> Pair(500, response.result.description ?: "중복된 이메일입니다.")
+                else -> Pair(response.result.code, response.result.description ?: "알 수 없는 상태")
+            }
+        } catch (e: HttpException) {
+            // HTTP exception handling
+            val statusCode = e.code()
+            val errorMessage = e.message ?: "알 수 없는 오류"
+            Log.e("SignUpScreen", "checkEmailStatus: HTTP 예외 발생 - 코드: $statusCode, 메시지: $errorMessage", e)
+
+            Pair(statusCode, "HTTP 오류 발생: $errorMessage")
+        }
+    }
+
+
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
     val errorMessage by signUpViewModel.errorMessage.collectAsState()
 
     val scope = rememberCoroutineScope()
     var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
 
+    var isEmailDuplicate by remember { mutableStateOf(false) }
+    var isEmailChecked by remember { mutableStateOf(false) }
+
     val focusManager = LocalFocusManager.current
+
     var currentStep by remember { mutableIntStateOf(0) }
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -78,10 +108,6 @@ fun SignUpScreen(
     var passwordErrorMessage by remember { mutableStateOf("") }
     var nicknameErrorMessage by remember { mutableStateOf("") }
 
-    // Validation functions
-    fun isEmailDuplicate(email: String): Boolean {
-        return email == "test@naver.com"  // 테스트용 중복 이메일
-    }
     fun isVerificationCodeValid(code: String): Boolean {
         return code != "111111"  // 111111이면 틀린 것으로 처리
     }
@@ -100,11 +126,6 @@ fun SignUpScreen(
                         isEmailError = true
                         false
                     }
-                    isEmailDuplicate(email) -> {
-                        emailErrorMessage = "이미 사용 중인 이메일입니다."
-                        isEmailError = true
-                        false
-                    }
                     else -> {
                         isEmailError = false
                         emailErrorMessage = ""
@@ -119,6 +140,7 @@ fun SignUpScreen(
                         isVerificationError = true
                         false
                     }
+
                     !isVerificationCodeValid(verificationCode) -> {
                         verificationErrorMessage = "인증번호가 올바르지 않습니다."
                         isVerificationError = true
@@ -329,40 +351,85 @@ fun SignUpScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                MiddleButton(
-                    text = if (currentStep == 3) "완료" else "다음",
-                    onClick = {
-                        if (validateCurrentStep()) {
-                            if (currentStep < 3) {
-                                currentStep++
-                            } else {
-                                // Call the Sign-Up API
-                                scope.launch {
+                if (currentStep == 0) {
+                    MiddleButton(
+                        text = "확인",
+                        onClick = {
+                            scope.launch {
+                                if (validateCurrentStep()) {
                                     try {
+                                        // Email duplicate check API call
+                                        val (code, description) = checkEmailStatus(email)
 
-                                        // Log before calling the Sign-Up API
-                                        //Log.d("SignUpScreen", "회원가입 데이터: email=$email, password=$password, passwordConfirm=$confirmPassword, nickname=$nickname")
-
-                                        apiResponse = authRepository.signUp(
-                                            email = email,
-                                            password = password,
-                                            passwordConfirm = confirmPassword,
-                                            nickname = nickname
-                                        )
-                                        if (apiResponse?.result?.code == 201) {
-//                                            Log.d("SignUpScreen", "회원가입 성공: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
-                                            onLoginClick()
-                                        } else {
-                                            Log.e("SignUpScreen", "회원가입 실패: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                        when (code) {
+                                            200 -> {
+                                                emailErrorMessage = ""
+                                                isEmailError = false
+                                                currentStep++
+                                                Log.d("SignUpScreen", "이메일 중복 확인: $description")
+                                            }
+                                            500 -> {
+                                                emailErrorMessage = "이미 사용 중인 이메일입니다."
+                                                isEmailError = true
+                                                Log.e("SignUpScreen", "이메일 중복 확인 : $description")
+                                            }
+                                            else -> {
+                                                emailErrorMessage = "오류 발생: $description"
+                                                isEmailError = true
+                                                Log.e("SignUpScreen", "예상치 못한 오류: code=$code, description=$description")
+                                            }
                                         }
                                     } catch (e: Exception) {
-                                        Log.e("SignUpScreen", "회원가입 중 오류 발생: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                        Log.e("SignUpScreen", "API 호출 중 오류 발생: ${e.message}")
+                                        emailErrorMessage = "이메일 확인 중 문제가 발생했습니다."
+                                        isEmailError = true
                                     }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                } else {
+                    MiddleButton(
+                        text = if (currentStep == 3) "완료" else "다음",
+                        onClick = {
+                            if (validateCurrentStep()) {
+                                if (currentStep < 3) {
+                                    currentStep++
+                                } else {
+                                    // Call the Sign-Up API
+                                    scope.launch {
+                                        try {
+
+                                            // Log before calling the Sign-Up API
+                                            //Log.d("SignUpScreen", "회원가입 데이터: email=$email, password=$password, passwordConfirm=$confirmPassword, nickname=$nickname")
+
+                                            apiResponse = authRepository.signUp(
+                                                email = email,
+                                                password = password,
+                                                passwordConfirm = confirmPassword,
+                                                nickname = nickname
+                                            )
+                                            if (apiResponse?.result?.code == 201) {
+//                                                Log.d("SignUpScreen", "회원가입 성공: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                                onLoginClick()
+                                            } else {
+                                                Log.e(
+                                                    "SignUpScreen",
+                                                    "회원가입 실패: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}"
+                                                )
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e(
+                                                "SignUpScreen",
+                                                "회원가입 중 오류 발생: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}"
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
                 // Call onLoginClick on successful sign-up
                 if (signUpResponse?.result?.code == 0) {
                     LaunchedEffect(Unit) {
