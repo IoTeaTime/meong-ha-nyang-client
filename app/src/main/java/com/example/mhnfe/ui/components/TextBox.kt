@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,7 +56,8 @@ fun MainTextBox(
     inputText: String = "",
     onInputTextChange: (String) -> Unit = {},
     hintText: String = "", // setting hint text
-    warningText: String = "" // setting warning text
+    warningText: String = "", // setting warning text
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     var isFocused by remember { mutableStateOf(false) } // focus state
     val backgroundColor = Color.White
@@ -98,6 +100,7 @@ fun MainTextBox(
                 }
             ),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+            visualTransformation = visualTransformation,
             // innerTextField settings
             decorationBox = { innerTextField ->
                 Row(
