@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.screens.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -60,6 +61,7 @@ fun LoginScreen(
     val authRepository = AuthRepository()
 
     // SharedPreferences를 사용해 자동 로그인 상태와 사용자 정보를 저장
+    val context = LocalContext.current
     val sharedPreferences = LocalContext.current.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
     val editor = sharedPreferences.edit()
 
@@ -175,6 +177,14 @@ fun LoginScreen(
                 // 로그인 성공 시 화면 전환
                 LaunchedEffect(loginResponse) {
                     if (loginResponse?.result?.code == 200) {
+                        // JWT 토큰 저장
+                        val token = loginResponse?.body?.accessToken
+                        if (token != null) {
+                            editor.putString("jwt_token", token)
+                            editor.apply()
+                            Log.d("LoginScreen", "JWT 토큰 저장 완료: $token")
+                        }
+
                         navController.navigate(NavRoutes.Auth.Select.route) {
                             popUpTo(NavRoutes.Auth.route) { inclusive = true }
                         }

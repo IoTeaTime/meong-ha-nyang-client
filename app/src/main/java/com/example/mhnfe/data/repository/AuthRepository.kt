@@ -4,6 +4,7 @@ import com.example.mhnfe.data.api.ApiService
 import com.example.mhnfe.data.api.AuthApi
 import com.example.mhnfe.data.model.ApiResponse
 import com.example.mhnfe.data.model.LoginRequest
+import com.example.mhnfe.data.model.LoginResponse
 import com.example.mhnfe.data.model.SignUpRequest
 
 class AuthRepository {
@@ -26,7 +27,7 @@ class AuthRepository {
     suspend fun login(
         email: String,
         password: String
-    ): ApiResponse {
+    ): LoginResponse {
         val request = LoginRequest(email, password)
         return api.login(request)
     }
