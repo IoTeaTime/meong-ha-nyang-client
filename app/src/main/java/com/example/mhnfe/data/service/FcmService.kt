@@ -1,5 +1,7 @@
 package com.example.mhnfe.data.service
 
+import android.content.Context
+import android.util.Log
 import com.example.mhnfe.data.model.request.RequestFcmToken
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -19,13 +21,22 @@ class FcmService {
     /**
      * 기기마다 발급되는 FCM 토큰을 서버로 보내 계정과 연결하는 메서드입니다.
      */
-    suspend fun saveFcmToken(requestBody: RequestFcmToken) {
+    suspend fun saveFcmToken(jwtToken: String?, requestBody: RequestFcmToken) {
+        // JWT 토큰이 null이면 로그를 남기고 작업을 종료
+        if (jwtToken.isNullOrEmpty()) {
+            Log.e("FcmService", "JWT 토큰이 없습니다.")
+            return
+        }
+
         val gson = Gson()
         val json = gson.toJson(requestBody)
 
+        // 요청 데이터를 로그로 출력
+        Log.d("FcmService", "RequestBody JSON: $json")
+
         val request = Request.Builder()
             .url(url)
-            .addHeader("Authorization", "") // TODO. 로그인 성공 후 Authorization Token 연결 필요
+            .addHeader("Authorization", jwtToken) // TODO. 로그인 성공 후 Authorization Token 연결 필요
             .post(json.toRequestBody(MEDIA_TYPE_JSON))
             .build()
 
