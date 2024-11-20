@@ -163,17 +163,6 @@ fun SignalingChannelTest(
             is WebRTCUiState.Success -> {
                 val successState = kvsState as WebRTCUiState.Success
 
-                val newConfig = WebRtcConfig(
-                    channelName = channelName,
-                    channelArn = successState.channelArn,
-                    webrtcEndpoint = successState.endpointList.find { it.protocol == "HTTPS" }?.resourceEndpoint ?: "",
-                    mWssEndpoint = successState.endpointList.find { it.protocol == "WSS" }?.resourceEndpoint ?: "",
-                    isMaster = successState.role == ChannelRole.MASTER,
-                    isFrontCamera = true,
-                    isAudioEnabled = true
-                )
-
-
                 when (successState.role) {
                     ChannelRole.MASTER -> {
                         navController.navigate(NavRoutes.Monitoring.Master.route)

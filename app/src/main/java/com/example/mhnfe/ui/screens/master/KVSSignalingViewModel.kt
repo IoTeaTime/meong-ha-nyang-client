@@ -7,6 +7,7 @@ import android.media.AudioManager
 import android.util.Base64
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -41,6 +42,7 @@ import com.example.mhnfe.webrtc.KinesisVideoPeerConnection
 import com.example.mhnfe.webrtc.KinesisVideoSdpObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -171,7 +173,7 @@ class KVSSignalingViewModel : ViewModel() {
 
     //webRTC관련 변수
     private val clientId = UUID.randomUUID().toString()
-    private val printStatsExecutor = Executors.newSingleThreadScheduledExecutor()
+    private var printStatsExecutor = Executors.newSingleThreadScheduledExecutor()
     private val peerConnectionFoundMap = mutableMapOf<String, PeerConnection>()
     private val pendingIceCandidatesMap = mutableMapOf<String, Queue<IceCandidate>>()
 
@@ -802,27 +804,36 @@ class KVSSignalingViewModel : ViewModel() {
 
     fun initializeSurfaceViews(context: Context, eglBaseContext: EglBase.Context, role: ChannelRole) {
         viewModelScope.launch(Dispatchers.Main) {
-            val localRenderer = SurfaceViewRenderer(context).apply {
-                init(eglBaseContext, null)
-                setEnableHardwareScaler(true)
-                setMirror(true)
+            try {
+                // 기존 view가 있다면 정리
+                _localView.value?.release()
+                _remoteView.value?.release()
+
+                val localRenderer = SurfaceViewRenderer(context).apply {
+                    init(eglBaseContext, null)
+                    setEnableHardwareScaler(true)
+                    setMirror(true)
+                }
+
+                val remoteRenderer = SurfaceViewRenderer(context).apply {
+                    init(eglBaseContext, null)
+                    setEnableHardwareScaler(true)
+                    setMirror(false)
+                }
+
+                _localView.value = localRenderer
+                _remoteView.value = remoteRenderer
+                _isViewsInitialized.value = true
+
+                // 로컬 트랙이 있으면 렌더러에 연결
+                localVideoTrack?.addSink(localRenderer)
+
+                Log.d(TAG, "initWsConnection ${role.name}")
+                initWsConnection(role.name)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize surface views", e)
+                _isViewsInitialized.value = false
             }
-            _localView.value = localRenderer
-
-            val remoteRenderer = SurfaceViewRenderer(context).apply {
-                init(eglBaseContext, null)
-                setEnableHardwareScaler(true)
-                setMirror(false)
-            }
-            _remoteView.value = remoteRenderer
-
-            _isViewsInitialized.value = true
-
-            // 로컬 트랙이 있으면 렌더러에 연결
-            localVideoTrack?.addSink(localRenderer)
-
-            Log.d(TAG,"initWsConnection"+role.name);
-            initWsConnection(role.name)
         }
     }
 
@@ -1143,35 +1154,30 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
     private fun addRemoteStreamToVideoView(stream: MediaStream) {
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                val remoteVideoTrack = stream.videoTracks.firstOrNull()
+                val remoteAudioTrack = stream.audioTracks.firstOrNull()
 
-        val remoteVideoTrack =
-            if (stream.videoTracks != null && !stream.videoTracks.isEmpty()) stream.videoTracks[0] else null
-
-        val remoteAudioTrack =
-            if (stream.audioTracks != null && !stream.audioTracks.isEmpty()) stream.audioTracks[0] else null
-
-        if (remoteAudioTrack != null) {
-            remoteAudioTrack.setEnabled(true)
-            Log.d(
-                TAG,
-                "remoteAudioTrack received: State=" + remoteAudioTrack.state().name
-            )
-        }
-
-        if (remoteVideoTrack != null) {
-            GlobalScope.launch(Dispatchers.Main) {
-                try {
-                    Log.d(TAG, "remoteVideoTrackId=${remoteVideoTrack.id()} videoTrackState=${remoteVideoTrack.state()}")
-                    remoteVideoTrack?.addSink(remoteView.value)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error in setting remote video view", e)
+                remoteAudioTrack?.let { audioTrack ->
+                    audioTrack.setEnabled(true)
+                    Log.d(TAG, "remoteAudioTrack received: State=${audioTrack.state().name}")
                 }
+
+                remoteVideoTrack?.let { videoTrack ->
+                    Log.d(TAG, "remoteVideoTrackId=${videoTrack.id()} videoTrackState=${videoTrack.state()}")
+                    _remoteView.value?.let { renderer ->
+                        try {
+                            videoTrack.addSink(renderer)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error adding sink to remote video track", e)
+                        }
+                    } ?: Log.e(TAG, "Remote renderer is null")
+                } ?: Log.e(TAG, "Remote video track is null")
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in setting remote stream", e)
             }
-        } else {
-            Log.e(
-                TAG,
-                "Error in setting remote track"
-            )
         }
     }
 
@@ -1243,6 +1249,59 @@ class KVSSignalingViewModel : ViewModel() {
     fun onConnectionEventHandled() {
         _connectionEvent.value = null
     }
+
+
+    fun releasePeerConnection() {
+        viewModelScope.launch {
+            try {
+                printStatsExecutor.shutdownNow()
+                printStatsExecutor = Executors.newSingleThreadScheduledExecutor()  // 새로운 executor 생성
+
+                masterLocalPeer.forEach { (_, peer) ->
+                    peer.close()
+                    peer.dispose()
+                }
+                masterLocalPeer.clear()
+
+                localPeer?.close()
+                localPeer?.dispose()
+                localPeer = null
+
+                _remoteView.value?.let {
+                    it.clearImage()
+                    it.release()
+                }
+                _localView.value?.let {
+                    it.clearImage()
+                    it.release()
+                }
+
+                _remoteView.value = null
+                _localView.value = null
+
+            } catch (e: Exception) {
+                Log.e("KVSSignalingViewModel", "PeerConnection 정리 실패", e)
+            }
+        }
+    }
+    fun updateState(state: WebRTCUiState) {
+        _uiState.value = state
+    }
+
+
+    fun resetState() {
+        _uiState.value = WebRTCUiState.Initial
+        _localView.value = null
+        _remoteView.value = null
+    }
+
+
+
+
+
+
+
+
 
 
 

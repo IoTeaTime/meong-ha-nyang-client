@@ -1,29 +1,10 @@
-//import androidx.compose.foundation.layout.Box
-//import androidx.compose.foundation.layout.fillMaxSize
-//import androidx.compose.foundation.layout.height
-//import androidx.compose.foundation.layout.padding
-//import androidx.compose.foundation.layout.width
-//import androidx.compose.runtime.Composable
-//import androidx.compose.runtime.DisposableEffect
-//import androidx.compose.runtime.collectAsState
-//import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.compose.runtime.remember
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.platform.LocalConfiguration
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.viewinterop.AndroidView
-//import androidx.navigation.NavController
-//import com.amazonaws.services.kinesisvideo.model.ChannelRole
-//import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
-//import org.webrtc.SurfaceViewRenderer
-
 package com.example.mhnfe.ui.screens.master
 
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,9 +15,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,112 +35,241 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
+import com.example.mhnfe.R
+import com.example.mhnfe.ui.theme.mainBlack
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
-//
+import org.webrtc.Logging
+
+
 @Composable
 fun WebRtcScreen(
+    modifier: Modifier = Modifier,
     viewModel: KVSSignalingViewModel,
     navController: NavController,
     channelName: String,
     role: ChannelRole
 ) {
-
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
     val localView by viewModel.localView.collectAsState()
     val remoteView by viewModel.remoteView.collectAsState()
-
-
-    // EglBase를 컴포저블 레벨에서 생성
     val eglBase = remember { EglBase.create() }
-
     val connectionEvent by viewModel.connectionEvent.collectAsState()
+    val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.initialize(context)
+    // 초기화는 한 번만 실행되도록 key를 사용
+    LaunchedEffect(channelName) {
+        if (uiState !is WebRTCUiState.Success) {
+            try {
+                viewModel.initialize(context)
+                viewModel.updateSignalingChannelInfo(
+                    channelName = channelName,
+                    role = role,
+                    context = context,
+                    eglBase = eglBase.eglBaseContext
+                ).join()
 
-        viewModel.updateSignalingChannelInfo(
-            channelName = channelName,
-            role = role,
-            context = context,
-            eglBase = eglBase.eglBaseContext
-        ).join()
-
-        viewModel.initializeSurfaceViews(context, eglBase.eglBaseContext, role)
-        //viewModel.initWsConnection(true)
-
+                viewModel.initializeSurfaceViews(context, eglBase.eglBaseContext, role)
+            } catch (e: Exception) {
+                Log.e("WebRTCScreen", "초기화 실패", e)
+                Toast.makeText(context, "연결 초기화 실패", Toast.LENGTH_SHORT).show()
+                navController.navigateUp()
+            }
+        }
     }
-    // 연결 이벤트 처리
-    LaunchedEffect(connectionEvent) {
 
+
+    LaunchedEffect(connectionEvent) {
         when (connectionEvent) {
             ConnectionEvent.ConnectionFailed -> {
-                Toast.makeText(context, "Connection error to signaling", Toast.LENGTH_LONG).show()
-                navController.navigateUp()  // 화면 종료
+                Toast.makeText(context, "연결 실패", Toast.LENGTH_LONG).show()
+                navController.navigateUp()
+                viewModel.onConnectionEventHandled()
+            }
+            ConnectionEvent.ConnectionSuccess -> {
+                // 연결 성공 처리
                 viewModel.onConnectionEventHandled()
             }
             null -> {}
-            ConnectionEvent.ConnectionSuccess -> TODO()
-        }
-    }
-    val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
-
-    // SurfaceViewRenderer 초기화 및 정리
-    DisposableEffect(lifecycleOwner) {
-        Log.d("DisposableEffect", "Entered DisposableEffect block")
-        // role이 있을 때만 WebSocket 연결 시작
-        if (uiState is WebRTCUiState.Success) {
-            Log.d("DisposableEffect", "uiState is Success. ")
-
-            //viewModel.initializeSurfaceViews(context, (uiState as WebRTCUiState.Success).rootEglBase)
-            val isMaster = (uiState as WebRTCUiState.Success).role == ChannelRole.MASTER
-
-        }
-
-        onDispose {
-            localView?.release()
-            remoteView?.release()
-            eglBase.release()
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        // 상단에 비디오 화면 배치
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            if (isViewsInitialized) {
-                remoteView?.let { renderer ->
-                    AndroidView(
-                        factory = { renderer },
-                        modifier = Modifier.fillMaxSize().size(120.dp)
-                    )
+    // 리소스 정리 함수
+    val cleanup = {
+        try {
+            Logging.enableLogToDebugOutput(Logging.Severity.LS_NONE)
+            viewModel.releasePeerConnection()
+            viewModel.resetState()
+            localView?.let {
+                it.clearImage()
+                it.setMirror(false)
+                it.release()
+            }
+            remoteView?.let {
+                it.clearImage()
+                it.release()
+            }
+            viewModel.updateState(WebRTCUiState.Initial)
+            Log.d("WebRTCScreen", "cleanup 완료")
+        } catch (e: Exception) {
+            Log.e("WebRTCScreen", "리소스 정리 실패", e)
+        }
+    }
+
+    // 뒤로가기 처리
+    BackHandler {
+        Log.d("WebRTCScreen", "BackHandler 실행")
+
+        viewModel.viewModelScope.launch {
+            try {
+                viewModel.releasePeerConnection()
+                cleanup()
+
+                withContext(Dispatchers.Main) {
+                    navController.navigate("monitoring/group") {
+                        popUpTo(navController.graph.findStartDestination().id)
+                        launchSingleTop = true
+                    }
                 }
-
-                localView?.let { renderer ->
-                    AndroidView(
-                        factory = { renderer },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(120.dp)
-                            .padding(8.dp)
-                    )
+            } catch (e: Exception) {
+                Log.e("WebRTCScreen", "연결 해제 실패", e)
+                withContext(Dispatchers.Main) {
+                    navController.navigate("monitoring/group") {
+                        popUpTo(navController.graph.findStartDestination().id)
+                        launchSingleTop = true
+                    }
                 }
             }
         }
+    }
+//    DisposableEffect(Unit) {
+//        onDispose {
+//            viewModel.viewModelScope.launch {
+//                    viewModel.releasePeerConnection()
+//                    cleanup()
+//            }
+//        }
+//    }
+    Column(
+        modifier = modifier.fillMaxSize().background(color = mainBlack)
+    ) {
+        Row(
+            modifier = modifier
+                .background(color = Color.Transparent)
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = {
+                    viewModel.viewModelScope.launch {
+                        try {
+                            viewModel.releasePeerConnection()
+                            cleanup()
 
-        // 하단에 상태 및 컨트롤 UI
+                            withContext(Dispatchers.Main) {
+                                navController.navigate("monitoring/group") {
+                                    popUpTo(navController.graph.findStartDestination().id)
+                                    launchSingleTop = true
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("WebRTCScreen", "연결 해제 실패", e)
+                            withContext(Dispatchers.Main) {
+                                navController.navigate("monitoring/group") {
+                                    popUpTo(navController.graph.findStartDestination().id)
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+                    }
+                }
+            ) {
+                Text("카메라 끄기")
+            }
+            IconButton(
+                modifier = modifier
+                    .size(50.dp),
+                onClick = {}
+            ) {
+                Icon(
+                    modifier = modifier.size(41.dp),
+                    painter = painterResource(id = R.drawable.switch_camera),
+                    contentDescription = null,
+                    tint = Color.Unspecified
+                )
+            }
+        }
+        if (role == ChannelRole.MASTER) {
+            Box(
+                modifier = modifier
+                    .weight(1f)
+                    .fillMaxSize()
+            ) {
+                if (isViewsInitialized) {
+                    localView?.let { renderer ->
+                        AndroidView(
+                            factory = {
+                                renderer.apply {
+                                    (parent as? android.view.ViewGroup)?.removeView(this)
+                                }
+                            },
+                            modifier = modifier.fillMaxSize()
+                        )
+
+                    }
+                }
+            }
+        } else {
+            // Viewer
+            Box(
+                modifier = modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                if (isViewsInitialized) {
+                    remoteView?.let { renderer ->
+                        AndroidView(
+                            factory = {
+                                renderer.apply {
+                                    (parent as? android.view.ViewGroup)?.removeView(this)
+                                }
+                            },
+                            modifier = modifier.fillMaxSize()
+                        )
+                    }
+//                    localView?.let { renderer ->
+//                        AndroidView(
+//                            factory = {
+//                                renderer.apply {
+//                                    (parent as? android.view.ViewGroup)?.removeView(this)
+//                                }
+//                            },
+//                            modifier = Modifier
+//                                .align(Alignment.TopEnd)
+//                                .size(120.dp)
+//                                .padding(8.dp)
+//                        )
+//                    }
+                }
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -206,69 +322,3 @@ fun WebRtcScreen(
         }
     }
 }
-
-//@Composable
-//fun WebRtcScreen(
-//    viewModel: KVSSignalingViewModel,
-//    navController: NavController,
-//    channelName: String,
-//    role: ChannelRole,
-//) {
-//    val remoteVideoTrack by viewModel.remoteVideoTrack.collectAsState()
-//    val localVideoTrack by viewModel.localVideoTrack.collectAsState()
-//
-//
-//    // 로컬 뷰와 리모트 뷰 레퍼런스 기억
-//    val localViewRef = remember { mutableStateOf<SurfaceViewRenderer?>(null) }
-//    val remoteViewRef = remember { mutableStateOf<SurfaceViewRenderer?>(null) }
-//
-//    // 화면 회전 감지를 위한 Configuration
-//    val configuration = LocalConfiguration.current
-//
-//    Box(modifier = Modifier.fillMaxSize()) {
-//        // Remote Video (큰 화면)
-//        AndroidView(
-//            factory = { context ->
-//                SurfaceViewRenderer(context).apply {
-//                    init(eglBaseContext, null)
-//                    setEnableHardwareScaler(true)
-//                    remoteViewRef.value = this
-//                }
-//            },
-//            modifier = Modifier.fillMaxSize(),
-//            update = { view ->
-//                // 새로운 remote track이 들어오면 sink 업데이트
-//                remoteVideoTrack?.addSink(view)
-//            }
-//        )
-//
-//        // Local Video (PIP)
-//        AndroidView(
-//            factory = { context ->
-//                SurfaceViewRenderer(context).apply {
-//                    init(eglBaseContext, null)
-//                    setEnableHardwareScaler(true)
-//                    setMirror(true)
-//                    localViewRef.value = this
-//                }
-//            },
-//            modifier = Modifier
-//                .width(configuration.screenWidthDp.dp * 0.25f)
-//                .height(configuration.screenHeightDp.dp * 0.25f)
-//                .align(Alignment.TopEnd)
-//                .padding(8.dp),
-//            update = { view ->
-//                // 새로운 local track이 들어오면 sink 업데이트
-//                localVideoTrack?.addSink(view)
-//            }
-//        )
-//    }
-//
-//    // Cleanup
-//    DisposableEffect(Unit) {
-//        onDispose {
-//            localViewRef.value?.release()
-//            remoteViewRef.value?.release()
-//        }
-//    }
-//}
