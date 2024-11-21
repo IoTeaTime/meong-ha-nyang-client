@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version libs.versions.kotlin
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -16,6 +17,11 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "AWS_ACCESS_KEY", properties["AWS_ACCESS_KEY"].toString())
+        buildConfigField("String", "AWS_PRIVATE_KEY", properties["AWS_PRIVATE_KEY"].toString())
+        buildConfigField("String", "AWS_REGION", properties["AWS_REGION"].toString())
+        buildConfigField("String", "MQTT_END_POINT", properties["MQTT_END_POINT"].toString())
+        buildConfigField("String", "AWS_KEYSTORE_PW", properties["AWS_KEYSTORE_PW"].toString())
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -39,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -156,4 +163,8 @@ dependencies {
     implementation("androidx.work:work-multiprocess:$work_version")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    
+    implementation("com.amazonaws:aws-android-sdk-iot:2.77.0")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:2.77.0")
 }
