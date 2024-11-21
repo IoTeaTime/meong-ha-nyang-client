@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.model.ApiResponse
 import com.example.mhnfe.data.model.LoginResponse
 import com.example.mhnfe.data.repository.AuthRepository
+import com.example.mhnfe.utils.TokenManager
 import com.google.android.gms.common.api.Api
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,10 +41,19 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 // 서버로 로그인 요청
                 val response = authRepository.login(email, password)
 
-                val token = response.body.accessToken
-                editor.putString("jwt_token", token)
+                val accessToken = response.body.accessToken
+                val refreshToken = response.body.refreshToken
+                val accessTokenExpiration = System.currentTimeMillis() + (2 * 60 * 60 * 1000)
+                val refreshTokenExpiration =
+                    System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000)
+
+                // JWT 엑세스, 리프레시 토큰, expiration time 저장
+                editor.putString("accessToken", accessToken)
+                editor.putString("refreshToken", refreshToken)
+                editor.putLong("accessTokenExpiration", accessTokenExpiration)
+                editor.putLong("refreshTokenExpiration", refreshTokenExpiration)
                 editor.commit()
-                Log.d("LoginViewModel", "JWT 토큰 저장 완료: $token")
+                Log.d("LoginViewModel", "JWT 엑세스, 리프레시 토큰 저장 완료: $accessToken")
 
                 Log.d("LoginViewModel","response: " + response.result.message)
                 if (response.result.code == 200) {
