@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version libs.versions.kotlin
 }
@@ -16,6 +17,11 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "AWS_ACCESS_KEY", properties["AWS_ACCESS_KEY"].toString())
+        buildConfigField("String", "AWS_PRIVATE_KEY", properties["AWS_PRIVATE_KEY"].toString())
+        buildConfigField("String", "AWS_REGION", properties["AWS_REGION"].toString())
+        buildConfigField("String", "MQTT_END_POINT", properties["MQTT_END_POINT"].toString())
+        buildConfigField("String", "AWS_KEYSTORE_PW", properties["AWS_KEYSTORE_PW"].toString())
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -65,9 +71,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.foundation)
-    implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.media3.ui)
-    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -104,7 +107,6 @@ dependencies {
     implementation("com.amazonaws:aws-android-sdk-auth-userpools:${awsVersion}@aar") { isTransitive = true }
     implementation("com.amazonaws:aws-android-sdk-auth-ui:${awsVersion}@aar") { isTransitive = true }
 
-    implementation (libs.androidx.lifecycle.runtime.ktx.v261)
     implementation("org.awaitility:awaitility:4.2.0")
     implementation("org.json:json:20190722")
     implementation("com.google.guava:guava:28.1-android")
@@ -130,6 +132,10 @@ dependencies {
 
     //Add Awaitility dependency
     implementation("org.awaitility:awaitility:4.2.0")
+
+    implementation("com.amazonaws:aws-android-sdk-iot:2.77.0")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:2.77.0")
 
     // FCM
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
