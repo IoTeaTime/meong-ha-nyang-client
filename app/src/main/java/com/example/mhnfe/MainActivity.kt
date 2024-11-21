@@ -21,13 +21,13 @@ import androidx.compose.ui.unit.dp
 import com.example.mhnfe.ui.theme.MhnFETheme
 import android.content.ContentValues.TAG
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -41,6 +41,9 @@ import com.example.mhnfe.ui.screens.master.WebRTCUiState
 import com.example.mhnfe.utils.PermissionManager
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.CountDownLatch
 
 class MainActivity : ComponentActivity() {
@@ -53,6 +56,12 @@ class MainActivity : ComponentActivity() {
 
         val auth = AWSMobileClient.getInstance()
         initializeMobileClient(auth, this@MainActivity)
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                AWSMobileClient.getInstance().signIn("peach3139@naver.com", "qqqq11", null)
+            }
+        }
+
         //로그아웃
 //        AWSMobileClient.getInstance().signOut()
         //권한 요청

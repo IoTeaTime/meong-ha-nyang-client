@@ -55,7 +55,12 @@ sealed class NavRoutes(val route: String) {
     object Monitoring : NavRoutes("monitoring") {
         object Group : NavRoutes("monitoring/group")
         object Master : NavRoutes("monitoring/master")
-        object Viewer : NavRoutes("monitoring/viewer")
+//        object Viewer : NavRoutes("monitoring/viewer")
+        object Viewer {
+            const val route = "monitoring/viewer/{channelName}"
+
+            fun createRoute(channelName: String) = "monitoring/viewer/$channelName"
+        }
 
         object DeviceInformation : NavRoutes("device_information/{cctvId}") {
             fun createRoute(cctvId: String) = "device_information/$cctvId"
@@ -121,16 +126,6 @@ fun AppNavigation() {
             composable(NavRoutes.Auth.Select.route) {
                 SelectScreen(
                     navController = navController,
-                    onQrScanClick = {
-                        navController.navigate(NavRoutes.Auth.QRScanner.route) {
-                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
-                        }
-                    },
-                    onCreateGroupClick = {
-                        navController.navigate(NavRoutes.Monitoring.Group.route) {
-                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
-                        }
-                    }
                 )
             }
             composable(NavRoutes.Auth.QRScanner.route) {
@@ -206,20 +201,21 @@ fun MainContent(
                 startDestination = NavRoutes.Monitoring.Group.route,
                 route = NavRoutes.Monitoring.route
             ) {
-                composable(NavRoutes.Monitoring.Group.route) {entry ->
-                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
-                    SignalingChannelTest(
-                        navController = bottomNavController,
-                        kvsViewModel = kvsViewModel,
-                    )
-//                    GroupScreen(
-//                        userType = userType,
-//                        navController = bottomNavController  // bottomNavController 전달
+                composable(NavRoutes.Monitoring.Group.route) {
+//                    entry ->
+//                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
+//                    SignalingChannelTest(
+//                        navController = bottomNavController,
+//                        kvsViewModel = kvsViewModel,
 //                    )
+                    GroupScreen(
+                        userType = userType,
+                        navController = bottomNavController  // bottomNavController 전달
+                    )
                 }
                 composable(NavRoutes.Monitoring.Master.route) {
                     val parentEntry = remember(bottomNavController) {
-                        bottomNavController.getBackStackEntry(NavRoutes.Monitoring.Group.route)
+                        bottomNavController.getBackStackEntry(NavRoutes.Report.ReportDetail.route)
                     }
                     val kvsSignalingViewModel: KVSSignalingViewModel = viewModel(
                         viewModelStoreOwner = parentEntry
@@ -235,26 +231,47 @@ fun MainContent(
                         role = role
                     )
                 }
-
-                composable(NavRoutes.Monitoring.Viewer.route) {
-                    val parentEntry = remember(bottomNavController) {
-                        bottomNavController.getBackStackEntry(NavRoutes.Monitoring.Group.route)
-                    }
-                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel(
-                        viewModelStoreOwner = parentEntry
+                composable(
+                    route = NavRoutes.Monitoring.Viewer.route,
+                    arguments = listOf(
+                        navArgument("channelName") { type = NavType.StringType }
                     )
-
-
-                    val channelName = parentEntry.savedStateHandle.get<String>("channelName") ?: "demo-channel"
-                    val role = ChannelRole.VIEWER  // Master route이므로 MASTER로 고정
+                ) { backStackEntry ->
+                    val channelName = backStackEntry.arguments?.getString("channelName") ?: "demo-channel"
+                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel()
 
                     WebRtcScreen(
                         navController = bottomNavController,
                         viewModel = kvsSignalingViewModel,
                         channelName = channelName,
-                        role = role
+                        role = ChannelRole.VIEWER
                     )
                 }
+                //전 코드 확실해지면 나중에 지울게요
+//                composable(NavRoutes.Monitoring.Viewer.route) {
+////                    val parentEntry = remember(bottomNavController) {
+////                        bottomNavController.getBackStackEntry(NavRoutes.Report.ReportDetail.route)
+////                    }
+////                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel(
+////                        viewModelStoreOwner = parentEntry
+////                    )
+////
+////
+////                    val channelName = parentEntry.savedStateHandle.get<String>("channelName") ?: "demo-channel"
+////                    val role = ChannelRole.VIEWER  // Master route이므로 MASTER로 고정
+//                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel()
+//
+//                    // channelName을 현재 route의 arguments에서 가져오도록 수정
+//                    val channelName = it.arguments?.getString("channelName") ?: "demo-channel"
+//                    val role = ChannelRole.VIEWER
+//
+//                    WebRtcScreen(
+//                        navController = bottomNavController,
+//                        viewModel = kvsSignalingViewModel,
+//                        channelName = channelName,
+//                        role = role
+//                    )
+//                }
                 composable(
                     route = NavRoutes.Monitoring.DeviceInformation.route,
                     arguments = listOf(
@@ -290,7 +307,13 @@ fun MainContent(
                 route = NavRoutes.Report.route
             ) {
                 composable(NavRoutes.Report.ReportDetail.route) {
-                    ReportDetailScreen(navController = bottomNavController)
+                    entry ->
+                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
+                    SignalingChannelTest(
+                        navController = bottomNavController,
+                        kvsViewModel = kvsViewModel,
+                    )
+//                    ReportDetailScreen(navController = bottomNavController)
                 }
                 //추후에 화면이 추가 될 수 있기 때문에 이렇게 따로 빼서 구현 추후 화면 추가가 없을 시 삭제
             }

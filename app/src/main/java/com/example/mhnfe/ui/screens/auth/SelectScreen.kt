@@ -24,39 +24,17 @@ import com.example.mhnfe.ui.theme.mainYellow
 import com.example.mhnfe.ui.theme.mainGray
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MainTopBar
+import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.theme.Typography
 
-// 그룹 생성용 버튼 컴포넌트
-@Composable
-fun GroupCreateButton(
-    onClick: () -> Unit
-) {
-    Button(
-        modifier = Modifier
-            .wrapContentSize(),
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(vertical = 15.dp, horizontal = 140.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = mainGray
-        ),
-        onClick = onClick,
-    ) {
-        Text(
-            text = "그룹 생성",
-        )
-    }
-}
 
 @Composable
 fun SelectScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    onQrScanClick: () -> Unit,
-    onCreateGroupClick: () -> Unit
 ) {
-    val focusManager = LocalFocusManager.current
-    val interactionSource = remember { MutableInteractionSource() }
-
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -67,16 +45,9 @@ fun SelectScreen(
     ) { paddingValues ->
         Column(
             modifier = modifier
-                .background(color = Color.White)
                 .padding(paddingValues)
                 .fillMaxSize()
-                .padding(horizontal = 34.dp)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) {
-                    focusManager.clearFocus()
-                },
+                .padding(horizontal = 34.dp, vertical = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -84,7 +55,7 @@ fun SelectScreen(
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "로고",
-                modifier = Modifier
+                modifier = modifier
                     .padding(top = 80.dp)
                     .size(300.dp),
                 contentScale = ContentScale.Fit
@@ -92,22 +63,45 @@ fun SelectScreen(
 
             // 버튼들
             Column(
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxWidth()
-                    .padding(bottom = 48.dp),
+                    .wrapContentHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(30.dp)
+                verticalArrangement = Arrangement.spacedBy(30.dp, alignment = Alignment.CenterVertically)
             ) {
                 // QR 스캔 버튼
                 MiddleButton(
                     text = "참여 QR",
-                    onClick = onQrScanClick
-                )
+                    onClick =  {
+                        navController.navigate(NavRoutes.Auth.QRScanner.route) {
+                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
+                        }
+                    },
 
-                // 그룹 생성 버튼
-                GroupCreateButton(
-                    onClick = onCreateGroupClick
                 )
+                Button(
+                    modifier = modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(vertical = 15.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = mainGray
+                    ),
+                    onClick = {
+                        navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                            // Auth 플로우를 백스택에서 제거
+                            popUpTo(NavRoutes.Auth.route) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                ) {
+                    Text(
+                        style = Typography.labelLarge,
+                        text = "그룹 생성",
+                        color = Color.White)
+                }
             }
         }
     }
@@ -123,7 +117,5 @@ fun SelectScreen(
 fun SelectScreenPreview() {
     SelectScreen(
         navController = rememberNavController(),
-        onQrScanClick = {},
-        onCreateGroupClick = {}
     )
 }
