@@ -16,6 +16,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.data.repository.AuthRepository
+import com.example.mhnfe.data.repository.UserRepository
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 
@@ -35,6 +36,7 @@ fun MainScreen(
         if (!savedId.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
             // 저장된 로그인 정보로 자동 로그인 시도
             val authRepository = AuthRepository()
+            val userRepository = UserRepository()
             try {
                 val response = authRepository.login(savedId, savedPassword)
                 if (response.result.code == 200) {

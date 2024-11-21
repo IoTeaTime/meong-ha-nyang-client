@@ -1,5 +1,6 @@
 package com.example.mhnfe.data.model
 
+// 회원가입
 data class ApiResponse(
     val result: Result,
     val body: User
@@ -18,6 +19,7 @@ data class User(
     val nickname: String
 )
 
+// 로그인
 data class LoginResponse(
     val result: Result,
     val body: Jwt
@@ -27,4 +29,14 @@ data class Jwt(
     val memberId: Int,
     val accessToken: String,
     val refreshToken: String
+)
+
+// 리프래시 토큰
+data class RefreshResponse(
+    val result: Result,
+    val body: Refresh
+)
+
+data class Refresh(
+    val newAccessToken: String
 )
