@@ -21,11 +21,8 @@ import com.example.mhnfe.ui.screens.cctv.CameraViewModel
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,
-    viewModel: MainViewModel = viewModel(),
+    navController: NavController
 ) {
-    val context = LocalContext.current
-    viewModel.initializeWithContext(context)
     Column(
         modifier = modifier
             .fillMaxSize()
