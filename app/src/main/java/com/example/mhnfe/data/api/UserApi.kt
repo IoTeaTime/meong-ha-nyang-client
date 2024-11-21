@@ -6,7 +6,7 @@ import retrofit2.http.POST
 
 interface UserApi {
     @POST("/api/member/refresh-token")
-    suspend fun refreshToken(
+    fun refreshToken(
         @Header("Authorization") token: String
     ): RefreshResponse
 }

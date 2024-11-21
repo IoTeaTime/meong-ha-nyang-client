@@ -11,7 +11,7 @@ class UserRepository {
         api = ApiService.createApiService(UserApi::class.java)
     }
 
-    suspend fun refreshAccessToken(
+    fun refreshAccessToken(
         token: String
     ): RefreshResponse{
         return api.refreshToken(token)
