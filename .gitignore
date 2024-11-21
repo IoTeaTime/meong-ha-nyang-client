@@ -9,4 +9,7 @@
 local.properties
 /app/src/main/assets
 /app/src/main/res/raw
-.idea
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
