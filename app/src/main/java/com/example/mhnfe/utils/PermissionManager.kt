@@ -1,7 +1,9 @@
 package com.example.mhnfe.utils
 
 import android.Manifest
+import android.app.Activity.MODE_PRIVATE
 import android.app.AlertDialog
+import android.content.ContentValues.TAG
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -11,6 +13,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 
 class PermissionManager(private val activity: ComponentActivity) {
     private var isCheckingPermissions = false

@@ -5,6 +5,7 @@ import com.example.mhnfe.data.api.AuthApi
 import com.example.mhnfe.data.model.ApiResponse
 import com.example.mhnfe.data.model.LoginRequest
 import com.example.mhnfe.data.model.LoginResponse
+import com.example.mhnfe.data.model.RefreshFcmTokenRequest
 import com.example.mhnfe.data.model.SignUpRequest
 
 class AuthRepository {
@@ -30,5 +31,10 @@ class AuthRepository {
     ): LoginResponse {
         val request = LoginRequest(email, password)
         return api.login(request)
+    }
+
+    suspend fun refreshFcmToken(jwtToken: String, fcmToken: String): ApiResponse {
+        val request = RefreshFcmTokenRequest(fcmToken)
+        return api.refreshFcmToken(jwtToken, request)
     }
 }
