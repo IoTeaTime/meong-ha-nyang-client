@@ -64,7 +64,9 @@ import com.example.mhnfe.ui.screens.master.WebRtcConfig
 import com.example.mhnfe.utils.PermissionManager
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
@@ -85,6 +87,12 @@ class MainActivity : ComponentActivity() {
 
         val auth = AWSMobileClient.getInstance()
         initializeMobileClient(auth, this@MainActivity)
+        lifecycleScope.launch {
+            val signInResult = withContext(Dispatchers.IO) {
+                AWSMobileClient.getInstance().signIn("peach3139@naver.com", "qqqq11", null)
+            }
+        }
+
         //로그아웃
 //        AWSMobileClient.getInstance().signOut()
         //권한 요청

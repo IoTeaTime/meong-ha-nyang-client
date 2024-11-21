@@ -4,7 +4,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
@@ -28,7 +24,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -164,6 +159,7 @@ fun WebRtcScreen(
 //            }
 //        }
 //    }
+
     Column(
         modifier = modifier.fillMaxSize().background(color = mainBlack)
     ) {
@@ -184,10 +180,7 @@ fun WebRtcScreen(
                             cleanup()
 
                             withContext(Dispatchers.Main) {
-                                navController.navigate("monitoring/group") {
-                                    popUpTo(navController.graph.findStartDestination().id)
-                                    launchSingleTop = true
-                                }
+                                navController.navigateUp()
                             }
                         } catch (e: Exception) {
                             Log.e("WebRTCScreen", "연결 해제 실패", e)
@@ -206,7 +199,11 @@ fun WebRtcScreen(
             IconButton(
                 modifier = modifier
                     .size(50.dp),
-                onClick = {}
+                onClick = {
+                    if (role == ChannelRole.MASTER) {
+                        viewModel.switchCamera(context)
+                    }
+                }
             ) {
                 Icon(
                     modifier = modifier.size(41.dp),
