@@ -1,6 +1,8 @@
 package com.example.mhnfe.data.api
 
 import com.example.mhnfe.data.model.ApiResponse
+import com.example.mhnfe.data.model.LoginRequest
+import com.example.mhnfe.data.model.LoginResponse
 import com.example.mhnfe.data.model.SignUpRequest
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -10,4 +12,9 @@ interface AuthApi {
     suspend fun signUp(
         @Body request: SignUpRequest
     ): ApiResponse
+
+    @POST("/open-api/auth/sign-in")
+    suspend fun  login(
+        @Body request: LoginRequest
+    ): LoginResponse
 }

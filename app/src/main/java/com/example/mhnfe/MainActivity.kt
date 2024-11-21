@@ -29,7 +29,11 @@ import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
 import org.webrtc.PeerConnectionFactory
 import android.Manifest
+import android.content.ContentValues.TAG
+import android.app.NotificationManager
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,16 +45,25 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobile.client.Callback
 import com.amazonaws.mobile.client.UserStateDetails
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
+import com.example.mhnfe.data.model.request.RequestFcmToken
+import com.example.mhnfe.data.service.FcmService
 import com.example.mhnfe.ui.navigation.AppNavigation
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
 import com.example.mhnfe.ui.screens.master.WebRTCUiState
+import com.example.mhnfe.ui.screens.master.WebRtcConfig
 import com.example.mhnfe.utils.PermissionManager
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceTextureHelper
@@ -63,10 +76,12 @@ import java.util.concurrent.CountDownLatch
 class MainActivity : ComponentActivity() {
 
     private lateinit var permissionManager: PermissionManager
+    private lateinit var fcmService: FcmService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         permissionManager = PermissionManager(this)
+        fcmService = FcmService()
 
         val auth = AWSMobileClient.getInstance()
         initializeMobileClient(auth, this@MainActivity)
@@ -74,6 +89,42 @@ class MainActivity : ComponentActivity() {
 //        AWSMobileClient.getInstance().signOut()
         //권한 요청
         permissionManager.checkAndRequestPermissions()
+
+        // FCM 토큰 확인
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            } else {
+                val token = task.result
+                // SharedPreferences에 FCM 토큰 저장
+                val sharedPref = getSharedPreferences("app_preferences", MODE_PRIVATE)
+                with(sharedPref.edit()) {
+                    putString("fcm_token", token)
+                    apply()
+                }
+                Log.d(TAG, "FCM 토큰 저장됨: $token")  // 토큰 저장 확인 로그 추가
+            }
+
+            // Get new FCM registration token
+            val token = task.result
+
+            // Log and toast
+            // TODO. 로그용, 로그인 구현 성공 후 리팩토링 필요
+            val msg = getString(R.string.msg_token_fmt, token)
+            Log.d(TAG, msg)
+            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            // TODO. 기기별로 발급되는 FCM 토큰을 발급 받은 후 이를 저장해 두었다가 로그인에 성공하면 saveFcmToken() 실행 필요 (하단 메서드)
+            /*
+            lifecycleScope.launch {
+                try {
+                    fcmService.saveFcmToken(RequestFcmToken(token))
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error saving FCM token", e)
+                }
+            }
+            */
+        })
 
         setContent {
             MhnFETheme {
@@ -118,25 +169,52 @@ private fun initializeMobileClient(client: AWSMobileClient, context: ComponentAc
     }
 }
 
+//class WebRtcViewModelFactory(
+//    private val context: Context,
+//    private val notificationManager: NotificationManager,
+//    private val kvsSignalingViewModel: KVSSignalingViewModel
+//) : ViewModelProvider.Factory {
+//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+//        if (modelClass.isAssignableFrom(WebRtcViewModel::class.java)) {
+//            @Suppress("UNCHECKED_CAST")
+//            return WebRtcViewModel(kvsSignalingViewModel, context, notificationManager) as T
+//        }
+//        throw IllegalArgumentException("Unknown ViewModel class")
+//    }
+//}
+//private const val WEBRTC_VIEW_MODEL_KEY = "webrtc_view_model"
+
 
 @Composable
 fun SignalingChannelTest(
-    navController :NavController,
-    viewModel: KVSSignalingViewModel = KVSSignalingViewModel(),
+    navController: NavController,
+    kvsViewModel: KVSSignalingViewModel = viewModel(),
 ) {
-    var channelName by remember { mutableStateOf("demo-channel23") }
-    val scope = rememberCoroutineScope()
-    val webRTCState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    LaunchedEffect(webRTCState) {
-        when (webRTCState) {
+    LaunchedEffect(Unit) {
+        kvsViewModel.initialize(context)
+    }
+
+
+    var channelName by remember { mutableStateOf("demo-channel") }
+    val scope = rememberCoroutineScope()
+    val kvsState by kvsViewModel.uiState.collectAsState()
+    val webRtcConfig by kvsViewModel.webRtcConfig.collectAsState()
+
+    // 상태가 변경될 때마다 실행되는 효과
+    LaunchedEffect(kvsState) {
+        when (kvsState) {
             is WebRTCUiState.Success -> {
-                // 채널 생성/접속 성공
-                val role = (webRTCState as WebRTCUiState.Success).role
-                // 역할에 따라 적절한 화면으로 이동
-                when (role) {
-                    ChannelRole.MASTER -> navController.navigate(NavRoutes.Monitoring.Master.route)
-                    ChannelRole.VIEWER -> navController.navigate(NavRoutes.Monitoring.Viewer.route)
+                val successState = kvsState as WebRTCUiState.Success
+
+                when (successState.role) {
+                    ChannelRole.MASTER -> {
+                        navController.navigate(NavRoutes.Monitoring.Master.route)
+                    }
+                    ChannelRole.VIEWER -> {
+                        navController.navigate(NavRoutes.Monitoring.Viewer.route)
+                    }
                 }
             }
             else -> {}
@@ -153,226 +231,46 @@ fun SignalingChannelTest(
         OutlinedTextField(
             value = channelName,
             onValueChange = { channelName = it },
-            label = { Text("Channel Name") },
+            label = { Text("채널 이름") },
             modifier = Modifier.fillMaxWidth()
         )
-        Button(
-            onClick = {
-                scope.launch {
-                    viewModel.updateSignalingChannelInfo(
-                        channelName = channelName,
-                        role = ChannelRole.MASTER,
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("채널 생성")
-        }
 
         // Master 버튼
         Button(
             onClick = {
-
+                navController.currentBackStackEntry?.savedStateHandle?.set("channelName", channelName)
+                navController.currentBackStackEntry?.savedStateHandle?.set("role", ChannelRole.MASTER)
+                navController.navigate(NavRoutes.Monitoring.Master.route)
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Create Channel as Master")
+            Text("마스터로 입장")
         }
 
         // Viewer 버튼
         Button(
             onClick = {
-
+                navController.currentBackStackEntry?.savedStateHandle?.set("channelName", channelName)
+                navController.currentBackStackEntry?.savedStateHandle?.set("role", ChannelRole.VIEWER)
+                navController.navigate(NavRoutes.Monitoring.Viewer.route)
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Join Channel as Viewer")
+            Text("시청자로 입장")
         }
+
         // 현재 상태 표시
-        when (webRTCState) {
+        when (kvsState) {
             WebRTCUiState.Loading -> {
                 CircularProgressIndicator()
             }
             is WebRTCUiState.Error -> {
                 Text(
-                    text = (webRTCState as WebRTCUiState.Error).message,
+                    text = (kvsState as WebRTCUiState.Error).message,
+                    color = Color.Red
                 )
             }
             else -> {}
-        }
-
-    }
-}
-
-
-//webRTC테스트용 나중에 지울 것
-@Composable
-fun WebRTCTestScreen() {
-    val context = LocalContext.current
-    var testResult by remember { mutableStateOf<String?>(null) }
-    var hasPermissions by remember { mutableStateOf(false) }
-    var isInitialized by remember { mutableStateOf(false) }
-
-    // EGL 컨텍스트 생성
-    val eglBase = remember { EglBase.create() }
-
-    // SurfaceViewRenderer 생성
-    val surfaceView = remember {
-        SurfaceViewRenderer(context).apply {
-            setMirror(false)  // 미러링 비활성화
-            setEnableHardwareScaler(true)
-            setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-        }
-    }
-
-    // WebRTC components
-    val (videoCapturer, setVideoCapturer) = remember { mutableStateOf<VideoCapturer?>(null) }
-    val (videoSource, setVideoSource) = remember { mutableStateOf<VideoSource?>(null) }
-    val (localVideoTrack, setLocalVideoTrack) = remember { mutableStateOf<VideoTrack?>(null) }
-
-    // 권한 요청
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        hasPermissions = permissions.values.all { it }
-        if (hasPermissions) {
-            try {
-                // WebRTC 초기화
-                PeerConnectionFactory.initialize(
-                    PeerConnectionFactory.InitializationOptions.builder(context)
-                        .setEnableInternalTracer(true)
-                        .createInitializationOptions()
-                )
-                isInitialized = true
-                testResult = "초기화 완료"
-            } catch (e: Exception) {
-                testResult = "초기화 실패: ${e.message}"
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        launcher.launch(
-            arrayOf(
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO
-            )
-        )
-    }
-
-    // SurfaceView 초기화
-    DisposableEffect(surfaceView) {
-        try {
-            surfaceView.init(eglBase.eglBaseContext, null)
-        } catch (e: Exception) {
-            Log.e("WebRTC", "SurfaceView 초기화 실패", e)
-        }
-
-        onDispose {
-            try {
-                videoCapturer?.stopCapture()
-                videoCapturer?.dispose()
-                videoSource?.dispose()
-                localVideoTrack?.dispose()
-                surfaceView.release()
-                eglBase.release()
-            } catch (e: Exception) {
-                Log.e("WebRTC", "리소스 정리 실패", e)
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (hasPermissions && isInitialized) {
-            AndroidView(
-                factory = { surfaceView },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .aspectRatio(16f/9f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                try {
-                    // PeerConnectionFactory 생성
-                    val factory = PeerConnectionFactory.builder()
-                        .setVideoDecoderFactory(DefaultVideoDecoderFactory(eglBase.eglBaseContext))
-                        .setVideoEncoderFactory(DefaultVideoEncoderFactory(eglBase.eglBaseContext, true, true))
-                        .createPeerConnectionFactory()
-
-                    // 카메라 설정
-                    val enumerator = Camera2Enumerator(context)
-                    val deviceNames = enumerator.deviceNames
-
-                    // 먼저 후면 카메라 시도
-                    var newCapturer: VideoCapturer? = null
-                    for (deviceName in deviceNames) {
-                        if (enumerator.isBackFacing(deviceName)) {
-                            newCapturer = enumerator.createCapturer(deviceName, null)
-                            if (newCapturer != null) break
-                        }
-                    }
-
-                    // 후면 카메라가 없다면 전면 카메라 시도
-                    if (newCapturer == null) {
-                        for (deviceName in deviceNames) {
-                            if (enumerator.isFrontFacing(deviceName)) {
-                                newCapturer = enumerator.createCapturer(deviceName, null)
-                                if (newCapturer != null) break
-                            }
-                        }
-                    }
-
-                    if (newCapturer == null) {
-                        throw Exception("사용 가능한 카메라를 찾을 수 없습니다")
-                    }
-
-                    setVideoCapturer(newCapturer)
-
-                    // 비디오 소스 설정
-                    val newVideoSource = factory.createVideoSource(false)
-                    setVideoSource(newVideoSource)
-
-                    val surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.eglBaseContext)
-                    newCapturer.initialize(surfaceTextureHelper, context, newVideoSource.capturerObserver)
-
-                    // 낮은 해상도로 시작
-                    newCapturer.startCapture(640, 480, 30)
-
-                    // 비디오 트랙 설정
-                    val newVideoTrack = factory.createVideoTrack("local_track", newVideoSource)
-                    setLocalVideoTrack(newVideoTrack)
-                    newVideoTrack.addSink(surfaceView)
-
-                    testResult = "카메라 스트리밍 시작됨"
-
-                } catch (e: Exception) {
-                    testResult = "테스트 실패: ${e.message}"
-                    Log.e("WebRTC", "카메라 시작 실패", e)
-                }
-            },
-            enabled = hasPermissions && isInitialized
-        ) {
-            Text("카메라 시작")
-        }
-
-        testResult?.let {
-            Text(
-                text = it,
-                textAlign = TextAlign.Center,
-                color = if (it.contains("실패")) Color.Red else Color.Green,
-                modifier = Modifier.padding(16.dp)
-            )
         }
     }
 }
