@@ -20,16 +20,13 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.lifecycleScope
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
-import com.example.mhnfe.data.model.request.RequestFcmToken
 import com.example.mhnfe.data.repository.AuthRepository
-import com.example.mhnfe.data.service.FcmService
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
@@ -65,10 +62,6 @@ fun LoginScreen(
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
     val editor = sharedPreferences.edit()
-    val jwtToken = sharedPreferences.getString("jwt_token", null)
-
-    // FCM
-    val fcmService = remember { FcmService() }
 
     Scaffold(
         modifier = modifier,
@@ -167,7 +160,7 @@ fun LoginScreen(
                     text = "로그인",
                     onClick = {
                         // ViewModel에 로그인 요청 전달
-                        loginViewModel.loginUser(id, password)
+                        loginViewModel.loginUser(editor, id, password)
 
                         // 자동 로그인 상태 저장
                         if (isAutoLogin) {
@@ -181,15 +174,8 @@ fun LoginScreen(
                 // 로그인 성공 시 화면 전환
                 LaunchedEffect(loginResponse) {
                     if (loginResponse?.result?.code == 200) {
-                        // JWT 토큰 저장
-                        val token = loginResponse?.body?.accessToken
-                        if (token != null) {
-                            editor.putString("jwt_token", token)
-                            editor.apply()
-                            Log.d("LoginScreen", "JWT 토큰 저장 완료: $token")
-                        }
-
-                        // TODO. 기기별로 발급되는 FCM 토큰을 발급 받은 후 이를 저장해 두었다가 로그인에 성공하면 saveFcmToken() 실행 필요 (하단 메서드)
+                        val jwtToken = sharedPreferences.getString("jwt_token", null)
+                        // FCM 토큰 전송
                         if (!jwtToken.isNullOrEmpty()) {
                             val sharedPref = context.getSharedPreferences("app_preferences", MODE_PRIVATE)
                             val fcmToken = sharedPref.getString("fcm_token", null)
@@ -197,7 +183,7 @@ fun LoginScreen(
 
                             if (fcmToken != null) {
                                 try {
-                                    fcmService.saveFcmToken(token, RequestFcmToken(fcmToken))
+                                    loginViewModel.refreshFcmToken(jwtToken, fcmToken)
                                 } catch (e: Exception) {
                                     Log.e(TAG, "Error saving FCM token", e)
                                 }
