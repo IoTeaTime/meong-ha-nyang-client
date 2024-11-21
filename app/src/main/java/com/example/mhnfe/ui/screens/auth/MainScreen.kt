@@ -26,8 +26,7 @@ import com.example.mhnfe.ui.screens.cctv.CameraViewModel
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,
-    viewModel: MainViewModel = viewModel(),
+    navController: NavController
 ) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
@@ -53,7 +52,7 @@ fun MainScreen(
             }
         }
     }
-    viewModel.initializeWithContext(context)
+//    viewModel.initializeWithContext(context)
     Column(
         modifier = modifier
             .fillMaxSize()
