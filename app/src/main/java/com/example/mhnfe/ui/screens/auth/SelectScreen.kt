@@ -24,7 +24,9 @@ import com.example.mhnfe.ui.theme.mainYellow
 import com.example.mhnfe.ui.theme.mainGray
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MainTopBar
+import com.example.mhnfe.ui.navigation.NavRoutes
 
 // 그룹 생성용 버튼 컴포넌트
 @Composable
@@ -51,8 +53,7 @@ fun GroupCreateButton(
 fun SelectScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    onQrScanClick: () -> Unit,
-    onCreateGroupClick: () -> Unit
+    onQrScanClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -106,7 +107,12 @@ fun SelectScreen(
 
                 // 그룹 생성 버튼
                 GroupCreateButton(
-                    onClick = onCreateGroupClick
+                    onClick = {
+                        navController.navigate(
+                            NavRoutes.Monitoring.Master.route
+//                            NavRoutes.Monitoring.QRGenerate.createRoute(UserType.CCTV)
+                        )
+                    }
                 )
             }
         }
@@ -123,7 +129,6 @@ fun SelectScreen(
 fun SelectScreenPreview() {
     SelectScreen(
         navController = rememberNavController(),
-        onQrScanClick = {},
-        onCreateGroupClick = {}
+        onQrScanClick = {}
     )
 }

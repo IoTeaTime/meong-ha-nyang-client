@@ -3,12 +3,14 @@ import android.app.Application
 import android.util.Log
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
+import dagger.hilt.android.HiltAndroidApp
 import org.json.JSONException
 
 /**
  * 애플리케이션의 메인 Application 클래스
  * AWS 인증 정보와 리전 설정을 관리합니다.
  */
+@HiltAndroidApp
 class MyApplication : Application() {
     companion object {
         private val TAG = MyApplication::class.java.simpleName

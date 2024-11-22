@@ -26,7 +26,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.data.api.ApiService
 import com.example.mhnfe.data.repository.AuthRepository
+import com.example.mhnfe.data.token.TokenProvider
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
@@ -38,7 +40,9 @@ import com.example.mhnfe.ui.theme.mainYellow
 fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(AuthRepository())),
+    loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(AuthRepository(
+        ApiService()
+    ))),
     onLoginClick: () -> Unit
 ) {
     val loginResponse by loginViewModel.loginResponse.collectAsState()
@@ -54,14 +58,11 @@ fun LoginScreen(
     var id by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Cognito 로그인
-//    val cognitoUsername = ""
-//    val cognitoPassword = ""
-
     // SharedPreferences를 사용해 자동 로그인 상태와 사용자 정보를 저장
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+    val sharedPreferences = context.getSharedPreferences("login_prefs", MODE_PRIVATE)
     val editor = sharedPreferences.edit()
+    val tokenProvider = TokenProvider(context)
 
     Scaffold(
         modifier = modifier,
@@ -160,7 +161,7 @@ fun LoginScreen(
                     text = "로그인",
                     onClick = {
                         // ViewModel에 로그인 요청 전달
-                        loginViewModel.loginUser(editor, id, password)
+                        loginViewModel.loginUser(tokenProvider, id, password)
 
                         // 자동 로그인 상태 저장
                         if (isAutoLogin) {

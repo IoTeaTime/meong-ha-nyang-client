@@ -37,6 +37,7 @@ import androidx.compose.ui.text.SpanStyle
 
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mhnfe.data.model.ApiResponse
 
@@ -45,7 +46,8 @@ fun SignUpScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
     onLoginClick: () -> Unit,
-    signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository()))
+    signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository(
+        LocalContext.current)))
 ) {
 
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
@@ -175,7 +177,7 @@ fun SignUpScreen(
     }
 
     // Create an instance of the Repository for calling the Sign-Up API
-    val authRepository = AuthRepository()
+    val authRepository = AuthRepository(LocalContext.current)
 
     Scaffold(
         modifier = modifier,

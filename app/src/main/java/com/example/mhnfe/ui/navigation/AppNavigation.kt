@@ -126,11 +126,11 @@ fun AppNavigation() {
                             popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
                         }
                     },
-                    onCreateGroupClick = {
-                        navController.navigate(NavRoutes.Monitoring.Group.route) {
-                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
-                        }
-                    }
+//                    onCreateGroupClick = {
+//                        navController.navigate(NavRoutes.Monitoring.Group.route) {
+//                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
+//                        }
+//                    }
                 )
             }
             composable(NavRoutes.Auth.QRScanner.route) {

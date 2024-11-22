@@ -4,6 +4,10 @@ plugins {
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version libs.versions.kotlin
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+
+    // Hilt 플러그인 추가
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -168,7 +172,12 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
     implementation("com.amazonaws:aws-android-sdk-mobile-client:2.77.0")
 
-    // EncryptedSharedPreferences
-    implementation("androidx.security:security-crypto:1.0.0")
+    // Hilt 기본 라이브러리
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+}
 
+// Allow references to generated code
+kapt {
+    correctErrorTypes = true
 }

@@ -3,13 +3,12 @@ package com.example.mhnfe.data.repository
 import com.example.mhnfe.data.api.ApiService
 import com.example.mhnfe.data.api.UserApi
 import com.example.mhnfe.data.model.RefreshResponse
+import javax.inject.Inject
 
-class UserRepository {
-    private val api: UserApi
-
-    init {
-        api = ApiService.createApiService(UserApi::class.java)
-    }
+class UserRepository @Inject constructor(
+    private val apiService: ApiService
+) {
+    private val api: UserApi = apiService.createApiService(UserApi::class.java)
 
     fun refreshAccessToken(
         token: String
