@@ -236,7 +236,7 @@ fun SignUpScreen(
                                 emailErrorMessage = ""
                             },
                             hintText = "example@example.com",
-                            warningText = emailErrorMessage
+                            warningText = if (isEmailError) emailErrorMessage else ""
                         )
                     }
                     1 -> {
@@ -365,6 +365,7 @@ fun SignUpScreen(
                                         Log.e("SignUpScreen", "API 호출 중 오류 발생: ${e.message}")
                                         emailErrorMessage = "이메일 확인 중 문제가 발생했습니다."
                                         isEmailError = true
+                                        errorMessage = emailErrorMessage
                                     }
                                 }
                             }
@@ -417,10 +418,6 @@ fun SignUpScreen(
                     LaunchedEffect(Unit) {
                         onLoginClick()
                     }
-                }
-                // Handle error message
-                errorMessage?.let {
-                    Text(text = it, color = Color.Red, textAlign = TextAlign.Center)
                 }
             }
         }
