@@ -7,6 +7,7 @@ import com.example.mhnfe.data.model.LoginRequest
 import com.example.mhnfe.data.model.LoginResponse
 import com.example.mhnfe.data.model.RefreshFcmTokenRequest
 import com.example.mhnfe.data.model.SignUpRequest
+import com.example.mhnfe.data.model.User
 
 class AuthRepository {
     private val api: AuthApi

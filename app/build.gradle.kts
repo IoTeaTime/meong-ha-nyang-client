@@ -4,6 +4,10 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version libs.versions.kotlin
+    id("dagger.hilt.android.plugin")
+    kotlin("kapt")
+    alias(libs.plugins.compose.compiler)
+
 }
 
 android {
@@ -47,7 +51,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
     packaging {
         resources {
@@ -71,6 +75,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.datastore.core.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -163,4 +168,17 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
+    // Hilt dependencies
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+
+
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    //hilt life
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+}
+
+kapt {
+    correctErrorTypes = true
 }
