@@ -49,7 +49,6 @@ fun SignUpScreen(
     signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository()))
 ) {
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
-    val errorMessage by signUpViewModel.errorMessage.collectAsState()
 
     val scope = rememberCoroutineScope()
     var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
@@ -77,6 +76,7 @@ fun SignUpScreen(
     var isNicknameError by remember { mutableStateOf(false) }
 
     // Error message states
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var emailErrorMessage by remember { mutableStateOf("") }
     var verificationErrorMessage by remember { mutableStateOf("") }
     var passwordErrorMessage by remember { mutableStateOf("") }
@@ -86,6 +86,7 @@ fun SignUpScreen(
         return code != "111111"  // 111111이면 틀린 것으로 처리
     }
 
+
     fun validateCurrentStep(): Boolean {
         return when (currentStep) {
             0 -> {
@@ -93,16 +94,19 @@ fun SignUpScreen(
                     email.isEmpty() -> {
                         emailErrorMessage = "이메일을 입력해주세요."
                         isEmailError = true
+                        errorMessage = emailErrorMessage
                         false
                     }
                     !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                         emailErrorMessage = "올바른 이메일 형식이 아닙니다."
                         isEmailError = true
+                        errorMessage = emailErrorMessage
                         false
                     }
                     else -> {
                         isEmailError = false
                         emailErrorMessage = ""
+                        errorMessage = null
                         true
                     }
                 }
@@ -340,17 +344,20 @@ fun SignUpScreen(
                                             200 -> {
                                                 emailErrorMessage = ""
                                                 isEmailError = false
+                                                errorMessage = null
                                                 currentStep++
                                                 Log.d("SignUpScreen", "이메일 중복 확인: $description")
                                             }
                                             400 -> {
                                                 emailErrorMessage = "이미 사용 중인 이메일입니다."
                                                 isEmailError = true
+                                                errorMessage = emailErrorMessage
                                                 Log.e("SignUpScreen", "이메일 중복 확인 : $description")
                                             }
                                             else -> {
                                                 emailErrorMessage = "오류 발생: $description"
                                                 isEmailError = true
+                                                errorMessage = emailErrorMessage
                                                 Log.e("SignUpScreen", "예상치 못한 오류: code=$code, description=$description")
                                             }
                                         }
