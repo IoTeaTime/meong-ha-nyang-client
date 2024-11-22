@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
         //권한 요청
         permissionManager.checkAndRequestPermissions()
 
-        // FCM 토큰 확인
+//        // FCM 토큰 확인
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
                 Log.w(TAG, "Fetching FCM registration token failed", task.exception)
@@ -125,22 +125,6 @@ private fun initializeMobileClient(client: AWSMobileClient, context: ComponentAc
         e.printStackTrace()
     }
 }
-
-//class WebRtcViewModelFactory(
-//    private val context: Context,
-//    private val notificationManager: NotificationManager,
-//    private val kvsSignalingViewModel: KVSSignalingViewModel
-//) : ViewModelProvider.Factory {
-//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-//        if (modelClass.isAssignableFrom(WebRtcViewModel::class.java)) {
-//            @Suppress("UNCHECKED_CAST")
-//            return WebRtcViewModel(kvsSignalingViewModel, context, notificationManager) as T
-//        }
-//        throw IllegalArgumentException("Unknown ViewModel class")
-//    }
-//}
-//private const val WEBRTC_VIEW_MODEL_KEY = "webrtc_view_model"
-
 
 @Composable
 fun SignalingChannelTest(
