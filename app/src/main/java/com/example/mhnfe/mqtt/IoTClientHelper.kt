@@ -16,7 +16,6 @@ import java.security.Security
 import java.util.UUID
 
 class IoTClientHelper(androidId: String) {
-    private val tag = "MqttHelper"
     private val client: AWSIotClient
     private var thingId = ""
 
