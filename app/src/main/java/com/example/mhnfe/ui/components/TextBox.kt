@@ -153,7 +153,7 @@ fun MainTextBox(
                     tint = mainRed
                 )
                 Text(
-                    text = "warningText",
+                    text = warningText,
                     color = mainRed,
                     style = Typography.bodySmall.copy(fontSize = 12.sp)
                 )
