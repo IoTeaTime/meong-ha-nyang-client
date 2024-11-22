@@ -48,32 +48,6 @@ fun SignUpScreen(
     onLoginClick: () -> Unit,
     signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository()))
 ) {
-
-    suspend fun checkEmailStatus(email: String): Pair<Int, String> {
-//        Log.d("SignUpScreen", "checkEmailDuplicate 호출, email=$email")
-        val authRepository = AuthRepository()
-        return try {
-            // API call
-            val response = authRepository.checkEmailDuplicate(email)
-//            Log.d("SignUpScreen", "checkEmailDuplicate 응답1: $response")
-
-            // Response handling
-            when (response.result.code) {
-                200 -> Pair(200, "사용 가능한 이메일입니다.")
-                500 -> Pair(500, response.result.description ?: "중복된 이메일입니다.")
-                else -> Pair(response.result.code, response.result.description ?: "알 수 없는 상태")
-            }
-        } catch (e: HttpException) {
-            // HTTP exception handling
-            val statusCode = e.code()
-            val errorMessage = e.message ?: "알 수 없는 오류"
-            Log.e("SignUpScreen", "checkEmailStatus: HTTP 예외 발생 - 코드: $statusCode, 메시지: $errorMessage", e)
-
-            Pair(statusCode, "HTTP 오류 발생: $errorMessage")
-        }
-    }
-
-
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
     val errorMessage by signUpViewModel.errorMessage.collectAsState()
 
@@ -351,6 +325,8 @@ fun SignUpScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                val signUpViewModel: SignUpViewModel = viewModel()
+
                 if (currentStep == 0) {
                     MiddleButton(
                         text = "확인",
@@ -358,8 +334,7 @@ fun SignUpScreen(
                             scope.launch {
                                 if (validateCurrentStep()) {
                                     try {
-                                        // Email duplicate check API call
-                                        val (code, description) = checkEmailStatus(email)
+                                        val (code, description) = signUpViewModel.checkEmailStatus(email)
 
                                         when (code) {
                                             200 -> {
@@ -368,7 +343,7 @@ fun SignUpScreen(
                                                 currentStep++
                                                 Log.d("SignUpScreen", "이메일 중복 확인: $description")
                                             }
-                                            500 -> {
+                                            400 -> {
                                                 emailErrorMessage = "이미 사용 중인 이메일입니다."
                                                 isEmailError = true
                                                 Log.e("SignUpScreen", "이메일 중복 확인 : $description")
