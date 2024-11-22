@@ -37,8 +37,7 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         if (!savedId.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
             // 저장된 로그인 정보로 자동 로그인 시도
-            val authRepository = AuthRepository()
-            val userRepository = UserRepository()
+            val authRepository = AuthRepository(context)
             try {
                 val response = authRepository.login(savedId, savedPassword)
                 if (response.result.code == 200) {

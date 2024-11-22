@@ -1,5 +1,6 @@
 package com.example.mhnfe.data.repository
 
+import android.content.Context
 import com.example.mhnfe.data.api.ApiService
 import com.example.mhnfe.data.api.AuthApi
 import com.example.mhnfe.data.model.ApiResponse
@@ -7,13 +8,12 @@ import com.example.mhnfe.data.model.LoginRequest
 import com.example.mhnfe.data.model.LoginResponse
 import com.example.mhnfe.data.model.RefreshFcmTokenRequest
 import com.example.mhnfe.data.model.SignUpRequest
+import javax.inject.Inject
 
-class AuthRepository {
-    private val api: AuthApi
-
-    init {
-        api = ApiService.createApiService(AuthApi::class.java)
-    }
+class AuthRepository @Inject constructor(
+    private val apiService: ApiService
+) {
+    private val api: AuthApi = apiService.createApiService(AuthApi::class.java)
 
     suspend fun signUp(
         email: String,
@@ -29,6 +29,7 @@ class AuthRepository {
         email: String,
         password: String
     ): LoginResponse {
+
         val request = LoginRequest(email, password)
         return api.login(request)
     }
