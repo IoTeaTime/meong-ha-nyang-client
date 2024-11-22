@@ -14,10 +14,15 @@ import android.util.Log
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttManager
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
 import java.security.KeyStore
 import kotlin.concurrent.thread
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 object MqttUtils {
     private var awsMqttManager: AWSIotMqttManager? = null
@@ -28,7 +33,7 @@ object MqttUtils {
     private var androidId: String = ""
 
     @SuppressLint("HardwareIds")
-    fun initialize(context: Context) {
+    suspend fun initialize(context: Context): String = withContext(Dispatchers.IO) {
         androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
         // IoTClientHelper와 MqttManagerHelper 초기화
@@ -41,22 +46,23 @@ object MqttUtils {
 
         val keyStoreFile = File("${context.filesDir}/keystore.bks")
 
-        thread {
-            try {
-                if (keyStoreFile.exists()) {
-                    // 기존 KeyStore를 사용하는 경우
-                    initializeWithExistingKeyStore(context)
-                } else {
-                    // 새로운 KeyStore를 생성해야 하는 경우
-                    initializeWithNewKeyStore(context)
-                }
-                // MQTT Manager 연결
-                connectToMqttManager(context)
-            } catch (e: Exception) {
-                Log.e(tag, "Initialization error: ${e.message}", e)
+        try {
+            if (keyStoreFile.exists()) {
+                // 기존 KeyStore를 사용하는 경우
+                initializeWithExistingKeyStore(context)
+            } else {
+                // 새로운 KeyStore를 생성해야 하는 경우
+                initializeWithNewKeyStore(context)
             }
+            // MQTT Manager 연결 및 상태 확인
+            connectToMqttManager()
+        } catch (e: Exception) {
+            Log.e(tag, "Initialization error: ${e.message}", e)
+            throw e // 오류를 상위로 전달
         }
+        androidId
     }
+
 
     private fun initializeWithExistingKeyStore(context: Context) {
         try {
@@ -86,22 +92,35 @@ object MqttUtils {
         }
     }
 
-    private fun connectToMqttManager(context: Context) {
-        awsMqttManager?.connect(keyStore) { status, throwable ->
-            if (throwable != null) {
-                Log.e(tag, "Connection error: ${throwable.message}", throwable)
-            } else {
-                Log.d(tag, "MQTT Connection Status: $status")
-                if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected) {
-                    Log.d(tag, "MQTT Connected. Preparing to subscribe.")
-                    // 구독 호출 전에 약간의 지연 추가
-                    thread {
-                        Thread.sleep(500) // 500ms 지연
-                        createShadowWithSubscribe(androidId, context)
-                    }                }
+
+
+    private suspend fun connectToMqttManager() = withContext(Dispatchers.IO) {
+        try {
+            suspendCancellableCoroutine<Unit> { continuation ->
+                awsMqttManager?.connect(keyStore) { status, throwable ->
+                    if (throwable != null) {
+                        Log.e(tag, "Connection error: ${throwable.message}", throwable)
+                        // 예외를 전달하여 코루틴 재개
+                        if (continuation.isActive) {
+                            continuation.resumeWithException(throwable)
+                        }
+                    } else {
+                        Log.d(tag, "MQTT Connection Status: $status")
+                        if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected) {
+                            if (continuation.isActive) {
+                                continuation.resume(Unit)
+                            }
+                        }
+                    }
+                }
             }
+        } catch (e: Exception) {
+            Log.e(tag, "MQTT Connection failed: ${e.message}", e)
+            throw e
         }
     }
+
+
 
     fun disconnectMqttManager() {
         awsMqttManager?.disconnect()
@@ -132,8 +151,6 @@ object MqttUtils {
             // Shadow Payload (하드코딩된 샘플 데이터)
             val batteryLevel = getBatteryLevel(context)
             val availableMemory = getAvailableMemory(context)
-            val frontCameraAvailable = isFrontCameraAvailable(context)
-            val rearCameraAvailable = isRearCameraAvailable(context)
             val kvsChannelActive = true
             val kvsChannelDeleteRequested = false
 
@@ -235,38 +252,4 @@ object MqttUtils {
         activityManager.getMemoryInfo(memoryInfo)
         return memoryInfo.availMem / (1024 * 1024) // MB 단위
     }
-
-    fun isFrontCameraAvailable(context: Context): Boolean {
-        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        try {
-            for (cameraId in cameraManager.cameraIdList) {
-                val characteristics = cameraManager.getCameraCharacteristics(cameraId)
-                val lensFacing = characteristics.get(CameraCharacteristics.LENS_FACING)
-                if (lensFacing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    return true
-                }
-            }
-        } catch (e: CameraAccessException) {
-            e.printStackTrace()
-        }
-        return false
-    }
-
-    fun isRearCameraAvailable(context: Context): Boolean {
-        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        try {
-            for (cameraId in cameraManager.cameraIdList) {
-                val characteristics = cameraManager.getCameraCharacteristics(cameraId)
-                val lensFacing = characteristics.get(CameraCharacteristics.LENS_FACING)
-                if (lensFacing == CameraCharacteristics.LENS_FACING_BACK) {
-                    return true
-                }
-            }
-        } catch (e: CameraAccessException) {
-            e.printStackTrace()
-        }
-        return false
-    }
-
-
 }

@@ -44,13 +44,12 @@ import com.example.mhnfe.R
 import com.example.mhnfe.mqtt.MqttUtils
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
 
-
+private var thingId: String = ""
 @Composable
 fun WebRtcScreen(
     modifier: Modifier = Modifier,
@@ -68,30 +67,25 @@ fun WebRtcScreen(
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
 
-    val testTopic = "test/topic"
-
-
     LaunchedEffect(Unit) {
         try {
             // 1. MQTT 연결 시도
-            MqttUtils.initialize(context)
-            Log.d("WebRTCScreen", "MQTT 연결 테스트 시작")
+            thingId = withContext(Dispatchers.IO) {
+                MqttUtils.initialize(context)
+            }
+            Log.d("WebRTCScreen", "MQTT 연결 성공: thingId=$thingId")
             Toast.makeText(context, "MQTT 연결 성공", Toast.LENGTH_SHORT).show()
 
-            // 2. 연결 후 2초 대기 후 구독 실행
-            kotlinx.coroutines.delay(2000)
-            MqttUtils.subscribe(testTopic) { topic, message ->
-                Log.d(
-                    "WebRTCScreen",
-                    "MQTT 메시지 수신 - Topic: $topic, Message: $message Context: $context"
-                )
+            // 2. MQTT 연결이 완료 후, 기본 Shadow 생성 및 토픽 구독
+            withContext(Dispatchers.IO) {
+                MqttUtils.createShadowWithSubscribe(thingId, context)
             }
-            Log.d("WebRTCScreen", "MQTT 토픽 구독 성공 - Topic: $testTopic")
         } catch (e: Exception) {
             Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
             Toast.makeText(context, "MQTT 연결 실패 또는 구독 실패", Toast.LENGTH_SHORT).show()
         }
     }
+
     // 초기화는 한 번만 실행되도록 key를 사용
     LaunchedEffect(channelName) {
         if (uiState !is WebRTCUiState.Success) {
@@ -231,12 +225,11 @@ fun WebRtcScreen(
                 onClick = {
                     viewModel.viewModelScope.launch {
                         try {
-                            val payload =
-                                "{\"event\": \"test\", \"timestamp\": ${System.currentTimeMillis()}}"
-                            MqttUtils.publish(testTopic, payload)
+                            val payload = "{ }"
+                            MqttUtils.publish("\$aws/things/$thingId/shadow/get", payload)
                             Log.d(
                                 "WebRTCScreen",
-                                "MQTT 이벤트 발행 - Topic: $testTopic, Payload: $payload"
+                                "MQTT 이벤트 발행 - Topic: GetShadow, Payload: $payload"
                             )
                             Toast.makeText(context, "이벤트 발행 완료", Toast.LENGTH_SHORT).show()
                         } catch (e: Exception) {
