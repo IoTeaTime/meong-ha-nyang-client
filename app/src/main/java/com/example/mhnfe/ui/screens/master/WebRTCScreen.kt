@@ -107,7 +107,6 @@ fun WebRtcScreen(
     val cleanup = {
         try {
             Logging.enableLogToDebugOutput(Logging.Severity.LS_NONE)
-            viewModel.releasePeerConnection()
             viewModel.resetState()
             localView?.let {
                 it.clearImage()
@@ -244,6 +243,7 @@ fun WebRtcScreen(
                     remoteView?.let { renderer ->
                         AndroidView(
                             factory = {
+
                                 renderer.apply {
                                     (parent as? android.view.ViewGroup)?.removeView(this)
                                 }
