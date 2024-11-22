@@ -1,7 +1,14 @@
 package com.example.mhnfe.mqtt
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.hardware.camera2.CameraAccessException
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
+import android.os.BatteryManager
 import android.provider.Settings
 import android.util.Log
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
@@ -44,7 +51,7 @@ object MqttUtils {
                     initializeWithNewKeyStore(context)
                 }
                 // MQTT Manager 연결
-                connectToMqttManager()
+                connectToMqttManager(context)
             } catch (e: Exception) {
                 Log.e(tag, "Initialization error: ${e.message}", e)
             }
@@ -79,15 +86,19 @@ object MqttUtils {
         }
     }
 
-    private fun connectToMqttManager() {
+    private fun connectToMqttManager(context: Context) {
         awsMqttManager?.connect(keyStore) { status, throwable ->
             if (throwable != null) {
                 Log.e(tag, "Connection error: ${throwable.message}", throwable)
             } else {
                 Log.d(tag, "MQTT Connection Status: $status")
                 if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected) {
-                    createShadowWithSubscribe(androidId)
-                }
+                    Log.d(tag, "MQTT Connected. Preparing to subscribe.")
+                    // 구독 호출 전에 약간의 지연 추가
+                    thread {
+                        Thread.sleep(500) // 500ms 지연
+                        createShadowWithSubscribe(androidId, context)
+                    }                }
             }
         }
     }
@@ -113,14 +124,16 @@ object MqttUtils {
         }
     }
 
-    fun createShadowWithSubscribe(thingId: String) {
+    fun createShadowWithSubscribe(thingId: String, context: Context) {
         try {
             // Shadow Update Topic
             val topic = "\$aws/things/${thingId}/shadow/update"
 
             // Shadow Payload (하드코딩된 샘플 데이터)
-            val batteryLevel = 91
-            val availableMemory = 126
+            val batteryLevel = getBatteryLevel(context)
+            val availableMemory = getAvailableMemory(context)
+            val frontCameraAvailable = isFrontCameraAvailable(context)
+            val rearCameraAvailable = isRearCameraAvailable(context)
             val kvsChannelActive = true
             val kvsChannelDeleteRequested = false
 
@@ -149,7 +162,7 @@ object MqttUtils {
 
             // 각 Topic에 대해 구독 설정
             shadowTopics.forEach { shadowTopic ->
-                MqttUtils.subscribe(shadowTopic) { receivedTopic, message ->
+                subscribe(shadowTopic) { receivedTopic, message ->
                     Log.d(tag, "Message received on Topic: $receivedTopic, Payload: $message")
                     // 추가 로직: 메시지 내용을 처리 (예: Shadow 업데이트, UI 반영 등)
                     handleShadowMessage(receivedTopic, message)
@@ -157,12 +170,13 @@ object MqttUtils {
             }
 
             // Shadow 상태 업데이트 메시지 발행
-            MqttUtils.publish(topic, payload)
+            publish(topic, payload)
             Log.d(tag, "MQTT 메시지 발행 성공: Topic=$topic, Payload=$payload")
         } catch (e: Exception) {
             Log.e(tag, "MQTT 메시지 발행 실패: ${e.message}", e)
         }
     }
+
     /**
      * Shadow 메시지 처리 함수
      * @param topic - 메시지가 발행된 Topic
@@ -178,18 +192,22 @@ object MqttUtils {
                     // Delta 메시지 처리 로직
                     Log.d(tag, "Delta 메시지 수신: $jsonObject")
                 }
+
                 topic.contains("accepted") -> {
                     // Update/Accepted 메시지 처리 로직
                     Log.d(tag, "Accepted 메시지 수신: $jsonObject")
                 }
+
                 topic.contains("rejected") -> {
                     // Update/Rejected 메시지 처리 로직
                     Log.e(tag, "Rejected 메시지 수신: $jsonObject")
                 }
+
                 topic.contains("documents") -> {
                     // Update/Documents 메시지 처리 로직
                     Log.d(tag, "Documents 메시지 수신: $jsonObject")
                 }
+
                 else -> {
                     Log.w(tag, "알 수 없는 Shadow Topic 수신: $topic")
                 }
@@ -198,4 +216,57 @@ object MqttUtils {
             Log.e(tag, "Shadow 메시지 처리 실패: ${e.message}", e)
         }
     }
+
+    fun getBatteryLevel(context: Context): Int {
+        val batteryIntent =
+            context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+        return if (level != -1 && scale != -1) {
+            (level * 100) / scale
+        } else {
+            -1 // 오류 발생 시
+        }
+    }
+
+    fun getAvailableMemory(context: Context): Long {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memoryInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memoryInfo)
+        return memoryInfo.availMem / (1024 * 1024) // MB 단위
+    }
+
+    fun isFrontCameraAvailable(context: Context): Boolean {
+        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        try {
+            for (cameraId in cameraManager.cameraIdList) {
+                val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+                val lensFacing = characteristics.get(CameraCharacteristics.LENS_FACING)
+                if (lensFacing == CameraCharacteristics.LENS_FACING_FRONT) {
+                    return true
+                }
+            }
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
+    fun isRearCameraAvailable(context: Context): Boolean {
+        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        try {
+            for (cameraId in cameraManager.cameraIdList) {
+                val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+                val lensFacing = characteristics.get(CameraCharacteristics.LENS_FACING)
+                if (lensFacing == CameraCharacteristics.LENS_FACING_BACK) {
+                    return true
+                }
+            }
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
+
 }
