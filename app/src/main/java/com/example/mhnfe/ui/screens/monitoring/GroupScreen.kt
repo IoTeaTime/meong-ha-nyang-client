@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
 import com.example.mhnfe.data.model.emptyCCTVList
 import com.example.mhnfe.data.model.sampleCCTVList
@@ -103,8 +104,14 @@ fun GroupScreen(
                         CCTVItemCard(
                             cctv = cctvItem,
                             onClick = {
-                                // cctv 화면으로 이동
-                                // navController.navigate("camera/${cctvItem.id}")
+//                                navController.currentBackStackEntry?.savedStateHandle?.set("channelName", cctvItem.channelName)
+                                navController.currentBackStackEntry?.savedStateHandle?.set("role", ChannelRole.VIEWER)
+//                                navController.navigate(NavRoutes.Monitoring.Viewer.route)
+                                navController.navigate(
+                                    NavRoutes.Monitoring.Viewer.createRoute(
+                                        channelName = cctvItem.channelName
+                                    )
+                                )
                             },
                             onEdit = {
                                 navController.navigate(NavRoutes.Monitoring.DeviceInformation.createRoute(cctvItem.id))
@@ -117,33 +124,3 @@ fun GroupScreen(
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//private fun GroupScreenPreview() {
-//    val navController = rememberNavController()
-//    GroupScreen(
-//        userType = UserType.VIEWER,
-//        navController = navController,
-//        cctv = sampleCCTVList
-//    )
-//}
-//@Preview(showBackground = true)
-//@Composable
-//private fun GroupScreenPreview2() {
-//    val navController = rememberNavController()
-//    GroupScreen(
-//        userType = UserType.VIEWER,
-//        navController = navController,
-//        cctv = emptyCCTVList
-//    )
-//}
-//@Preview(showBackground = true)
-//@Composable
-//private fun GroupScreenPreview3() {
-//    val navController = rememberNavController()
-//    GroupScreen(
-//        userType = UserType.MASTER,
-//        navController = navController,
-//        cctv = sampleCCTVList
-//    )
-//}

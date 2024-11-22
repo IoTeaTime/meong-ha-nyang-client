@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 data class CCTV(
     val id: String,
+    val channelName: String,
     val deviceName: String,   // 기기명
     val model: String,        // 기종
     val os: String,           // OS
@@ -19,6 +20,7 @@ val emptyCCTVList = emptyList<CCTV>()
 val sampleCCTVList = listOf(
     CCTV(
         id = "1",
+        channelName = "demo-channel",
         deviceName = "주방",
         model = "Flip5",
         os = "Android 10",
@@ -28,6 +30,7 @@ val sampleCCTVList = listOf(
     ),
     CCTV(
         id = "2",
+        channelName = "demo-channel2",
         deviceName = "거실",
         model = "s24",
         os = "Android 10",
@@ -37,6 +40,7 @@ val sampleCCTVList = listOf(
     ),
     CCTV(
         id = "3",
+        channelName = "demo-channel3",
         deviceName = "방1",
         model = "s23",
         os = "Android 12",

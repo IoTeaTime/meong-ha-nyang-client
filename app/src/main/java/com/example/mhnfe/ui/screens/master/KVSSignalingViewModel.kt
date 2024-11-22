@@ -51,7 +51,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.ApplicationContextProvider.getApplicationContext
 import org.webrtc.Camera1Enumerator
+import org.webrtc.Camera2Enumerator
 import org.webrtc.CameraEnumerator
+import org.webrtc.CameraVideoCapturer
 import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
@@ -61,6 +63,7 @@ import org.webrtc.MediaConstraints
 import org.webrtc.MediaStream
 import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
+import org.webrtc.RendererCommon
 import org.webrtc.SessionDescription
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
@@ -651,7 +654,6 @@ class KVSSignalingViewModel : ViewModel() {
 
                     override fun onSdpOffer(offerEvent: Event) {
                         Log.d("signalingListener::", "Received SDP Offer: Setting Remote Description ")
-
                         val sdp = Event.parseOfferEvent(offerEvent)
                         var peerConnection: PeerConnection? = null
                         Log.d("signalingListener::", "Received SDP Offer:  "+offerEvent.senderClientId)
@@ -1295,6 +1297,52 @@ class KVSSignalingViewModel : ViewModel() {
         _remoteView.value = null
     }
 
+    private var isBackCamera = false
+
+    fun switchCamera(context: Context) {
+        viewModelScope.launch {
+            try {
+                (videoCapturer as? CameraVideoCapturer)?.let { capturer ->
+                    val enumerator = Camera1Enumerator(false)
+                    val deviceNames = enumerator.deviceNames
+
+                    val targetDevice = deviceNames.firstOrNull { deviceName ->
+                        if (isBackCamera) {
+                            enumerator.isFrontFacing(deviceName)
+                        } else {
+                            enumerator.isBackFacing(deviceName)
+                        }
+                    }
+
+                    Log.d("Camera", "Target device: $targetDevice")
+
+                    targetDevice?.let { device ->
+                        capturer.switchCamera(object : CameraVideoCapturer.CameraSwitchHandler {
+                            override fun onCameraSwitchDone(isFrontCamera: Boolean) {
+                                isBackCamera = !isFrontCamera
+                                Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
+                            }
+
+                            override fun onCameraSwitchError(error: String) {
+                                Log.e("Camera", "카메라 전환 실패: $error")
+                                // 전환 실패 시 캡처 상태 확인 후 필요하면 재시작
+                                try {
+                                    videoCapturer.startCapture(1280, 720, 30)
+                                } catch (e: Exception) {
+                                    Log.e("Camera", "캡처 재시작 실패", e)
+                                }
+                            }
+                        }, device)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("Camera", "카메라 전환 중 에러 발생", e)
+            }
+        }
+    }
+
+
+
 
 
 
@@ -1327,5 +1375,6 @@ sealed class WebRTCUiState {
     companion object {
         private const val TAG = "WebRTCViewModel"
     }
+    data object NoMasterConnected : WebRTCUiState()
 }
 

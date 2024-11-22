@@ -113,7 +113,6 @@ fun StartUpScreen(
                 scope.launch(Dispatchers.IO) {
                     isLoading = true
                     errorMessage = null
-
                     try {
                         withContext(Dispatchers.IO) {
                             Log.d("awskinesisvideo", "로그인 시도 시작 - username: $username")
