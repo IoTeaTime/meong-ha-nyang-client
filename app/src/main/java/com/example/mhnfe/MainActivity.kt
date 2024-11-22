@@ -41,11 +41,13 @@ import com.example.mhnfe.ui.screens.master.WebRTCUiState
 import com.example.mhnfe.utils.PermissionManager
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.CountDownLatch
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private lateinit var permissionManager: PermissionManager
