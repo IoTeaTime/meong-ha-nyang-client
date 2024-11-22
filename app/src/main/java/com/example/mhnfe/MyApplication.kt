@@ -4,12 +4,14 @@ import android.util.Log
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.google.firebase.FirebaseApp
+import dagger.hilt.android.HiltAndroidApp
 import org.json.JSONException
 import org.webrtc.PeerConnectionFactory
 
 /**
  webRTC라이브러리 초기화
  */
+@HiltAndroidApp
 class MyApplication : Application() {
 
     override fun onCreate() {
