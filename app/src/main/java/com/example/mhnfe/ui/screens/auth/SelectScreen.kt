@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.auth
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,17 +25,22 @@ import com.example.mhnfe.ui.theme.mainYellow
 import com.example.mhnfe.ui.theme.mainGray
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
+import dagger.hilt.android.lifecycle.HiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
 
 @Composable
 fun SelectScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
+    viewModel: SelectViewModel = hiltViewModel()
 ) {
+    val groupState by viewModel.groupState.collectAsState()
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -51,6 +57,7 @@ fun SelectScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+
             // 로고 이미지
             Image(
                 painter = painterResource(id = R.drawable.logo),
@@ -72,13 +79,13 @@ fun SelectScreen(
                 // QR 스캔 버튼
                 MiddleButton(
                     text = "참여 QR",
-                    onClick =  {
+                    onClick = {
                         navController.navigate(NavRoutes.Auth.QRScanner.route) {
                             popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
                         }
                     },
 
-                )
+                    )
                 Button(
                     modifier = modifier
                         .wrapContentHeight()
@@ -89,6 +96,7 @@ fun SelectScreen(
                         containerColor = mainGray
                     ),
                     onClick = {
+                        viewModel.createGroup()
                         navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
                             // Auth 플로우를 백스택에서 제거
                             popUpTo(NavRoutes.Auth.route) {
@@ -100,7 +108,14 @@ fun SelectScreen(
                     Text(
                         style = Typography.labelLarge,
                         text = "그룹 생성",
-                        color = Color.White)
+                        color = Color.White
+                    )
+                }
+                if (groupState != null) {
+                    Text("앱에 저장되었나 확인용 나중에 지울 것")
+                    Text("Group ID: ${groupState?.groupId}")
+                    Text("Group Name: ${groupState?.groupName}")
+                    Text("Created At: ${groupState?.createdAt}")
                 }
             }
         }
