@@ -1,4 +1,4 @@
-package com.example.mhnfe.domin.mqtt.shadow.delta
+package com.example.mhnfe.domain.mqtt.shadow.delta
 
 import kotlinx.serialization.Serializable
 

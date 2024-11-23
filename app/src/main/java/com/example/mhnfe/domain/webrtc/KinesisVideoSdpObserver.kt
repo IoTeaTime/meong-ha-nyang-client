@@ -1,4 +1,4 @@
-package com.example.mhnfe.domin.webrtc
+package com.example.mhnfe.domain.webrtc
 
 import android.util.Log
 import org.webrtc.SdpObserver

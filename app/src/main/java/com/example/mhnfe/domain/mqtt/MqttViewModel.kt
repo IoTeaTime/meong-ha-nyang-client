@@ -1,4 +1,4 @@
-package com.example.mhnfe.domin.mqtt
+package com.example.mhnfe.domain.mqtt
 
 import android.annotation.SuppressLint
 import android.app.ActivityManager
@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModel
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttManager
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos
-import com.example.mhnfe.domin.mqtt.shadow.delta.ShadowDeltaMsg
+import com.example.mhnfe.domain.mqtt.shadow.delta.ShadowDeltaMsg
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.serialization.json.Json
 import java.io.File

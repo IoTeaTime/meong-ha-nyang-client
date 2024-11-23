@@ -1,4 +1,4 @@
-package com.example.mhnfe.domin.fcm
+package com.example.mhnfe.domain.fcm
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel

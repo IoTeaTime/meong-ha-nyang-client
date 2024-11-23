@@ -1,4 +1,4 @@
-package com.example.mhnfe.domin.mqtt
+package com.example.mhnfe.domain.mqtt
 
 import android.content.Context
 import com.amazonaws.auth.BasicAWSCredentials

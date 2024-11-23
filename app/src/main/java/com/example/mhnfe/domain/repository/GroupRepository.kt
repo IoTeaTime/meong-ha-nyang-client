@@ -1,4 +1,4 @@
-package com.example.mhnfe.domin.repository
+package com.example.mhnfe.domain.repository
 
 import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.response.Group
