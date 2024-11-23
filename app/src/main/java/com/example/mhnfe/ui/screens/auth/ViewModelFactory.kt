@@ -3,6 +3,8 @@ package com.example.mhnfe.ui.screens.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.mhnfe.data.repository.AuthRepository
+import com.example.mhnfe.ui.screens.auth.login.LoginViewModel
+import com.example.mhnfe.ui.screens.auth.signup.SignUpViewModel
 
 class SignUpViewModelFactory(private val authRepository: AuthRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
