@@ -5,9 +5,6 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
 import android.os.BatteryManager
 import android.provider.Settings
 import android.util.Log
@@ -20,7 +17,6 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
 import java.security.KeyStore
-import kotlin.concurrent.thread
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -54,14 +50,17 @@ object MqttUtils {
                 // 새로운 KeyStore를 생성해야 하는 경우
                 initializeWithNewKeyStore(context)
             }
-            // MQTT Manager 연결 및 상태 확인
-            connectToMqttManager()
+
+            // MQTT Manager 연결
+            connectToMqttManager() // 연결 완료까지 대기
         } catch (e: Exception) {
             Log.e(tag, "Initialization error: ${e.message}", e)
             throw e // 오류를 상위로 전달
         }
-        androidId
+
+        return@withContext androidId
     }
+
 
 
     private fun initializeWithExistingKeyStore(context: Context) {
@@ -108,7 +107,7 @@ object MqttUtils {
                         Log.d(tag, "MQTT Connection Status: $status")
                         if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected) {
                             if (continuation.isActive) {
-                                continuation.resume(Unit)
+                                continuation.resume(Unit) // 연결 완료 시 코루틴 재개
                             }
                         }
                     }
@@ -119,6 +118,7 @@ object MqttUtils {
             throw e
         }
     }
+
 
 
 
@@ -142,6 +142,62 @@ object MqttUtils {
             Log.e(tag, "MQTT Manager is not initialized")
         }
     }
+
+    fun viewerInitialSubscribe(thingList: List<String>, groupId: Int) {
+        try {
+            // Group 관련 토픽 생성
+            val groupTopic = "/mhn/command/device/info/groups/$groupId"
+            val topicsToSubscribe = mutableListOf(groupTopic)
+
+            // Thing 리스트의 각 Thing에 대해 토픽 생성 및 추가
+            thingList.forEach { thingId ->
+                val thingTopic = "/mhn/command/device/info/things/$thingId"
+                topicsToSubscribe.add(thingTopic)
+            }
+
+            // 각 Topic에 대해 구독 설정
+            topicsToSubscribe.forEach { topic ->
+                subscribe(topic) { receivedTopic, message ->
+                    Log.d(tag, "Message received on Topic: $receivedTopic, Payload: $message")
+                    // 메시지 내용을 처리
+                    handleTopicMessage(receivedTopic, message)
+                }
+            }
+            Log.d(tag, "Viewer 초기 구독 완료: Topics=${topicsToSubscribe.joinToString(", ")}")
+        } catch (e: Exception) {
+            Log.e(tag, "MQTT 구독 실패: ${e.message}", e)
+        }
+    }
+
+    private fun handleTopicMessage(receivedTopic: String, message: String) {
+        try {
+            // JSON 메시지 파싱 (예시)
+            val jsonMessage = JSONObject(message)
+
+            when {
+                receivedTopic.contains("groups") -> {
+                    // 그룹 관련 메시지 처리
+                    val groupInfo = jsonMessage.optString("groupInfo", "N/A")
+                    Log.d(tag, "Received group info: $groupInfo")
+                }
+                receivedTopic.contains("things") -> {
+                    // Thing 관련 메시지 처리
+                    val thingId = receivedTopic.substringAfterLast("/")
+                    val status = jsonMessage.optString("status", "unknown")
+                    val batteryLevel = jsonMessage.optInt("batteryLevel", -1)
+                    Log.d(tag, "Received status for Thing $thingId: Status=$status, Battery=$batteryLevel")
+                }
+                else -> {
+                    // 기타 메시지 처리
+                    Log.w(tag, "Unhandled topic: $receivedTopic")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to process message for topic: $receivedTopic, Error: ${e.message}", e)
+        }
+    }
+
+
 
     fun createShadowWithSubscribe(thingId: String, context: Context) {
         try {
