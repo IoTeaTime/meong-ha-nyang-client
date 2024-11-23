@@ -74,11 +74,20 @@ fun WebRtcScreen(
                 MqttUtils.initialize(context)
             }
             Log.d("WebRTCScreen", "MQTT 연결 성공: thingId=$thingId")
-            Toast.makeText(context, "MQTT 연결 성공", Toast.LENGTH_SHORT).show()
 
-            // 2. MQTT 연결이 완료 후, 기본 Shadow 생성 및 토픽 구독
+            val roles = ChannelRole.VIEWER
+            // 2. MQTT 연결 후 역할에 따라 서로 다른 Initial 토픽을 구독
             withContext(Dispatchers.IO) {
-                MqttUtils.createShadowWithSubscribe(thingId, context)
+                if(roles == ChannelRole.MASTER) {
+                    MqttUtils.createShadowWithSubscribe(thingId, context)
+                }
+                else{
+                    // Todo. groupId를 가져와서 구독
+                    // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
+                    val groupId = 404
+                    val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
+                    MqttUtils.viewerInitialSubscribe(thingList, groupId)
+                }
             }
         } catch (e: Exception) {
             Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
@@ -224,11 +233,18 @@ fun WebRtcScreen(
                 onClick = {
                     viewModel.viewModelScope.launch {
                         try {
-                            val payload = "{ }"
-                            MqttUtils.publish("\$aws/things/$thingId/shadow/get", payload)
+                            val topic = "/mhn/command/device/info/groups/404"
+                            val payload = """
+                                {
+                                    "status": "online",
+                                    "batteryLevel": 78,
+                                    "temperature": 36.5
+                                }
+                            """.trimIndent()
+                            MqttUtils.publish(topic, payload)
                             Log.d(
                                 "WebRTCScreen",
-                                "MQTT 이벤트 발행 - Topic: GetShadow, Payload: $payload"
+                                "MQTT 이벤트 발행 - Topic: $topic, Payload: $payload"
                             )
                             Toast.makeText(context, "이벤트 발행 완료", Toast.LENGTH_SHORT).show()
                         } catch (e: Exception) {
