@@ -1,5 +1,7 @@
 package com.example.mhnfe.ui.screens.master
 
+import android.annotation.SuppressLint
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -35,13 +37,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
-import com.example.mhnfe.mqtt.MqttUtils
+import com.example.mhnfe.mqtt.MqttViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,12 +54,14 @@ import org.webrtc.Logging
 
 private var thingId: String = ""
 @Composable
-fun WebRtcScreen(
+@SuppressLint("HardwareIds")
+fun WebRtcScreen (
     modifier: Modifier = Modifier,
     viewModel: KVSSignalingViewModel,
     navController: NavController,
     channelName: String,
-    role: ChannelRole
+    role: ChannelRole,
+    mqttViewModel: MqttViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -66,6 +71,7 @@ fun WebRtcScreen(
     val eglBase = remember { EglBase.create() }
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
+    val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
     LaunchedEffect(Unit) {
         try {

@@ -141,6 +141,7 @@ dependencies {
     implementation("com.amazonaws:aws-android-sdk-iot:2.77.0")
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
     implementation("com.amazonaws:aws-android-sdk-mobile-client:2.77.0")
+    implementation("software.amazon.awssdk.iotdevicesdk:aws-iot-device-sdk:1.21.0")
 
     // FCM
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
@@ -176,7 +177,6 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     //hilt life
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-
 }
 
 kapt {
