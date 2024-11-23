@@ -6,9 +6,13 @@ import com.example.mhnfe.data.api.AuthApi
 import com.example.mhnfe.data.model.ApiResponse
 import com.example.mhnfe.data.model.EmailRequest
 import com.example.mhnfe.data.model.Result
-import com.example.mhnfe.data.model.SignUpRequest
 import com.google.gson.Gson
 import retrofit2.HttpException
+import com.example.mhnfe.data.model.LoginRequest
+import com.example.mhnfe.data.model.LoginResponse
+import com.example.mhnfe.data.model.RefreshFcmTokenRequest
+import com.example.mhnfe.data.model.SignUpRequest
+import com.example.mhnfe.data.model.User
 
 class AuthRepository {
     private val api: AuthApi
@@ -56,5 +60,18 @@ class AuthRepository {
             Log.e("AuthRepository", "Error parsing response: ${e.message}", e)
             ApiResponse(Result(-1, "Parsing Error"), null)
         }
+    }
+}
+    suspend fun login(
+        email: String,
+        password: String
+    ): LoginResponse {
+        val request = LoginRequest(email, password)
+        return api.login(request)
+    }
+
+    suspend fun refreshFcmToken(jwtToken: String, fcmToken: String): ApiResponse {
+        val request = RefreshFcmTokenRequest(fcmToken)
+        return api.refreshFcmToken(jwtToken, request)
     }
 }
