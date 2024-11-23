@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mhnfe.data.model.ApiResponse
+import retrofit2.HttpException
 
 @Composable
 fun SignUpScreen(
@@ -47,14 +48,16 @@ fun SignUpScreen(
     onLoginClick: () -> Unit,
     signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository()))
 ) {
-
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
-    val errorMessage by signUpViewModel.errorMessage.collectAsState()
 
     val scope = rememberCoroutineScope()
     var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
 
+    var isEmailDuplicate by remember { mutableStateOf(false) }
+    var isEmailChecked by remember { mutableStateOf(false) }
+
     val focusManager = LocalFocusManager.current
+
     var currentStep by remember { mutableIntStateOf(0) }
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -73,18 +76,16 @@ fun SignUpScreen(
     var isNicknameError by remember { mutableStateOf(false) }
 
     // Error message states
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var emailErrorMessage by remember { mutableStateOf("") }
     var verificationErrorMessage by remember { mutableStateOf("") }
     var passwordErrorMessage by remember { mutableStateOf("") }
     var nicknameErrorMessage by remember { mutableStateOf("") }
 
-    // Validation functions
-    fun isEmailDuplicate(email: String): Boolean {
-        return email == "test@naver.com"  // 테스트용 중복 이메일
-    }
     fun isVerificationCodeValid(code: String): Boolean {
         return code != "111111"  // 111111이면 틀린 것으로 처리
     }
+
 
     fun validateCurrentStep(): Boolean {
         return when (currentStep) {
@@ -93,21 +94,19 @@ fun SignUpScreen(
                     email.isEmpty() -> {
                         emailErrorMessage = "이메일을 입력해주세요."
                         isEmailError = true
+                        errorMessage = emailErrorMessage
                         false
                     }
                     !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
                         emailErrorMessage = "올바른 이메일 형식이 아닙니다."
                         isEmailError = true
-                        false
-                    }
-                    isEmailDuplicate(email) -> {
-                        emailErrorMessage = "이미 사용 중인 이메일입니다."
-                        isEmailError = true
+                        errorMessage = emailErrorMessage
                         false
                     }
                     else -> {
                         isEmailError = false
                         emailErrorMessage = ""
+                        errorMessage = null
                         true
                     }
                 }
@@ -119,6 +118,7 @@ fun SignUpScreen(
                         isVerificationError = true
                         false
                     }
+
                     !isVerificationCodeValid(verificationCode) -> {
                         verificationErrorMessage = "인증번호가 올바르지 않습니다."
                         isVerificationError = true
@@ -236,7 +236,7 @@ fun SignUpScreen(
                                 emailErrorMessage = ""
                             },
                             hintText = "example@example.com",
-                            warningText = emailErrorMessage
+                            warningText = if (isEmailError) emailErrorMessage else ""
                         )
                     }
                     1 -> {
@@ -329,49 +329,95 @@ fun SignUpScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                MiddleButton(
-                    text = if (currentStep == 3) "완료" else "다음",
-                    onClick = {
-                        if (validateCurrentStep()) {
-                            if (currentStep < 3) {
-                                currentStep++
-                            } else {
-                                // Call the Sign-Up API
-                                scope.launch {
+                val signUpViewModel: SignUpViewModel = viewModel()
+
+                if (currentStep == 0) {
+                    MiddleButton(
+                        text = "확인",
+                        onClick = {
+                            scope.launch {
+                                if (validateCurrentStep()) {
                                     try {
+                                        val (code, description) = signUpViewModel.checkEmailStatus(email)
 
-                                        // Log before calling the Sign-Up API
-                                        //Log.d("SignUpScreen", "회원가입 데이터: email=$email, password=$password, passwordConfirm=$confirmPassword, nickname=$nickname")
-
-                                        apiResponse = authRepository.signUp(
-                                            email = email,
-                                            password = password,
-                                            passwordConfirm = confirmPassword,
-                                            nickname = nickname
-                                        )
-                                        if (apiResponse?.result?.code == 201) {
-//                                            Log.d("SignUpScreen", "회원가입 성공: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
-                                            onLoginClick()
-                                        } else {
-                                            Log.e("SignUpScreen", "회원가입 실패: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                        when (code) {
+                                            200 -> {
+                                                emailErrorMessage = ""
+                                                isEmailError = false
+                                                errorMessage = null
+                                                currentStep++
+                                                Log.d("SignUpScreen", "이메일 중복 확인: $description")
+                                            }
+                                            400 -> {
+                                                emailErrorMessage = "이미 사용 중인 이메일입니다."
+                                                isEmailError = true
+                                                errorMessage = emailErrorMessage
+                                                Log.e("SignUpScreen", "이메일 중복 확인 : $description")
+                                            }
+                                            else -> {
+                                                emailErrorMessage = "오류 발생: $description"
+                                                isEmailError = true
+                                                errorMessage = emailErrorMessage
+                                                Log.e("SignUpScreen", "예상치 못한 오류: code=$code, description=$description")
+                                            }
                                         }
                                     } catch (e: Exception) {
-                                        Log.e("SignUpScreen", "회원가입 중 오류 발생: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                        Log.e("SignUpScreen", "API 호출 중 오류 발생: ${e.message}")
+                                        emailErrorMessage = "이메일 확인 중 문제가 발생했습니다."
+                                        isEmailError = true
+                                        errorMessage = emailErrorMessage
                                     }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                } else {
+                    MiddleButton(
+                        text = if (currentStep == 3) "완료" else "다음",
+                        onClick = {
+                            if (validateCurrentStep()) {
+                                if (currentStep < 3) {
+                                    currentStep++
+                                } else {
+                                    // Call the Sign-Up API
+                                    scope.launch {
+                                        try {
+
+                                            // Log before calling the Sign-Up API
+                                            //Log.d("SignUpScreen", "회원가입 데이터: email=$email, password=$password, passwordConfirm=$confirmPassword, nickname=$nickname")
+
+                                            apiResponse = authRepository.signUp(
+                                                email = email,
+                                                password = password,
+                                                passwordConfirm = confirmPassword,
+                                                nickname = nickname
+                                            )
+                                            if (apiResponse?.result?.code == 201) {
+//                                                Log.d("SignUpScreen", "회원가입 성공: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                                onLoginClick()
+                                            } else {
+                                                Log.e(
+                                                    "SignUpScreen",
+                                                    "회원가입 실패: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}"
+                                                )
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e(
+                                                "SignUpScreen",
+                                                "회원가입 중 오류 발생: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}"
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
                 // Call onLoginClick on successful sign-up
                 if (signUpResponse?.result?.code == 0) {
                     LaunchedEffect(Unit) {
                         onLoginClick()
                     }
-                }
-                // Handle error message
-                errorMessage?.let {
-                    Text(text = it, color = Color.Red, textAlign = TextAlign.Center)
                 }
             }
         }
