@@ -46,8 +46,7 @@ fun SignUpScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
     onLoginClick: () -> Unit,
-    signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository(
-        LocalContext.current)))
+    signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository()))
 ) {
 
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
@@ -177,7 +176,7 @@ fun SignUpScreen(
     }
 
     // Create an instance of the Repository for calling the Sign-Up API
-    val authRepository = AuthRepository(LocalContext.current)
+    val authRepository = AuthRepository()
 
     Scaffold(
         modifier = modifier,

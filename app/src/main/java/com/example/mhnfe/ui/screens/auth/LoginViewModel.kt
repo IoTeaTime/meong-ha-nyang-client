@@ -1,12 +1,13 @@
 package com.example.mhnfe.ui.screens.auth
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.model.ApiResponse
 import com.example.mhnfe.data.model.LoginResponse
 import com.example.mhnfe.data.repository.AuthRepository
-import com.example.mhnfe.data.token.TokenProvider
+import com.google.android.gms.common.api.Api
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -33,20 +34,16 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     // 로그인 함수
-    fun loginUser(tokenProvider: TokenProvider, email: String, password: String) {
+    fun loginUser(editor: SharedPreferences.Editor, email: String, password: String) {
         viewModelScope.launch {
             try {
                 // 서버로 로그인 요청
                 val response = authRepository.login(email, password)
 
-                val accessToken = response.body.accessToken
-                val refreshToken = response.body.refreshToken
-
-                // JWT 엑세스, 리프레시 토큰, expiration time 저장
-                tokenProvider.saveAccessToken(accessToken)
-                tokenProvider.saveRefreshToken(refreshToken)
-
-                Log.d("LoginViewModel", "JWT 엑세스, 리프레시 토큰 저장 완료: $accessToken")
+                val token = response.body.accessToken
+                editor.putString("jwt_token", token)
+                editor.commit()
+                Log.d("LoginViewModel", "JWT 토큰 저장 완료: $token")
 
                 Log.d("LoginViewModel","response: " + response.result.message)
                 if (response.result.code == 200) {

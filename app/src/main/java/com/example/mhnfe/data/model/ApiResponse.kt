@@ -1,6 +1,8 @@
 package com.example.mhnfe.data.model
 
-// 회원가입
+import kotlinx.serialization.Serializable
+
+
 data class ApiResponse(
     val result: Result,
     val body: User
