@@ -20,6 +20,7 @@ interface AuthApi {
     @POST("/open-api/auth/check-email")
     suspend fun checkEmailDuplicate(
         @Body request: EmailRequest
+    ): ApiResponse
 
     @POST("/open-api/auth/sign-in")
     suspend fun  login(

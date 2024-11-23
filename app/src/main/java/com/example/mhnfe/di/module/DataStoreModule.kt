@@ -38,8 +38,8 @@ object DataStoreModule {
 
     @Provides
     @Singleton
-    fun provideGroupSerializer(): androidx.datastore.core.Serializer<Group> {
-        return object : androidx.datastore.core.Serializer<Group> {
+    fun provideGroupSerializer(): Serializer<Group> {
+        return object : Serializer<Group> {
             override val defaultValue: Group = Group(0, "", "")
 
             override suspend fun readFrom(input: InputStream): Group {
@@ -75,6 +75,7 @@ object DataStoreModule {
             produceFile = { context.filesDir.resolve("group_data.pb") }
         )
     }
+
     @Provides
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {

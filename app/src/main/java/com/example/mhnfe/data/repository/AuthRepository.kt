@@ -61,7 +61,7 @@ class AuthRepository {
             ApiResponse(Result(-1, "Parsing Error"), null)
         }
     }
-}
+
     suspend fun login(
         email: String,
         password: String

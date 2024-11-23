@@ -8,19 +8,22 @@ import com.amazonaws.services.iot.model.AttachPolicyRequest
 import com.amazonaws.services.iot.model.AttachThingPrincipalRequest
 import com.amazonaws.services.iot.model.CreateKeysAndCertificateRequest
 import com.amazonaws.services.iot.model.CreateKeysAndCertificateResult
+import com.amazonaws.services.iot.model.DeleteThingRequest
 import com.amazonaws.services.iot.model.RegisterThingRequest
 import com.example.mhnfe.BuildConfig
 import com.example.mhnfe.R
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.Security
-import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class IoTClientHelper(androidId: String) {
-    private val client: AWSIotClient
-    private var thingId = ""
+@Singleton
+class IoTClientHelper @Inject constructor(
+    private val thingId: String,
+) {
+    private var client: AWSIotClient
 
     init {
-        thingId = androidId
         client = AWSIotClient(
             BasicAWSCredentials(
                 BuildConfig.AWS_ACCESS_KEY, // AWS 액세스 키를 여기에 입력하세요
@@ -62,5 +65,11 @@ class IoTClientHelper(androidId: String) {
             principal = result.certificateArn // 인증서 ARN
         }
         client.attachThingPrincipal(attachThingPrincipalRequest)
+    }
+
+    fun deleteDevice() {
+        val deleteThingRequest = DeleteThingRequest()
+        deleteThingRequest.thingName = thingId
+        client.deleteThing(deleteThingRequest)
     }
 }
