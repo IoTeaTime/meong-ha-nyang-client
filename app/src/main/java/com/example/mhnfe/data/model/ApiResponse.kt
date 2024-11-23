@@ -1,5 +1,8 @@
 package com.example.mhnfe.data.model
 
+import kotlinx.serialization.Serializable
+
+
 data class ApiResponse(
     val result: Result,
     val body: Any? = null
@@ -18,6 +21,17 @@ data class User(
     val password: String,
     val passwordConfirm: String,
     val nickname: String
+)
+
+data class LoginResponse(
+    val result: Result,
+    val body: Jwt
+)
+
+data class Jwt(
+    val memberId: Int,
+    val accessToken: String,
+    val refreshToken: String
 )
 
 

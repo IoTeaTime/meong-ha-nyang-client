@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.auth
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,67 +25,44 @@ import com.example.mhnfe.ui.theme.mainYellow
 import com.example.mhnfe.ui.theme.mainGray
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mhnfe.di.UserType
+import com.example.mhnfe.ui.components.MainTopBar
+import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.theme.Typography
+import dagger.hilt.android.lifecycle.HiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
-// 그룹 생성용 버튼 컴포넌트
-@Composable
-fun GroupCreateButton(
-    onClick: () -> Unit
-) {
-    Button(
-        modifier = Modifier
-            .wrapContentSize(),
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(vertical = 15.dp, horizontal = 140.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = mainGray
-        ),
-        onClick = onClick,
-    ) {
-        Text(
-            text = "그룹 생성",
-        )
-    }
-}
 
 @Composable
 fun SelectScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    onQrScanClick: () -> Unit,
-    onCreateGroupClick: () -> Unit
+    viewModel: SelectViewModel = hiltViewModel()
 ) {
-    val focusManager = LocalFocusManager.current
-    val interactionSource = remember { MutableInteractionSource() }
-
+    val groupState by viewModel.groupState.collectAsState()
     Scaffold(
         modifier = modifier,
         topBar = {
-            SubTopBar(
-                text = "",
-                onBack = { navController.popBackStack() }
+            MainTopBar(
+                text = "선택"
             )
         }
     ) { paddingValues ->
         Column(
             modifier = modifier
-                .background(color = Color.White)
                 .padding(paddingValues)
                 .fillMaxSize()
-                .padding(horizontal = 34.dp)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null
-                ) {
-                    focusManager.clearFocus()
-                },
+                .padding(horizontal = 34.dp, vertical = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+
             // 로고 이미지
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "로고",
-                modifier = Modifier
+                modifier = modifier
                     .padding(top = 80.dp)
                     .size(300.dp),
                 contentScale = ContentScale.Fit
@@ -92,22 +70,53 @@ fun SelectScreen(
 
             // 버튼들
             Column(
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxWidth()
-                    .padding(bottom = 48.dp),
+                    .wrapContentHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(30.dp)
+                verticalArrangement = Arrangement.spacedBy(30.dp, alignment = Alignment.CenterVertically)
             ) {
                 // QR 스캔 버튼
                 MiddleButton(
                     text = "참여 QR",
-                    onClick = onQrScanClick
-                )
+                    onClick = {
+                        navController.navigate(NavRoutes.Auth.QRScanner.route) {
+                            popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
+                        }
+                    },
 
-                // 그룹 생성 버튼
-                GroupCreateButton(
-                    onClick = onCreateGroupClick
-                )
+                    )
+                Button(
+                    modifier = modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(vertical = 15.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = mainGray
+                    ),
+                    onClick = {
+                        viewModel.createGroup()
+                        navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                            // Auth 플로우를 백스택에서 제거
+                            popUpTo(NavRoutes.Auth.route) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                ) {
+                    Text(
+                        style = Typography.labelLarge,
+                        text = "그룹 생성",
+                        color = Color.White
+                    )
+                }
+                if (groupState != null) {
+                    Text("앱에 저장되었나 확인용 나중에 지울 것")
+                    Text("Group ID: ${groupState?.groupId}")
+                    Text("Group Name: ${groupState?.groupName}")
+                    Text("Created At: ${groupState?.createdAt}")
+                }
             }
         }
     }
@@ -123,7 +132,5 @@ fun SelectScreen(
 fun SelectScreenPreview() {
     SelectScreen(
         navController = rememberNavController(),
-        onQrScanClick = {},
-        onCreateGroupClick = {}
     )
 }

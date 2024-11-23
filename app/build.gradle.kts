@@ -1,6 +1,13 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("com.google.gms.google-services")
+    kotlin("plugin.serialization") version libs.versions.kotlin
+    id("dagger.hilt.android.plugin")
+    kotlin("kapt")
+    alias(libs.plugins.compose.compiler)
+
 }
 
 android {
@@ -14,6 +21,11 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "AWS_ACCESS_KEY", properties["AWS_ACCESS_KEY"].toString())
+        buildConfigField("String", "AWS_PRIVATE_KEY", properties["AWS_PRIVATE_KEY"].toString())
+        buildConfigField("String", "AWS_REGION", properties["AWS_REGION"].toString())
+        buildConfigField("String", "MQTT_END_POINT", properties["MQTT_END_POINT"].toString())
+        buildConfigField("String", "AWS_KEYSTORE_PW", properties["AWS_KEYSTORE_PW"].toString())
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -39,7 +51,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
     packaging {
         resources {
@@ -63,6 +75,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.datastore.core.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -113,8 +126,10 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
-
-
+    // ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.1.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.1.1")
+    implementation("androidx.media3:media3-ui:1.1.1")
 
 
     //Add OkHttp dependency
@@ -122,4 +137,48 @@ dependencies {
 
     //Add Awaitility dependency
     implementation("org.awaitility:awaitility:4.2.0")
+
+    implementation("com.amazonaws:aws-android-sdk-iot:2.77.0")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:2.77.0")
+
+    // FCM
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+    val work_version = "2.9.1"
+    // (Java only)
+    implementation("androidx.work:work-runtime:$work_version")
+
+    // Kotlin + coroutines
+    implementation("androidx.work:work-runtime-ktx:$work_version")
+
+    // optional - RxJava2 support
+    implementation("androidx.work:work-rxjava2:$work_version")
+
+    // optional - GCMNetworkManager support
+    implementation("androidx.work:work-gcm:$work_version")
+
+    // optional - Test helpers
+    androidTestImplementation("androidx.work:work-testing:$work_version")
+
+    // optional - Multiprocess support
+    implementation("androidx.work:work-multiprocess:$work_version")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    // Hilt dependencies
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+
+
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    //hilt life
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+}
+
+kapt {
+    correctErrorTypes = true
 }
