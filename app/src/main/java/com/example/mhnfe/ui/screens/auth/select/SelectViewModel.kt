@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.response.CreateGroupRequest
 import com.example.mhnfe.data.remote.response.Group
-import com.example.mhnfe.domin.repository.GroupRepository
+import com.example.mhnfe.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

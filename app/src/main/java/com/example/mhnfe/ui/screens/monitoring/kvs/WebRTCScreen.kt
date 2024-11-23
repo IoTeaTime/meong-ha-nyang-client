@@ -44,7 +44,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
-import com.example.mhnfe.domin.mqtt.MqttViewModel
+import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

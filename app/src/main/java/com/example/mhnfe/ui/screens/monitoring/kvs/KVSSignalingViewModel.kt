@@ -36,8 +36,8 @@ import com.example.mhnfe.data.signaling.model.Message
 import com.example.mhnfe.data.signaling.okhttp.SignalingServiceWebSocketClient
 import com.example.mhnfe.utils.AwsV4Signer
 import com.example.mhnfe.utils.Constants
-import com.example.mhnfe.domin.webrtc.KinesisVideoPeerConnection
-import com.example.mhnfe.domin.webrtc.KinesisVideoSdpObserver
+import com.example.mhnfe.domain.webrtc.KinesisVideoPeerConnection
+import com.example.mhnfe.domain.webrtc.KinesisVideoSdpObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

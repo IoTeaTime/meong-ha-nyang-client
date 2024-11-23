@@ -1,4 +1,4 @@
-package com.example.mhnfe.domin.mqtt
+package com.example.mhnfe.domain.mqtt
 
 import software.amazon.awssdk.crt.mqtt.MqttClientConnection
 import software.amazon.awssdk.iot.iotshadow.IotShadowClient
