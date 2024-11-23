@@ -52,7 +52,6 @@ import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
 
-private var thingId: String = ""
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen (
@@ -76,23 +75,25 @@ fun WebRtcScreen (
     LaunchedEffect(Unit) {
         try {
             // 1. MQTT 연결 시도
-            thingId = withContext(Dispatchers.IO) {
-                MqttUtils.initialize(context)
+            val isConnected = withContext(Dispatchers.IO) {
+                mqttViewModel.initialize(context)
             }
-            Log.d("WebRTCScreen", "MQTT 연결 성공: thingId=$thingId")
 
-            val roles = ChannelRole.VIEWER
-            // 2. MQTT 연결 후 역할에 따라 서로 다른 Initial 토픽을 구독
-            withContext(Dispatchers.IO) {
-                if(roles == ChannelRole.MASTER) {
-                    MqttUtils.createShadowWithSubscribe(thingId, context)
-                }
-                else{
-                    // Todo. groupId를 가져와서 구독
-                    // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
-                    val groupId = 404
-                    val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
-                    MqttUtils.viewerInitialSubscribe(thingList, groupId)
+            if (isConnected) {
+                // Todo. 역할을 가져오는 로직도 추가
+                val roles = ChannelRole.VIEWER
+
+                withContext(Dispatchers.IO) {
+                    if (roles == ChannelRole.MASTER) {
+                        mqttViewModel.createShadowWithSubscribe(context)
+                    } else {
+                        // Todo. groupId를 가져와서 구독
+                        val groupId = 404
+                        // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
+                        val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
+
+                        mqttViewModel.viewerInitialSubscribe(thingList, groupId)
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -247,7 +248,7 @@ fun WebRtcScreen (
                                     "temperature": 36.5
                                 }
                             """.trimIndent()
-                            MqttUtils.publish(topic, payload)
+                            mqttViewModel.publish(topic, payload)
                             Log.d(
                                 "WebRTCScreen",
                                 "MQTT 이벤트 발행 - Topic: $topic, Payload: $payload"
