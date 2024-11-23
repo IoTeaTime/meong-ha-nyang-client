@@ -21,13 +21,13 @@ import androidx.compose.ui.unit.dp
 import com.example.mhnfe.ui.theme.MhnFETheme
 import android.content.ContentValues.TAG
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.amazonaws.mobile.client.AWSMobileClient
@@ -41,8 +41,13 @@ import com.example.mhnfe.ui.screens.master.WebRTCUiState
 import com.example.mhnfe.utils.PermissionManager
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.CountDownLatch
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private lateinit var permissionManager: PermissionManager
@@ -53,12 +58,18 @@ class MainActivity : ComponentActivity() {
 
         val auth = AWSMobileClient.getInstance()
         initializeMobileClient(auth, this@MainActivity)
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                AWSMobileClient.getInstance().signIn("peach3139@naver.com", "qqqq11", null)
+            }
+        }
+
         //로그아웃
 //        AWSMobileClient.getInstance().signOut()
         //권한 요청
         permissionManager.checkAndRequestPermissions()
 
-        // FCM 토큰 확인
+//        // FCM 토큰 확인
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
                 Log.w(TAG, "Fetching FCM registration token failed", task.exception)
@@ -116,22 +127,6 @@ private fun initializeMobileClient(client: AWSMobileClient, context: ComponentAc
         e.printStackTrace()
     }
 }
-
-//class WebRtcViewModelFactory(
-//    private val context: Context,
-//    private val notificationManager: NotificationManager,
-//    private val kvsSignalingViewModel: KVSSignalingViewModel
-//) : ViewModelProvider.Factory {
-//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-//        if (modelClass.isAssignableFrom(WebRtcViewModel::class.java)) {
-//            @Suppress("UNCHECKED_CAST")
-//            return WebRtcViewModel(kvsSignalingViewModel, context, notificationManager) as T
-//        }
-//        throw IllegalArgumentException("Unknown ViewModel class")
-//    }
-//}
-//private const val WEBRTC_VIEW_MODEL_KEY = "webrtc_view_model"
-
 
 @Composable
 fun SignalingChannelTest(

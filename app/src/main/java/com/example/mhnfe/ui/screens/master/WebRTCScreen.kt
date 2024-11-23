@@ -4,7 +4,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
@@ -28,7 +24,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,8 +41,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
+import com.example.mhnfe.mqtt.MqttUtils
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
@@ -71,6 +68,30 @@ fun WebRtcScreen(
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
 
+    val testTopic = "test/topic"
+
+
+    LaunchedEffect(Unit) {
+        try {
+            // 1. MQTT 연결 시도
+            MqttUtils.initialize(context)
+            Log.d("WebRTCScreen", "MQTT 연결 테스트 시작")
+            Toast.makeText(context, "MQTT 연결 성공", Toast.LENGTH_SHORT).show()
+
+            // 2. 연결 후 2초 대기 후 구독 실행
+            kotlinx.coroutines.delay(2000)
+            MqttUtils.subscribe(testTopic) { topic, message ->
+                Log.d(
+                    "WebRTCScreen",
+                    "MQTT 메시지 수신 - Topic: $topic, Message: $message Context: $context"
+                )
+            }
+            Log.d("WebRTCScreen", "MQTT 토픽 구독 성공 - Topic: $testTopic")
+        } catch (e: Exception) {
+            Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
+            Toast.makeText(context, "MQTT 연결 실패 또는 구독 실패", Toast.LENGTH_SHORT).show()
+        }
+    }
     // 초기화는 한 번만 실행되도록 key를 사용
     LaunchedEffect(channelName) {
         if (uiState !is WebRTCUiState.Success) {
@@ -94,6 +115,7 @@ fun WebRtcScreen(
 
 
     LaunchedEffect(connectionEvent) {
+        Log.d("WebRtcScreen", "connectionEvent 상태: $connectionEvent")
         when (connectionEvent) {
             ConnectionEvent.ConnectionFailed -> {
                 Toast.makeText(context, "연결 실패", Toast.LENGTH_LONG).show()
@@ -101,18 +123,18 @@ fun WebRtcScreen(
                 viewModel.onConnectionEventHandled()
             }
             ConnectionEvent.ConnectionSuccess -> {
-                // 연결 성공 처리
+                Log.d("WebRtcScreen", "연결 성공: MQTT 초기화 시작")
                 viewModel.onConnectionEventHandled()
             }
             null -> {}
         }
     }
 
+
     // 리소스 정리 함수
     val cleanup = {
         try {
             Logging.enableLogToDebugOutput(Logging.Severity.LS_NONE)
-            viewModel.releasePeerConnection()
             viewModel.resetState()
             localView?.let {
                 it.clearImage()
@@ -164,6 +186,7 @@ fun WebRtcScreen(
 //            }
 //        }
 //    }
+
     Column(
         modifier = modifier.fillMaxSize().background(color = mainBlack)
     ) {
@@ -184,10 +207,7 @@ fun WebRtcScreen(
                             cleanup()
 
                             withContext(Dispatchers.Main) {
-                                navController.navigate("monitoring/group") {
-                                    popUpTo(navController.graph.findStartDestination().id)
-                                    launchSingleTop = true
-                                }
+                                navController.navigateUp()
                             }
                         } catch (e: Exception) {
                             Log.e("WebRTCScreen", "연결 해제 실패", e)
@@ -203,10 +223,42 @@ fun WebRtcScreen(
             ) {
                 Text("카메라 끄기")
             }
+
+
+            // MQTT 이벤트 발행 button
+            Button (
+                onClick = {
+                    viewModel.viewModelScope.launch {
+                        try {
+                            val payload =
+                                "{\"event\": \"test\", \"timestamp\": ${System.currentTimeMillis()}}"
+                            MqttUtils.publish(testTopic, payload)
+                            Log.d(
+                                "WebRTCScreen",
+                                "MQTT 이벤트 발행 - Topic: $testTopic, Payload: $payload"
+                            )
+                            Toast.makeText(context, "이벤트 발행 완료", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
+                        }
+                    }
+                },
+                modifier = Modifier.padding(8.dp)
+
+            ) {
+                Text("이벤트")
+
+            }
+
+
             IconButton(
                 modifier = modifier
                     .size(50.dp),
-                onClick = {}
+                onClick = {
+                    if (role == ChannelRole.MASTER) {
+                        viewModel.switchCamera(context)
+                    }
+                }
             ) {
                 Icon(
                     modifier = modifier.size(41.dp),
@@ -247,6 +299,7 @@ fun WebRtcScreen(
                     remoteView?.let { renderer ->
                         AndroidView(
                             factory = {
+
                                 renderer.apply {
                                     (parent as? android.view.ViewGroup)?.removeView(this)
                                 }

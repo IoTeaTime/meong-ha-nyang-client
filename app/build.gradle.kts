@@ -1,13 +1,13 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("com.google.gms.google-services")
     kotlin("plugin.serialization") version libs.versions.kotlin
-    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    id("dagger.hilt.android.plugin")
+    kotlin("kapt")
+    alias(libs.plugins.compose.compiler)
 
-    // Hilt 플러그인 추가
-    id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -49,10 +49,9 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
     packaging {
         resources {
@@ -76,9 +75,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.foundation)
-    implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.media3.ui)
-    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.datastore.core.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -147,6 +144,9 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-messaging-ktx")
 
+    implementation("com.amazonaws:aws-android-sdk-iot:2.77.0")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+
     val work_version = "2.9.1"
     // (Java only)
     implementation("androidx.work:work-runtime:$work_version")
@@ -167,17 +167,18 @@ dependencies {
     implementation("androidx.work:work-multiprocess:$work_version")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    
-    implementation("com.amazonaws:aws-android-sdk-iot:2.77.0")
-    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
-    implementation("com.amazonaws:aws-android-sdk-mobile-client:2.77.0")
 
-    // Hilt 기본 라이브러리
+    // Hilt dependencies
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+
+
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    //hilt life
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
 }
 
-// Allow references to generated code
 kapt {
     correctErrorTypes = true
 }
