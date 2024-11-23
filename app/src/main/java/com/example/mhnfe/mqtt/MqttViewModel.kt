@@ -17,13 +17,10 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.security.KeyStore
 import javax.inject.Inject
-import kotlin.concurrent.thread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.File
-import java.security.KeyStore
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -32,38 +29,34 @@ class MqttViewModel @Inject constructor(
     private val thingId: String,
     private val iotClientHelper: IoTClientHelper,
     private val mqttHelper: MqttManagerHelper
-): ViewModel() {
+) : ViewModel() {
     private var awsMqttManager: AWSIotMqttManager = mqttHelper.createMqttManager()
     private var keyStore: KeyStore? = null
     private val tag = "MqttUtils"
 
     @SuppressLint("HardwareIds")
-    fun initialize(context: Context) {
+    suspend fun initialize(context: Context): Boolean = withContext(Dispatchers.IO) {
         val keyStoreFile = File("${context.filesDir}/keystore.bks")
-
-        thread {
-            try {
-                if (keyStoreFile.exists()) {
-                    // 기존 KeyStore를 사용하는 경우
-                    initializeWithExistingKeyStore(context)
-                } else {
-                    // 새로운 KeyStore를 생성해야 하는 경우
-                    initializeWithNewKeyStore(context)
-                }
-                // MQTT Manager 연결
-                connectToMqttManager()
-            } catch (e: Exception) {
-                Log.e(tag, "Initialization error: ${e.message}", e)
+        return@withContext try {
+            if (keyStoreFile.exists()) {
+                // 기존 KeyStore를 사용하는 경우
+                initializeWithExistingKeyStore(context)
+            } else {
+                // 새로운 KeyStore를 생성해야 하는 경우
+                initializeWithNewKeyStore(context)
             }
-
             // MQTT Manager 연결
-            connectToMqttManager() // 연결 완료까지 대기
+            val isConnected = connectToMqttManager()
+            if (isConnected) {
+                Log.d(tag, "MQTT 연결 성공")
+            } else {
+                Log.e(tag, "MQTT 연결 실패")
+            }
+            isConnected // 연결 성공 여부 반환
         } catch (e: Exception) {
             Log.e(tag, "Initialization error: ${e.message}", e)
-            throw e // 오류를 상위로 전달
+            false // 실패 시 false 반환
         }
-
-        return@withContext androidId
     }
 
 
@@ -95,14 +88,13 @@ class MqttViewModel @Inject constructor(
     }
 
 
-
-    private suspend fun connectToMqttManager() = withContext(Dispatchers.IO) {
-        try {
-            suspendCancellableCoroutine<Unit> { continuation ->
+    private suspend fun connectToMqttManager(): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            suspendCancellableCoroutine<Boolean> { continuation ->
                 awsMqttManager?.connect(keyStore) { status, throwable ->
                     if (throwable != null) {
                         Log.e(tag, "Connection error: ${throwable.message}", throwable)
-                        // 예외를 전달하여 코루틴 재개
+                        // 예외 전달하여 코루틴 재개
                         if (continuation.isActive) {
                             continuation.resumeWithException(throwable)
                         }
@@ -110,7 +102,11 @@ class MqttViewModel @Inject constructor(
                         Log.d(tag, "MQTT Connection Status: $status")
                         if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected) {
                             if (continuation.isActive) {
-                                continuation.resume(Unit) // 연결 완료 시 코루틴 재개
+                                continuation.resume(true) // 성공 시 true 반환
+                            }
+                        } else if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.ConnectionLost) {
+                            if (continuation.isActive) {
+                                continuation.resume(false) // 연결 끊김 시 false 반환
                             }
                         }
                     }
@@ -118,11 +114,9 @@ class MqttViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(tag, "MQTT Connection failed: ${e.message}", e)
-            throw e
+            false // 실패 시 false 반환
         }
-
-
-
+    }
 
     fun disconnectMqttManager() {
         awsMqttManager.disconnect()
@@ -148,8 +142,8 @@ class MqttViewModel @Inject constructor(
             val topicsToSubscribe = mutableListOf(groupTopic)
 
             // Thing 리스트의 각 Thing에 대해 토픽 생성 및 추가
-            thingList.forEach { thingId ->
-                val thingTopic = "/mhn/command/device/info/things/$thingId"
+            thingList.forEach { subthingId ->
+                val thingTopic = "/mhn/command/device/info/things/$subthingId"
                 topicsToSubscribe.add(thingTopic)
             }
 
@@ -178,26 +172,33 @@ class MqttViewModel @Inject constructor(
                     val groupInfo = jsonMessage.optString("groupInfo", "N/A")
                     Log.d(tag, "Received group info: $groupInfo")
                 }
+
                 receivedTopic.contains("things") -> {
                     // Thing 관련 메시지 처리
                     val thingId = receivedTopic.substringAfterLast("/")
                     val status = jsonMessage.optString("status", "unknown")
                     val batteryLevel = jsonMessage.optInt("batteryLevel", -1)
-                    Log.d(tag, "Received status for Thing $thingId: Status=$status, Battery=$batteryLevel")
+                    Log.d(
+                        tag,
+                        "Received status for Thing $thingId: Status=$status, Battery=$batteryLevel"
+                    )
                 }
+
                 else -> {
                     // 기타 메시지 처리
                     Log.w(tag, "Unhandled topic: $receivedTopic")
                 }
             }
         } catch (e: Exception) {
-            Log.e(tag, "Failed to process message for topic: $receivedTopic, Error: ${e.message}", e)
+            Log.e(
+                tag,
+                "Failed to process message for topic: $receivedTopic, Error: ${e.message}",
+                e
+            )
         }
     }
 
-
-
-    fun createShadowWithSubscribe(thingId: String, context: Context) {
+    fun createShadowWithSubscribe(context: Context) {
         try {
             // Shadow Update Topic
             val topic = "\$aws/things/${thingId}/shadow/update"
@@ -264,7 +265,7 @@ class MqttViewModel @Inject constructor(
                     Log.d(tag, "Delta 메시지 수신: $jsonObject")
 
                     // kvsChannelDeleteRequested가 true라면
-                    if(jsonObject.state.delta.kvsChannelDeleteRequested) {
+                    if (jsonObject.state.delta.kvsChannelDeleteRequested) {
                         // IoT 디바이스 삭제
                         iotClientHelper.deleteDevice()
                         Log.d(tag, "IoT 디바이스 삭제 성공")
@@ -311,7 +312,8 @@ class MqttViewModel @Inject constructor(
     }
 
     fun getAvailableMemory(context: Context): Long {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val activityManager =
+            context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memoryInfo = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(memoryInfo)
         return memoryInfo.availMem / (1024 * 1024) // MB 단위
