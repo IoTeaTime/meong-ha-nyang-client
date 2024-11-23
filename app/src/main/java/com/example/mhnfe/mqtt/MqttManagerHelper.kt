@@ -7,8 +7,13 @@ import com.amazonaws.mobileconnectors.iot.AWSIotMqttManager
 import com.amazonaws.services.iot.model.CreateKeysAndCertificateResult
 import com.example.mhnfe.BuildConfig
 import java.security.KeyStore
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class MqttManagerHelper(private val androidId: String) {
+@Singleton
+class MqttManagerHelper @Inject constructor(
+    private val thingId: String
+) {
     private val tag = "MqttManagerHelper"
     private val keyStoreFilePath = "keystore.bks"
 
@@ -46,7 +51,7 @@ class MqttManagerHelper(private val androidId: String) {
     }
 
     fun createMqttManager(): AWSIotMqttManager {
-        return AWSIotMqttManager(androidId, BuildConfig.MQTT_END_POINT).apply {
+        return AWSIotMqttManager(thingId, BuildConfig.MQTT_END_POINT).apply {
             isAutoReconnect = true
         }
     }

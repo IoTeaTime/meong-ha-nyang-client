@@ -1,11 +1,7 @@
 package com.example.mhnfe
 import android.app.Application
 import android.util.Log
-import com.amazonaws.auth.AWSCredentialsProvider
-import com.amazonaws.mobile.client.AWSMobileClient
-import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
-import org.json.JSONException
 import org.webrtc.PeerConnectionFactory
 
 /**
