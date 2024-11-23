@@ -112,7 +112,6 @@ dependencies {
     implementation("com.amazonaws:aws-android-sdk-auth-userpools:${awsVersion}@aar") { isTransitive = true }
     implementation("com.amazonaws:aws-android-sdk-auth-ui:${awsVersion}@aar") { isTransitive = true }
 
-    implementation (libs.androidx.lifecycle.runtime.ktx.v261)
     implementation("org.awaitility:awaitility:4.2.0")
     implementation("org.json:json:20190722")
     implementation("com.google.guava:guava:28.1-android")
@@ -139,13 +138,15 @@ dependencies {
     //Add Awaitility dependency
     implementation("org.awaitility:awaitility:4.2.0")
 
+    implementation("com.amazonaws:aws-android-sdk-iot:2.77.0")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:2.77.0")
+    implementation("software.amazon.awssdk.iotdevicesdk:aws-iot-device-sdk:1.21.0")
+
     // FCM
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-messaging-ktx")
-
-    implementation("com.amazonaws:aws-android-sdk-iot:2.77.0")
-    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
 
     val work_version = "2.9.1"
     // (Java only)
@@ -176,7 +177,6 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     //hilt life
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-
 }
 
 kapt {

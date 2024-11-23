@@ -1,5 +1,7 @@
 package com.example.mhnfe.ui.screens.master
 
+import android.annotation.SuppressLint
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -35,16 +37,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
-import com.example.mhnfe.mqtt.MqttUtils
+import com.example.mhnfe.mqtt.MqttViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
@@ -52,12 +54,14 @@ import org.webrtc.Logging
 
 
 @Composable
-fun WebRtcScreen(
+@SuppressLint("HardwareIds")
+fun WebRtcScreen (
     modifier: Modifier = Modifier,
     viewModel: KVSSignalingViewModel,
     navController: NavController,
     channelName: String,
-    role: ChannelRole
+    role: ChannelRole,
+    mqttViewModel: MqttViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -67,20 +71,24 @@ fun WebRtcScreen(
     val eglBase = remember { EglBase.create() }
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
+    val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
     val testTopic = "test/topic"
-
 
     LaunchedEffect(Unit) {
         try {
             // 1. MQTT 연결 시도
-            MqttUtils.initialize(context)
+            mqttViewModel.initialize(context)
             Log.d("WebRTCScreen", "MQTT 연결 테스트 시작")
             Toast.makeText(context, "MQTT 연결 성공", Toast.LENGTH_SHORT).show()
 
+            if(role == ChannelRole.MASTER) {
+                mqttViewModel.createShadowWithSubscribe(androidId, context)
+            }
+
             // 2. 연결 후 2초 대기 후 구독 실행
             kotlinx.coroutines.delay(2000)
-            MqttUtils.subscribe(testTopic) { topic, message ->
+            mqttViewModel.subscribe(testTopic) { topic, message ->
                 Log.d(
                     "WebRTCScreen",
                     "MQTT 메시지 수신 - Topic: $topic, Message: $message Context: $context"
@@ -232,7 +240,7 @@ fun WebRtcScreen(
                         try {
                             val payload =
                                 "{\"event\": \"test\", \"timestamp\": ${System.currentTimeMillis()}}"
-                            MqttUtils.publish(testTopic, payload)
+                            mqttViewModel.publish(testTopic, payload)
                             Log.d(
                                 "WebRTCScreen",
                                 "MQTT 이벤트 발행 - Topic: $testTopic, Payload: $payload"
