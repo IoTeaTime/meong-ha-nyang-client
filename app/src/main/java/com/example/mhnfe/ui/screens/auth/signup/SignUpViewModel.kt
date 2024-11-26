@@ -10,8 +10,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
-class SignUpViewModel(private val authRepository: AuthRepository) : ViewModel() {
+@HiltViewModel
+class SignUpViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _signUpResponse = MutableStateFlow<SignUpResponse?>(null)
     val signUpResponse: StateFlow<SignUpResponse?> = _signUpResponse
