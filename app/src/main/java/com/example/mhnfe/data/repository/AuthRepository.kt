@@ -1,23 +1,28 @@
 package com.example.mhnfe.data.repository
 
 import android.util.Log
-import com.example.mhnfe.data.api.ApiService
-import com.example.mhnfe.data.api.AuthApi
-import com.example.mhnfe.data.model.SignUpResponse
-import com.example.mhnfe.data.model.EmailRequest
-import com.example.mhnfe.data.model.Result
+import com.example.mhnfe.data.remote.api.ApiService
+import com.example.mhnfe.data.remote.api.AuthApi
+import com.example.mhnfe.data.remote.request.EmailRequest
+import com.example.mhnfe.data.remote.response.Result
 import com.google.gson.Gson
 import retrofit2.HttpException
-import com.example.mhnfe.data.model.LoginRequest
-import com.example.mhnfe.data.model.LoginResponse
-import com.example.mhnfe.data.model.RefreshFcmTokenRequest
-import com.example.mhnfe.data.model.SignUpRequest
+import com.example.mhnfe.data.remote.request.LoginRequest
+import com.example.mhnfe.data.remote.response.LoginResponse
+import com.example.mhnfe.data.remote.request.RefreshFcmTokenRequest
+import com.example.mhnfe.data.remote.request.SignUpRequest
+import com.example.mhnfe.data.remote.response.SignUpResponse
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AuthRepository {
+@Singleton
+class AuthRepository @Inject constructor(
+    private val apiService: ApiService
+){
     private val api: AuthApi
 
     init {
-        api = ApiService.createApiService(AuthApi::class.java)
+        api = apiService.createApiService(AuthApi::class.java)
     }
 
     suspend fun signUp(
@@ -53,7 +58,7 @@ class AuthRepository {
             if (!errorBody.isNullOrEmpty()) {
                 Gson().fromJson(errorBody, SignUpResponse::class.java)
             } else {
-                SignUpResponse(com.example.mhnfe.data.model.Result(-1, "Unknown Error"), null)
+                SignUpResponse(Result(-1, "Unknown Error"), null)
             }
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error parsing response: ${e.message}", e)
