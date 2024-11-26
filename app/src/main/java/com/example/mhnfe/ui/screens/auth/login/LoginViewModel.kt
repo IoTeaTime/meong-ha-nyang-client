@@ -4,7 +4,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.remote.response.ApiResponse
+import com.example.mhnfe.data.remote.response.FCMResponse
 import com.example.mhnfe.data.remote.response.LoginResponse
 import com.example.mhnfe.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +17,7 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     private val _loginResponse = MutableStateFlow<LoginResponse?>(null)
     val loginResponse: StateFlow<LoginResponse?> = _loginResponse
     // FCM 토큰 전송 결과 상태
-    private val _apiResponse = MutableStateFlow<ApiResponse?>(null)
+    private val _apiResponse = MutableStateFlow<FCMResponse?>(null)
 
     // 에러 메시지 상태
     private val _errorMessage = MutableStateFlow<String?>(null)
