@@ -1,6 +1,6 @@
 package com.example.mhnfe.data.api
 
-import com.example.mhnfe.data.model.ApiResponse
+import com.example.mhnfe.data.model.SignUpResponse
 import com.example.mhnfe.data.model.EmailRequest
 import com.example.mhnfe.data.model.LoginRequest
 import com.example.mhnfe.data.model.LoginResponse
@@ -15,12 +15,12 @@ interface AuthApi {
     @POST("/open-api/auth/sign-up")
     suspend fun signUp(
         @Body request: SignUpRequest
-    ): ApiResponse
+    ): SignUpResponse
 
     @POST("/open-api/auth/check-email")
     suspend fun checkEmailDuplicate(
         @Body request: EmailRequest
-    ): ApiResponse
+    ): SignUpResponse
 
     @POST("/open-api/auth/sign-in")
     suspend fun  login(
@@ -31,5 +31,5 @@ interface AuthApi {
     suspend fun refreshFcmToken(
         @Header("Authorization") authToken: String,
         @Body request: RefreshFcmTokenRequest
-    ): ApiResponse
+    ): SignUpResponse
 }
