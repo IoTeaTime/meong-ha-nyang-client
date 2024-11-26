@@ -1,5 +1,7 @@
 package com.example.mhnfe.data.remote.response
 
+import kotlinx.serialization.Serializable
+
 data class SignUpResponse(
     val result: Result,
     val body: Any? = null
@@ -35,7 +37,16 @@ data class LoginResponse(
 
 data class Jwt(
     val memberId: Int,
-    val accessToken: String,
+    val accessToken: AccessToken,
+    val refreshToken: RefreshToken
+)
+
+@Serializable
+data class AccessToken(
+    val accessToken: String
+)
+@Serializable
+data class RefreshToken(
     val refreshToken: String
 )
 

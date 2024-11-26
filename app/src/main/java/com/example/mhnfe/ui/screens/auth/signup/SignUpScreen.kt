@@ -36,16 +36,16 @@ import androidx.compose.ui.text.SpanStyle
 
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mhnfe.data.remote.response.SignUpResponse
-import com.example.mhnfe.ui.screens.auth.SignUpViewModelFactory
 
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
     onLoginClick: () -> Unit,
-    signUpViewModel: SignUpViewModel = viewModel(factory = SignUpViewModelFactory(AuthRepository()))
+    signUpViewModel: SignUpViewModel = hiltViewModel()
 ) {
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
 

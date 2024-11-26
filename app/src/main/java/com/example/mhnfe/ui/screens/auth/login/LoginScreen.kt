@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.auth.login
 
+import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
@@ -23,24 +24,24 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
-import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
-import com.example.mhnfe.ui.screens.auth.LoginViewModelFactory
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
+import kotlinx.coroutines.launch
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(AuthRepository())),
-    onLoginClick: () -> Unit
+    loginViewModel: LoginViewModel = hiltViewModel()
+//    loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(AuthRepository()))
 ) {
     val loginResponse by loginViewModel.loginResponse.collectAsState()
     val errorMessage by loginViewModel.errorMessage.collectAsState()
@@ -55,14 +56,10 @@ fun LoginScreen(
     var id by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Cognito 로그인
-//    val cognitoUsername = ""
-//    val cognitoPassword = ""
-
-    // SharedPreferences를 사용해 자동 로그인 상태와 사용자 정보를 저장
+//    // SharedPreferences를 사용해 자동 로그인 상태와 사용자 정보를 저장
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-    val editor = sharedPreferences.edit()
+//    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+//    val editor = sharedPreferences.edit()
 
     Scaffold(
         modifier = modifier,
@@ -160,43 +157,38 @@ fun LoginScreen(
                 MiddleButton(
                     text = "로그인",
                     onClick = {
-                        // ViewModel에 로그인 요청 전달
-                        loginViewModel.loginUser(editor, id, password)
-
-                        // 자동 로그인 상태 저장
-                        if (isAutoLogin) {
-                            editor.putString("saved_id", id)
-                            editor.putString("saved_password", password)
-                            editor.apply()
-                        }
+                        // ViewModel에 로그인 요청 전달 (isAutoLogin 포함)
+                        loginViewModel.loginUser(id, password, isAutoLogin)
                     }
                 )
 
                 // 로그인 성공 시 화면 전환
                 LaunchedEffect(loginResponse) {
                     if (loginResponse?.result?.code == 200) {
-                        val jwtToken = sharedPreferences.getString("jwt_token", null)
-                        // FCM 토큰 전송
-                        if (!jwtToken.isNullOrEmpty()) {
-                            val sharedPref = context.getSharedPreferences("app_preferences", MODE_PRIVATE)
-                            val fcmToken = sharedPref.getString("fcm_token", null)
-                            Log.d("LoginScreen", "fcmToken: $fcmToken")
+                        loginViewModel.getAccessToken { accessToken ->
+                            // FCM 토큰 전송
+                            if (!accessToken.isNullOrEmpty()) {
+                                val sharedPref =
+                                    context.getSharedPreferences("app_preferences", MODE_PRIVATE)
+                                val fcmToken = sharedPref.getString("fcm_token", null)
+                                Log.d("LoginScreen", "fcmToken: $fcmToken")
 
-                            if (fcmToken != null) {
-                                try {
-                                    loginViewModel.refreshFcmToken(jwtToken, fcmToken)
-                                } catch (e: Exception) {
-                                    Log.e(TAG, "Error saving FCM token", e)
+                                if (fcmToken != null) {
+                                    try {
+                                        loginViewModel.refreshFcmToken(accessToken, fcmToken)
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Error saving FCM token", e)
+                                    }
+                                } else {
+                                    Log.e(TAG, "FCM 토큰이 저장되어 있지 않습니다.")
                                 }
                             } else {
-                                Log.e(TAG, "FCM 토큰이 저장되어 있지 않습니다.")
+                                Log.e(TAG, "JWT 토큰이 null이어서 FCM 토큰 전송이 불가능합니다.")
                             }
-                        } else {
-                            Log.e(TAG, "JWT 토큰이 null이어서 FCM 토큰 전송이 불가능합니다.")
-                        }
 
-                        navController.navigate(NavRoutes.Auth.Select.route) {
-                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                            navController.navigate(NavRoutes.Auth.Select.route) {
+                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                            }
                         }
                     }
                 }
@@ -214,8 +206,6 @@ fun LoginScreen(
     }
 }
 
-
-
 @Preview(
     name = "Login Screen",
     showBackground = true,
@@ -225,8 +215,6 @@ fun LoginScreen(
 @Composable
 fun LoginScreenPreview() {
     LoginScreen(
-        navController = rememberNavController(),
-        onLoginClick = {}
+        navController = rememberNavController()
     )
 }
-

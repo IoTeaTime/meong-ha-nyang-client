@@ -14,12 +14,17 @@ import com.example.mhnfe.data.remote.request.SignUpRequest
 import com.example.mhnfe.data.remote.response.CheckEmailResponse
 import com.example.mhnfe.data.remote.response.FCMResponse
 import com.example.mhnfe.data.remote.response.SignUpResponse
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class AuthRepository {
+@Singleton
+class AuthRepository @Inject constructor(
+    private val apiService: ApiService
+){
     private val api: AuthApi
 
     init {
-        api = ApiService.createApiService(AuthApi::class.java)
+        api = apiService.createApiService(AuthApi::class.java)
     }
 
     suspend fun signUp(
