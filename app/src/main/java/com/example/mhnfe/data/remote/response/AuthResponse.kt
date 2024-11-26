@@ -1,7 +1,13 @@
 package com.example.mhnfe.data.remote.response
 
+data class SignUpResponse(
+    val result: Result,
+    val body: Any? = null
+) {
+    val data: Any? = null
+}
 
-data class ApiResponse(
+data class CheckEmailResponse(
     val result: Result,
     val body: Any? = null
 ) {
@@ -13,6 +19,7 @@ data class Result(
     val message: String,
     val description: String? = null
 )
+
 
 data class User(
     val email: String,
@@ -32,4 +39,9 @@ data class Jwt(
     val refreshToken: String
 )
 
-
+data class FCMResponse(
+    val result: Result,
+    val body: Any? = null
+) {
+    val data: Any? = null
+}
