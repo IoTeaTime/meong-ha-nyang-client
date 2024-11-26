@@ -1,18 +1,14 @@
 package com.example.mhnfe.data.remote.response
 
+import com.example.mhnfe.data.remote.request.GroupRequest
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class GroupResponse(
-    val result: GroupResult,
+    val result: GroupRequest,
     val body: Group
 )
-@Serializable
-data class GroupResult(
-    val code: Int,
-    val message: String,
-    val description: String
-)
+
 @Serializable
 data class Group(
     val groupId: Int,
