@@ -1,4 +1,4 @@
-package com.example.mhnfe.di
+package com.example.mhnfe.di.module
 
 import com.example.mhnfe.data.network.AuthInterceptor
 import com.example.mhnfe.data.remote.api.ApiService
@@ -6,6 +6,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import com.example.mhnfe.data.remote.api.GroupApi
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -39,7 +40,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return ApiService(retrofit)
+    fun provideGroupApi(apiService: ApiService): GroupApi {
+        // ApiService를 주입받아 GroupApi 생성
+        return apiService.createApiService(GroupApi::class.java)
     }
 }

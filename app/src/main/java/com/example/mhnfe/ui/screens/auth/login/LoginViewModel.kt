@@ -1,14 +1,15 @@
 package com.example.mhnfe.ui.screens.auth.login
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.FCMResponse
 import com.example.mhnfe.data.remote.response.LoginResponse
 import com.example.mhnfe.data.remote.response.RefreshToken
-import com.example.mhnfe.data.remote.response.SignUpResponse
 import com.example.mhnfe.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,7 @@ class LoginViewModel @Inject constructor(
     val loginResponse: StateFlow<LoginResponse?> = _loginResponse
 
     // FCM 토큰 전송 결과 상태
-    private val _apiResponse = MutableStateFlow<SignUpResponse?>(null)
+    private val _apiResponse = MutableStateFlow<FCMResponse?>(null)
 
     // 에러 메시지 상태
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -68,13 +69,14 @@ class LoginViewModel @Inject constructor(
                     _loginResponse.value = response
                     _errorMessage.value = null
                 } else {
+                    Log.d("LoginViewModel","response: " + response.result.message)
                     // 실패한 경우 사용자 친화적인 에러 메시지 생성
                     _errorMessage.value = mapErrorMessage(
                         response.result.code,
                         response.result.message,
                         response.result.description
                     )
-                    Log.e("LoginViewModel", "Error: ${_errorMessage.value}")
+                    Log.e("LoginViewModel","Error: " + _errorMessage.value)
                 }
             } catch (e: Exception) {
                 // 네트워크 오류 등 예외 처리

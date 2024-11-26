@@ -1,11 +1,11 @@
 package com.example.mhnfe.di.module
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.provider.Settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
-import com.example.mhnfe.data.remote.api.ApiService
-import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.RefreshToken
@@ -18,6 +18,7 @@ import kotlinx.serialization.json.Json
 import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Singleton
+import android.content.Context.MODE_PRIVATE
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -114,6 +115,13 @@ object AppModule {
     // 엑세스 토큰 제공
     @Provides
     @Singleton
+    fun provideThingId(@ApplicationContext context: Context): String {
+        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+    }
+
+    // 엑세스 토큰 제공
+    @Provides
+    @Singleton
     fun provideAccessTokenDataStore(
         @ApplicationContext context: Context,
         serializer: Serializer<AccessToken>
@@ -135,5 +143,11 @@ object AppModule {
             serializer = serializer,
             produceFile = { context.filesDir.resolve("refresh_token.pb") }
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
+        return context.getSharedPreferences("login_prefs", MODE_PRIVATE)
     }
 }

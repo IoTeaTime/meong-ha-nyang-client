@@ -5,12 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.data.remote.response.SignUpResponse
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.mhnfe.data.remote.response.CheckEmailResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
@@ -23,8 +24,8 @@ class SignUpViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val _emailCheckResponse = MutableStateFlow<SignUpResponse?>(null)
-    val emailCheckResponse: StateFlow<SignUpResponse?> = _emailCheckResponse
+    private val _emailCheckResponse = MutableStateFlow<CheckEmailResponse?>(null)
+    val emailCheckResponse: StateFlow<CheckEmailResponse?> = _emailCheckResponse
 
     suspend fun checkEmailStatus(email: String): Pair<Int, String> {
 //        Log.d("SignUpScreen", "checkEmailDuplicate 호출, email=$email")

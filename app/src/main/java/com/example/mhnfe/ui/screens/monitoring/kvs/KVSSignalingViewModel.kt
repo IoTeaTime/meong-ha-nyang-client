@@ -1371,4 +1371,3 @@ sealed class WebRTCUiState {
     }
     data object NoMasterConnected : WebRTCUiState()
 }
-
