@@ -52,7 +52,6 @@ import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
 
-
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen (
@@ -73,33 +72,36 @@ fun WebRtcScreen (
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
     val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
-    val testTopic = "test/topic"
-
     LaunchedEffect(Unit) {
         try {
             // 1. MQTT 연결 시도
-            mqttViewModel.initialize(context)
-            Log.d("WebRTCScreen", "MQTT 연결 테스트 시작")
-            Toast.makeText(context, "MQTT 연결 성공", Toast.LENGTH_SHORT).show()
-
-            if(role == ChannelRole.MASTER) {
-                mqttViewModel.createShadowWithSubscribe(androidId, context)
+            val isConnected = withContext(Dispatchers.IO) {
+                mqttViewModel.initialize(context)
             }
 
-            // 2. 연결 후 2초 대기 후 구독 실행
-            kotlinx.coroutines.delay(2000)
-            mqttViewModel.subscribe(testTopic) { topic, message ->
-                Log.d(
-                    "WebRTCScreen",
-                    "MQTT 메시지 수신 - Topic: $topic, Message: $message Context: $context"
-                )
+            if (isConnected) {
+                // Todo. 역할을 가져오는 로직도 추가
+                val roles = ChannelRole.VIEWER
+
+                withContext(Dispatchers.IO) {
+                    if (roles == ChannelRole.MASTER) {
+                        mqttViewModel.createShadowWithSubscribe(context)
+                    } else {
+                        // Todo. groupId를 가져와서 구독
+                        val groupId = 404
+                        // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
+                        val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
+
+                        mqttViewModel.viewerInitialSubscribe(thingList, groupId)
+                    }
+                }
             }
-            Log.d("WebRTCScreen", "MQTT 토픽 구독 성공 - Topic: $testTopic")
         } catch (e: Exception) {
             Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
             Toast.makeText(context, "MQTT 연결 실패 또는 구독 실패", Toast.LENGTH_SHORT).show()
         }
     }
+
     // 초기화는 한 번만 실행되도록 key를 사용
     LaunchedEffect(channelName) {
         if (uiState !is WebRTCUiState.Success) {
@@ -238,12 +240,18 @@ fun WebRtcScreen (
                 onClick = {
                     viewModel.viewModelScope.launch {
                         try {
-                            val payload =
-                                "{\"event\": \"test\", \"timestamp\": ${System.currentTimeMillis()}}"
-                            mqttViewModel.publish(testTopic, payload)
+                            val topic = "/mhn/command/device/info/groups/404"
+                            val payload = """
+                                {
+                                    "status": "online",
+                                    "batteryLevel": 78,
+                                    "temperature": 36.5
+                                }
+                            """.trimIndent()
+                            mqttViewModel.publish(topic, payload)
                             Log.d(
                                 "WebRTCScreen",
-                                "MQTT 이벤트 발행 - Topic: $testTopic, Payload: $payload"
+                                "MQTT 이벤트 발행 - Topic: $topic, Payload: $payload"
                             )
                             Toast.makeText(context, "이벤트 발행 완료", Toast.LENGTH_SHORT).show()
                         } catch (e: Exception) {
