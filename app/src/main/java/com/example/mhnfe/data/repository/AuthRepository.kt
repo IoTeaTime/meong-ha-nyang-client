@@ -1,18 +1,17 @@
 package com.example.mhnfe.data.repository
 
 import android.util.Log
-import com.example.mhnfe.data.api.ApiService
-import com.example.mhnfe.data.api.AuthApi
-import com.example.mhnfe.data.model.ApiResponse
-import com.example.mhnfe.data.model.EmailRequest
-import com.example.mhnfe.data.model.Result
+import com.example.mhnfe.data.remote.api.ApiService
+import com.example.mhnfe.data.remote.api.AuthApi
+import com.example.mhnfe.data.remote.response.ApiResponse
+import com.example.mhnfe.data.remote.request.EmailRequest
+import com.example.mhnfe.data.remote.response.Result
 import com.google.gson.Gson
 import retrofit2.HttpException
-import com.example.mhnfe.data.model.LoginRequest
-import com.example.mhnfe.data.model.LoginResponse
-import com.example.mhnfe.data.model.RefreshFcmTokenRequest
-import com.example.mhnfe.data.model.SignUpRequest
-import com.example.mhnfe.data.model.User
+import com.example.mhnfe.data.remote.request.LoginRequest
+import com.example.mhnfe.data.remote.response.LoginResponse
+import com.example.mhnfe.data.remote.request.RefreshFcmTokenRequest
+import com.example.mhnfe.data.remote.request.SignUpRequest
 
 class AuthRepository {
     private val api: AuthApi
@@ -54,7 +53,7 @@ class AuthRepository {
             if (!errorBody.isNullOrEmpty()) {
                 Gson().fromJson(errorBody, ApiResponse::class.java)
             } else {
-                ApiResponse(com.example.mhnfe.data.model.Result(-1, "Unknown Error"), null)
+                ApiResponse(Result(-1, "Unknown Error"), null)
             }
         } catch (e: Exception) {
             Log.e("AuthRepository", "Error parsing response: ${e.message}", e)
