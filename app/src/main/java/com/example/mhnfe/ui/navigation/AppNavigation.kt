@@ -20,21 +20,18 @@ import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
-import com.example.mhnfe.ui.bottombar.BottomNavigationBar
-import com.example.mhnfe.ui.screens.auth.LoginScreen
-import com.example.mhnfe.ui.screens.auth.MainScreen
-import com.example.mhnfe.ui.screens.auth.SelectScreen
-import com.example.mhnfe.ui.screens.auth.SignUpScreen
-import com.example.mhnfe.ui.screens.auth.StartUpScreen
-import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
-import com.example.mhnfe.ui.screens.master.WebRtcScreen
+import com.example.mhnfe.ui.screens.auth.login.LoginScreen
+import com.example.mhnfe.ui.screens.auth.main.MainScreen
+import com.example.mhnfe.ui.screens.auth.select.SelectScreen
+import com.example.mhnfe.ui.screens.auth.signup.SignUpScreen
+import com.example.mhnfe.ui.screens.monitoring.kvs.KVSSignalingViewModel
+import com.example.mhnfe.ui.screens.monitoring.kvs.WebRtcScreen
 import com.example.mhnfe.ui.screens.monitoring.DeviceInfoScreen
-import com.example.mhnfe.ui.screens.monitoring.GroupScreen
+import com.example.mhnfe.ui.screens.monitoring.group.GroupScreen
 import com.example.mhnfe.ui.screens.mypage.PasswordEditScreen
 import com.example.mhnfe.ui.screens.mypage.ProfileScreen
-import com.example.mhnfe.ui.screens.qr.QRGenerateScreen
-import com.example.mhnfe.ui.screens.qr.QRScanningScreen
-import com.example.mhnfe.ui.screens.report.ReportDetailScreen
+import com.example.mhnfe.ui.screens.qr.qrgenerate.QRGenerateScreen
+import com.example.mhnfe.ui.screens.qr.qrscannig.QRScanningScreen
 import com.example.mhnfe.ui.screens.mypage.DeviceManagementScreen
 
 
@@ -101,15 +98,6 @@ fun AppNavigation() {
             }
             composable(NavRoutes.Auth.Login.route) {
                 LoginScreen(
-                    navController = navController,
-                    onLoginClick = {
-                        navController.navigate(NavRoutes.Monitoring.Group.route)
-                    }
-                )
-            }
-            composable(NavRoutes.Auth.Cognito.route) {
-                StartUpScreen(
-                    auth = auth,
                     navController = navController
                 )
             }

@@ -1,15 +1,15 @@
 package com.example.mhnfe.data.network
 
-import com.example.mhnfe.data.model.User
 import com.example.mhnfe.data.repository.UserRepository
 import com.example.mhnfe.data.token.TokenProvider
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import java.util.concurrent.locks.ReentrantLock
+import javax.inject.Inject
 import kotlin.concurrent.withLock
 
-class AuthInterceptor(
+class AuthInterceptor @Inject constructor(
     private val tokenProvider: TokenProvider,
     private val userRepository: UserRepository
 ) : Interceptor {
@@ -37,17 +37,22 @@ class AuthInterceptor(
 
                 lock.withLock {
                     // 갱신된 토큰을 한 번만 요청
-                    val newAccessToken =
-                        tokenProvider.getRefreshToken()?.let {
-                            userRepository.refreshAccessToken(it)
-                                .toString()
-                        }?.let { tokenProvider.saveAccessToken(it) }
+                    val refreshToken = tokenProvider.getRefreshToken()
 
-                    if (newAccessToken != null) {
+                    if (!refreshToken.isNullOrEmpty()) {
+                        val newAccessToken = userRepository.refreshAccessToken(refreshToken)?.toString()
+                        if (!newAccessToken.isNullOrEmpty()) {
+                            tokenProvider.saveAccessToken(newAccessToken)
+                            println("New Access Token saved: $newAccessToken")
                             val newRequest = addAuthorizationHeader(request,
                                 newAccessToken.toString()
                             )
-                            return chain.proceed(newRequest) // 새 요청으로 재시도
+                            return chain.proceed(newRequest)
+                        } else {
+                            println("Failed to refresh access token.")
+                        }
+                    } else {
+                        println("No refresh token available.")
                     }
                 }
             }
