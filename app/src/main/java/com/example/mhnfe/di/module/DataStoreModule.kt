@@ -6,9 +6,9 @@ import android.content.SharedPreferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
-import com.example.mhnfe.data.api.GroupApi
-import com.example.mhnfe.data.api.ApiService
-import com.example.mhnfe.data.model.Group
+import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.remote.api.ApiService
+import com.example.mhnfe.data.remote.response.Group
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,7 +19,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Singleton
 import android.provider.Settings
-import javax.inject.Named
 
 @Module
 @InstallIn(SingletonComponent::class)
