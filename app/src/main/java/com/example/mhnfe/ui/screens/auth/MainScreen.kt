@@ -16,6 +16,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.data.repository.AuthRepository
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 
@@ -77,6 +78,9 @@ fun MainScreen(
                 text = " 로그인",
                 onClick = {
                     navController.navigate(NavRoutes.Auth.Login.route)
+//                    navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+//                        popUpTo(NavRoutes.Auth.route) { inclusive = true }
+//                    }
                 },
             )
             // Cam 회원 버튼
