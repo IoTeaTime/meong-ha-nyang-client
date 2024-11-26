@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -37,10 +36,8 @@ import androidx.compose.ui.text.SpanStyle
 
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mhnfe.data.model.ApiResponse
-import retrofit2.HttpException
+import com.example.mhnfe.data.model.SignUpResponse
 
 @Composable
 fun SignUpScreen(
@@ -52,7 +49,7 @@ fun SignUpScreen(
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
 
     val scope = rememberCoroutineScope()
-    var apiResponse by remember { mutableStateOf<ApiResponse?>(null) }
+    var apiResponse by remember { mutableStateOf<SignUpResponse?>(null) }
 
     var isEmailDuplicate by remember { mutableStateOf(false) }
     var isEmailChecked by remember { mutableStateOf(false) }

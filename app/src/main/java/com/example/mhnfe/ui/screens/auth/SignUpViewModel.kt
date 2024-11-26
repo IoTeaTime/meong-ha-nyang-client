@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.repository.AuthRepository
-import com.example.mhnfe.data.model.ApiResponse
+import com.example.mhnfe.data.model.SignUpResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -12,14 +12,14 @@ import retrofit2.HttpException
 
 class SignUpViewModel(private val authRepository: AuthRepository) : ViewModel() {
 
-    private val _signUpResponse = MutableStateFlow<ApiResponse?>(null)
-    val signUpResponse: StateFlow<ApiResponse?> = _signUpResponse
+    private val _signUpResponse = MutableStateFlow<SignUpResponse?>(null)
+    val signUpResponse: StateFlow<SignUpResponse?> = _signUpResponse
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val _emailCheckResponse = MutableStateFlow<ApiResponse?>(null)
-    val emailCheckResponse: StateFlow<ApiResponse?> = _emailCheckResponse
+    private val _emailCheckResponse = MutableStateFlow<SignUpResponse?>(null)
+    val emailCheckResponse: StateFlow<SignUpResponse?> = _emailCheckResponse
 
     suspend fun checkEmailStatus(email: String): Pair<Int, String> {
 //        Log.d("SignUpScreen", "checkEmailDuplicate 호출, email=$email")

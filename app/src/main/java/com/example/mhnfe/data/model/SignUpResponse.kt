@@ -1,9 +1,7 @@
 package com.example.mhnfe.data.model
 
-import kotlinx.serialization.Serializable
 
-
-data class ApiResponse(
+data class SignUpResponse(
     val result: Result,
     val body: Any? = null
 ) {
