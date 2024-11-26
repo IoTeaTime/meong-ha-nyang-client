@@ -50,7 +50,10 @@ fun SignUpScreen(
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
 
     val scope = rememberCoroutineScope()
-    var apiResponse by remember { mutableStateOf<SignUpResponse?>(null) }
+    var SignUpResponse by remember { mutableStateOf<SignUpResponse?>(null) }
+
+    var isEmailDuplicate by remember { mutableStateOf(false) }
+    var isEmailChecked by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
 
@@ -171,7 +174,7 @@ fun SignUpScreen(
     }
 
     // Create an instance of the Repository for calling the Sign-Up API
-//    val authRepository = AuthRepository()
+    val authRepository = AuthRepository()
 
     Scaffold(
         modifier = modifier,
@@ -382,25 +385,25 @@ fun SignUpScreen(
                                             // Log before calling the Sign-Up API
                                             //Log.d("SignUpScreen", "회원가입 데이터: email=$email, password=$password, passwordConfirm=$confirmPassword, nickname=$nickname")
 
-                                            apiResponse = authRepository.signUp(
+                                            SignUpResponse = authRepository.signUp(
                                                 email = email,
                                                 password = password,
                                                 passwordConfirm = confirmPassword,
                                                 nickname = nickname
                                             )
-                                            if (apiResponse?.result?.code == 201) {
-//                                                Log.d("SignUpScreen", "회원가입 성공: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}")
+                                            if (SignUpResponse?.result?.code == 201) {
+//                                                Log.d("SignUpScreen", "회원가입 성공: code=${SignUpResponse?.result?.code}, message=${SignUpResponse?.result?.message}, description=${SignUpResponse?.result?.description}")
                                                 onLoginClick()
                                             } else {
                                                 Log.e(
                                                     "SignUpScreen",
-                                                    "회원가입 실패: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}"
+                                                    "회원가입 실패: code=${SignUpResponse?.result?.code}, message=${SignUpResponse?.result?.message}, description=${SignUpResponse?.result?.description}"
                                                 )
                                             }
                                         } catch (e: Exception) {
                                             Log.e(
                                                 "SignUpScreen",
-                                                "회원가입 중 오류 발생: code=${apiResponse?.result?.code}, message=${apiResponse?.result?.message}, description=${apiResponse?.result?.description}"
+                                                "회원가입 중 오류 발생: code=${SignUpResponse?.result?.code}, message=${SignUpResponse?.result?.message}, description=${SignUpResponse?.result?.description}"
                                             )
                                         }
                                     }

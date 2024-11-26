@@ -9,13 +9,27 @@ data class SignUpResponse(
     val data: Any? = null
 }
 
+data class CheckEmailResponse(
+    val result: Result,
+    val body: Any? = null
+) {
+    val data: Any? = null
+}
+
 data class Result(
     val code: Int,
     val message: String,
     val description: String? = null
 )
 
-// 로그인
+
+data class User(
+    val email: String,
+    val password: String,
+    val passwordConfirm: String,
+    val nickname: String
+)
+
 data class LoginResponse(
     val result: Result,
     val body: Jwt
@@ -35,3 +49,10 @@ data class AccessToken(
 data class RefreshToken(
     val refreshToken: String
 )
+
+data class FCMResponse(
+    val result: Result,
+    val body: Any? = null
+) {
+    val data: Any? = null
+}

@@ -9,19 +9,21 @@ import com.example.mhnfe.data.remote.response.CreateGroupRequest
 import com.example.mhnfe.data.remote.response.Group
 import com.example.mhnfe.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class SelectViewModel @Inject constructor(
-    private val repository: GroupRepository,
+    private val groupRepository: GroupRepository,
     private val groupApi: GroupApi,
     private val thingId: String,
-    private val sharedPreferences: SharedPreferences,
-    private val groupRepository: GroupRepository
+    private val sharedPreferences: SharedPreferences
 ) : ViewModel() {
     private val _groupState = MutableStateFlow<Group?>(null)
     val groupState = _groupState.asStateFlow()
@@ -32,52 +34,43 @@ class SelectViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            groupRepository.getGroupResponse().collect { group ->
-                _groupState.value = group
-            }
-        }
-    }
-
+    private val _navigateNext = MutableStateFlow(false)
+    val navigateNext = _navigateNext.asStateFlow()
 
     fun createGroup() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val jwtToken = sharedPreferences.getString("jwt_token", null)
-                Log.d("SelectViewModel", "JWT Token: $jwtToken")
-
-                if (jwtToken.isNullOrEmpty()) {
-                    _error.value = "JWT token is not available"
-                    return@launch
-                }
-
-                val authToken = "$jwtToken"
-                Log.d("token", "토큰 값: $authToken")
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: throw IllegalStateException("JWT token is not available")
 
                 val request = CreateGroupRequest(thingId = thingId)
-                val response = groupApi.createGroup(authToken, request)
-                groupRepository.saveGroupResponse(response)
-                Log.d("SelectViewModel", "Response received: $response")
+                val response = withContext(Dispatchers.IO) {
+                    groupApi.createGroup(jwtToken, request)
+                }
 
-                repository.saveGroupResponse(response)
-                _groupState.value = response.body
-                _error.value = null
-            }   catch (e: Exception) {
+                val group = groupRepository.getGroup(response)
+                _groupState.value = group
+                _navigateNext.value = true
+
+            } catch (e: Exception) {
                 when (e) {
+                    is CancellationException -> throw e
                     is HttpException -> {
-                        Log.e("SelectViewModel", "HTTP ${e.code()}: ${e.message()}")
-                        try {
+                        if (e.code() == 400) {
                             val errorBody = e.response()?.errorBody()?.string()
-                            Log.e("SelectViewModel", "Error body: $errorBody")
-                        } catch (e2: Exception) {
-                            Log.e("SelectViewModel", "Error reading error body", e2)
+                            if (errorBody?.contains("그룹이 이미 존재합니다") == true) {
+                                // 그룹이 이미 존재하는 경우도 다음 화면으로 이동
+                                _navigateNext.value = true
+                            }
                         }
                     }
-                    else -> Log.e("SelectViewModel", "Error creating group", e)
+                    else -> {
+                        Log.e("SelectViewModel", "Error creating group", e)
+                        _error.value = e.message ?: "알 수 없는 오류가 발생했습니다"
+                    }
                 }
-                _error.value = e.message
             } finally {
                 _isLoading.value = false
             }
