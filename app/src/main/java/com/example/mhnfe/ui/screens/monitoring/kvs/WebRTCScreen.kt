@@ -25,6 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -83,6 +84,8 @@ fun WebRtcScreen(
 
             // Todo. 역할을 가져오는 로직 추가
             val roles = ChannelRole.MASTER
+            // Todo. 그룹 ID를 가져오는 로직 추가
+            val groupId = 404
 
             withContext(Dispatchers.IO) {
                 // 1. MQTT 연결 시도 (MASTER일 때)
@@ -91,11 +94,23 @@ fun WebRtcScreen(
                 }
                 if (isConnected)
                     if (roles == ChannelRole.MASTER)
-                        mqttViewModel.createShadowWithSubscribe(context)
+                        mqttViewModel.createShadowWithSubscribe(context, groupId)
             }
         } catch (e: Exception) {
             Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
             Toast.makeText(context, "MQTT 연결 실패 또는 구독 실패", Toast.LENGTH_SHORT).show()
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            if (role == ChannelRole.MASTER) {
+                try {
+                    mqttViewModel.disconnectMqttManager()
+                    Log.d("WebRTCScreen", "MQTT Manager Disconnected for MASTER role")
+                } catch (e: Exception) {
+                    Log.e("WebRTCScreen", "Failed to disconnect MQTT Manager", e)
+                }
+            }
         }
     }
 
@@ -194,6 +209,7 @@ fun WebRtcScreen(
 //            }
 //        }
 //    }
+
 
     Column(
         modifier = modifier
