@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
@@ -41,7 +42,6 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
     loginViewModel: LoginViewModel = hiltViewModel()
-//    loginViewModel: LoginViewModel = viewModel(factory = LoginViewModelFactory(AuthRepository()))
 ) {
     val loginResponse by loginViewModel.loginResponse.collectAsState()
     val errorMessage by loginViewModel.errorMessage.collectAsState()
@@ -56,7 +56,7 @@ fun LoginScreen(
     var id by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-//    // SharedPreferences를 사용해 자동 로그인 상태와 사용자 정보를 저장
+    // SharedPreferences를 사용해 사용자 정보를 저장
     val context = LocalContext.current
 
     Scaffold(
@@ -184,8 +184,29 @@ fun LoginScreen(
                                 Log.e(TAG, "JWT 토큰이 null이어서 FCM 토큰 전송이 불가능합니다.")
                             }
 
-                            navController.navigate(NavRoutes.Auth.Select.route) {
-                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                            if(loginResponse?.body?.isGroupMember == true)
+                            {
+                                if(loginResponse?.body?.role== "MASTER") {
+                                    navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                                        // Auth 플로우를 백스택에서 제거
+                                        popUpTo(NavRoutes.Auth.route) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                                else{
+                                    navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
+                                        // Auth 플로우를 백스택에서 제거
+                                        popUpTo(NavRoutes.Auth.route) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                navController.navigate(NavRoutes.Auth.Select.route) {
+                                    popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                                }
                             }
                         }
                     }
