@@ -1,5 +1,7 @@
 package com.example.mhnfe.data.remote.request
 
+import kotlinx.serialization.Serializable
+
 data class SignUpRequest(
     val email: String,
     val password: String,
@@ -11,6 +13,7 @@ data class EmailRequest(
     val email: String
 )
 
+@Serializable
 data class LoginRequest(
     val email: String,
     val password: String
