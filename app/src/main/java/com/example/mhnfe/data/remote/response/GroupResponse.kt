@@ -8,6 +8,7 @@ data class GroupResponse(
     val body: Group
 )
 
+
 data class Group(
     val groupId: Int,
     val groupName: String,
