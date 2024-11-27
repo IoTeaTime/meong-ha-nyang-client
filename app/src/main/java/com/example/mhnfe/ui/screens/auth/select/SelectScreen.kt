@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.auth.select
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -31,13 +32,26 @@ fun SelectScreen(
     viewModel: SelectViewModel = hiltViewModel()
 ) {
     val groupState by viewModel.groupState.collectAsState()
+    val navigateNext by viewModel.navigateNext.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    // 에러 메시지 표시를 위한 스낵바 상태
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(navigateNext) {
+        if (navigateNext) {
+            navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                popUpTo(NavRoutes.Auth.route) { inclusive = true }
+            }
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
-            MainTopBar(
-                text = "선택"
-            )
-        }
+            MainTopBar(text = "선택")
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = modifier
@@ -86,13 +100,8 @@ fun SelectScreen(
                         containerColor = mainGray
                     ),
                     onClick = {
+                        Log.d("SelectScreen", "그룹 생성 버튼 클릭됨")
                         viewModel.createGroup()
-                        navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
-                            // Auth 플로우를 백스택에서 제거
-                            popUpTo(NavRoutes.Auth.route) {
-                                inclusive = true
-                            }
-                        }
                     },
                 ) {
                     Text(
@@ -101,17 +110,10 @@ fun SelectScreen(
                         color = Color.White
                     )
                 }
-                if (groupState != null) {
-                    Text("앱에 저장되었나 확인용 나중에 지울 것")
-                    Text("Group ID: ${groupState?.groupId}")
-                    Text("Group Name: ${groupState?.groupName}")
-                    Text("Created At: ${groupState?.createdAt}")
-                }
             }
         }
     }
 }
-
 @Preview(
     name = "Select Screen",
     showBackground = true,
