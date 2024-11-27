@@ -46,7 +46,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
-import com.example.mhnfe.domain.ai.AiViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -66,8 +65,7 @@ fun WebRtcScreen(
     navController: NavController,
     channelName: String,
     role: ChannelRole,
-    mqttViewModel: MqttViewModel = hiltViewModel(),
-    aiViewModel: AiViewModel = hiltViewModel()
+    mqttViewModel: MqttViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -253,23 +251,23 @@ fun WebRtcScreen(
             // MQTT 이벤트 발행 및 AI 분석 button
             Button(
                 onClick = {
-                    // AI 분석 및 MQTT 이벤트 발행
-                    viewModel.viewModelScope.launch {
-                        aiViewModel.simulateAIProcessing(
-                            onResult = { result ->
-                                Log.d("WebRTCScreen", "AI Result: $result")
-                            },
-                            onPayloadReady = { payload ->
-                                try {
-                                    mqttViewModel.publishAIResult(payload) // MQTT 이벤트 발행
-                                    Toast.makeText(context, "MQTT 이벤트 발행 완료", Toast.LENGTH_SHORT)
-                                        .show()
-                                } catch (e: Exception) {
-                                    Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
-                                }
-                            }
-                        )
-                    }
+//                    // AI 분석 및 MQTT 이벤트 발행
+//                    viewModel.viewModelScope.launch {
+//                        aiViewModel.simulateAIProcessing(
+//                            onResult = { result ->
+//                                Log.d("WebRTCScreen", "AI Result: $result")
+//                            },
+//                            onPayloadReady = { payload ->
+//                                try {
+//                                    mqttViewModel.publishAIResult(payload) // MQTT 이벤트 발행
+//                                    Toast.makeText(context, "MQTT 이벤트 발행 완료", Toast.LENGTH_SHORT)
+//                                        .show()
+//                                } catch (e: Exception) {
+//                                    Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
+//                                }
+//                            }
+//                        )
+//                    }
                 },
                 modifier = Modifier.padding(8.dp)
             ) {
