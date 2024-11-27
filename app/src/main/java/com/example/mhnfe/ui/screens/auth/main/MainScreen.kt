@@ -31,9 +31,6 @@ fun MainScreen(
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-    val savedId = sharedPreferences.getString("saved_id", null)
-    val savedPassword = sharedPreferences.getString("saved_password", null)
 
     // 자동 로그인 로직
     LaunchedEffect(Unit) {
