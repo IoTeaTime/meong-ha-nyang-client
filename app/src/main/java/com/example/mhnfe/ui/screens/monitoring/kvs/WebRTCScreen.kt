@@ -56,7 +56,7 @@ import org.webrtc.Logging
 
 @Composable
 @SuppressLint("HardwareIds")
-fun WebRtcScreen (
+fun WebRtcScreen(
     aiViewModel: AiViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
     viewModel: KVSSignalingViewModel,
@@ -80,27 +80,18 @@ fun WebRtcScreen (
 
     LaunchedEffect(Unit) {
         try {
-            // 1. MQTT 연결 시도
-            val isConnected = withContext(Dispatchers.IO) {
-                mqttViewModel.initialize(context)
-            }
 
-            if (isConnected) {
-                // Todo. 역할을 가져오는 로직도 추가
-                val roles = ChannelRole.VIEWER
+            // Todo. 역할을 가져오는 로직 추가
+            val roles = ChannelRole.MASTER
 
-                withContext(Dispatchers.IO) {
-                    if (roles == ChannelRole.MASTER) {
-                        mqttViewModel.createShadowWithSubscribe(context)
-                    } else {
-                        // Todo. groupId를 가져와서 구독
-                        val groupId = 404
-                        // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
-                        val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
-
-                        mqttViewModel.viewerInitialSubscribe(thingList, groupId)
-                    }
+            withContext(Dispatchers.IO) {
+                // 1. MQTT 연결 시도 (MASTER일 때)
+                val isConnected = withContext(Dispatchers.IO) {
+                    mqttViewModel.initialize(context)
                 }
+                if (isConnected)
+                    if (roles == ChannelRole.MASTER)
+                        mqttViewModel.createShadowWithSubscribe(context)
             }
         } catch (e: Exception) {
             Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
@@ -138,10 +129,12 @@ fun WebRtcScreen (
                 navController.navigateUp()
                 viewModel.onConnectionEventHandled()
             }
+
             ConnectionEvent.ConnectionSuccess -> {
                 Log.d("WebRtcScreen", "연결 성공: MQTT 초기화 시작")
                 viewModel.onConnectionEventHandled()
             }
+
             null -> {}
         }
     }
@@ -203,7 +196,9 @@ fun WebRtcScreen (
 //    }
 
     Column(
-        modifier = modifier.fillMaxSize().background(color = mainBlack)
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = mainBlack)
     ) {
         Row(
             modifier = modifier
@@ -251,7 +246,8 @@ fun WebRtcScreen (
                             onPayloadReady = { payload ->
                                 try {
                                     mqttViewModel.publishAIResult(payload) // MQTT 이벤트 발행
-                                    Toast.makeText(context, "MQTT 이벤트 발행 완료", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "MQTT 이벤트 발행 완료", Toast.LENGTH_SHORT)
+                                        .show()
                                 } catch (e: Exception) {
                                     Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
                                 }
@@ -381,7 +377,8 @@ fun WebRtcScreen (
                     }
                 }
 
-                else -> { /* 다른 상태 처리 */ }
+                else -> { /* 다른 상태 처리 */
+                }
             }
         }
     }

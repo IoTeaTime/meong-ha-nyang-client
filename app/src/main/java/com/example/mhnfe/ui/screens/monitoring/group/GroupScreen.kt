@@ -12,19 +12,25 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
 import com.example.mhnfe.data.model.sampleCCTVList
 import com.example.mhnfe.di.UserType
+import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 @Composable
@@ -34,8 +40,30 @@ fun GroupScreen(
     userType: UserType = UserType.MASTER,
     //나중에 뷰모델로 뺄 것
     cctv: List<CCTV> = sampleCCTVList,
-    navController: NavController
-    ) {
+    navController: NavController,
+    mqttViewModel: MqttViewModel = hiltViewModel()
+) {
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        // UserType을 확인
+        if (userType != UserType.CCTV) {
+            withContext(Dispatchers.IO) {
+                // 1. MQTT 연결 시도 (VIEWER일 때)
+                val isConnected = withContext(Dispatchers.IO) {
+                    mqttViewModel.initialize(context)
+                }
+                if (isConnected) {
+                    val groupId = 404
+                    // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
+                    val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
+
+                    mqttViewModel.viewerInitialSubscribe(thingList, groupId)
+                }
+            }
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -48,15 +76,20 @@ fun GroupScreen(
                 .padding(innerPadding)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(40.dp, alignment = Alignment.CenterVertically)
+            verticalArrangement = Arrangement.spacedBy(
+                40.dp,
+                alignment = Alignment.CenterVertically
+            )
         ) {
             //마스터 화면 일 때 버튼 추가
             if (userType == UserType.MASTER) {
                 Row(
-                    modifier = modifier.fillMaxWidth().wrapContentHeight(),
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
-                ){
+                ) {
                     SmallButton(
                         onClick = {
                             navController.navigate(
@@ -76,7 +109,7 @@ fun GroupScreen(
                 }
             }
             if (cctv.isEmpty()) {
-                Column (
+                Column(
                     modifier = modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -102,7 +135,10 @@ fun GroupScreen(
                             cctv = cctvItem,
                             onClick = {
 //                                navController.currentBackStackEntry?.savedStateHandle?.set("channelName", cctvItem.channelName)
-                                navController.currentBackStackEntry?.savedStateHandle?.set("role", ChannelRole.VIEWER)
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    "role",
+                                    ChannelRole.VIEWER
+                                )
 //                                navController.navigate(NavRoutes.Monitoring.Viewer.route)
                                 navController.navigate(
                                     NavRoutes.Monitoring.Viewer.createRoute(
@@ -111,7 +147,11 @@ fun GroupScreen(
                                 )
                             },
                             onEdit = {
-                                navController.navigate(NavRoutes.Monitoring.DeviceInformation.createRoute(cctvItem.id))
+                                navController.navigate(
+                                    NavRoutes.Monitoring.DeviceInformation.createRoute(
+                                        cctvItem.id
+                                    )
+                                )
                             }
                         )
                     }
