@@ -1,11 +1,7 @@
 package com.example.mhnfe.domain.mqtt
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.os.BatteryManager
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
@@ -34,6 +30,7 @@ class MqttViewModel @Inject constructor(
     private var keyStore: KeyStore? = null
     private val tag = "MqttUtils"
 
+
     @SuppressLint("HardwareIds")
     suspend fun initialize(context: Context): Boolean = withContext(Dispatchers.IO) {
         val keyStoreFile = File("${context.filesDir}/keystore.bks")
@@ -58,7 +55,6 @@ class MqttViewModel @Inject constructor(
             false // 실패 시 false 반환
         }
     }
-
 
 
     private fun initializeWithExistingKeyStore(context: Context) {
@@ -135,11 +131,9 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    fun viewerInitialSubscribe(thingList: List<String>, groupId: Int) {
+    fun viewerInitialSubscribe(context: Context, thingList: List<String>) {
         try {
-            // Group 관련 토픽 생성
-            val groupTopic = "/mhn/command/device/info/groups/$groupId"
-            val topicsToSubscribe = mutableListOf(groupTopic)
+            val topicsToSubscribe: MutableList<String> = mutableListOf()
 
             // Thing 리스트의 각 Thing에 대해 토픽 생성 및 추가
             thingList.forEach { subthingId ->
@@ -152,7 +146,7 @@ class MqttViewModel @Inject constructor(
                 subscribe(topic) { receivedTopic, message ->
                     Log.d(tag, "Message received on Topic: $receivedTopic, Payload: $message")
                     // 메시지 내용을 처리
-                    handleTopicMessage(receivedTopic, message)
+                    handleTopicMessage(receivedTopic, message, context)
                 }
             }
             Log.d(tag, "Viewer 초기 구독 완료: Topics=${topicsToSubscribe.joinToString(", ")}")
@@ -161,67 +155,8 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    private fun handleTopicMessage(receivedTopic: String, message: String) {
+    fun createShadowWithSubscribe(context: Context, groupId: Int) {
         try {
-            // JSON 메시지 파싱 (예시)
-            val jsonMessage = JSONObject(message)
-
-            when {
-                receivedTopic.contains("groups") -> {
-                    // 그룹 관련 메시지 처리
-                    val groupInfo = jsonMessage.optString("groupInfo", "N/A")
-                    Log.d(tag, "Received group info: $groupInfo")
-                }
-
-                receivedTopic.contains("things") -> {
-                    // Thing 관련 메시지 처리
-                    val thingId = receivedTopic.substringAfterLast("/")
-                    val status = jsonMessage.optString("status", "unknown")
-                    val batteryLevel = jsonMessage.optInt("batteryLevel", -1)
-                    Log.d(
-                        tag,
-                        "Received status for Thing $thingId: Status=$status, Battery=$batteryLevel"
-                    )
-                }
-
-                else -> {
-                    // 기타 메시지 처리
-                    Log.w(tag, "Unhandled topic: $receivedTopic")
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(
-                tag,
-                "Failed to process message for topic: $receivedTopic, Error: ${e.message}",
-                e
-            )
-        }
-    }
-
-    fun createShadowWithSubscribe(context: Context) {
-        try {
-            // Shadow Update Topic
-            val topic = "\$aws/things/${thingId}/shadow/update"
-
-            // Shadow Payload (하드코딩된 샘플 데이터)
-            val batteryLevel = getBatteryLevel(context)
-            val availableMemory = getAvailableMemory(context)
-            val kvsChannelActive = true
-            val kvsChannelDeleteRequested = false
-
-            val payload = """
-            {
-                "state": {
-                    "reported": {
-                        "kvsChannelActive": $kvsChannelActive,
-                        "batteryLevel": $batteryLevel,
-                        "availableMemory": $availableMemory,
-                        "kvsChannelDeleteRequested": $kvsChannelDeleteRequested
-                    }
-                }
-            }
-        """.trimIndent()
-
             // Shadow 관련 Topic 구독
             val shadowTopics = listOf(
                 "\$aws/things/${thingId}/shadow/update/delta",
@@ -241,57 +176,96 @@ class MqttViewModel @Inject constructor(
                 }
             }
 
+            // Pub-Topic
+            val topic = "\$aws/things/${thingId}/shadow/update"
+            val payload = DeviceUtils.getShadowPayload(context)
+
             // Shadow 상태 업데이트 메시지 발행
             publish(topic, payload)
+
+            // 그룹 관련 Sub-Topic 구독
+            val groupTopic = "/mhn/command/device/info/groups/$groupId"
+            subscribe(groupTopic) { receivedTopic, message ->
+                Log.d(tag, "Message received on Group Topic: $receivedTopic, Payload: $message")
+                // 메시지 내용 처리
+                handleTopicMessage(receivedTopic, message, context)
+            }
+
             Log.d(tag, "MQTT 메시지 발행 성공: Topic=$topic, Payload=$payload")
         } catch (e: Exception) {
             Log.e(tag, "MQTT 메시지 발행 실패: ${e.message}", e)
         }
     }
 
-    /**
-     * Shadow 메시지 처리 함수
-     * @param topic - 메시지가 발행된 Topic
-     * @param message - 수신된 메시지 내용
-     */
+    // Subscribe Topic 처리 함수
+    private fun handleTopicMessage(receivedTopic: String, message: String, context: Context) {
+        try {
+            // JSON 메시지를 JSONObject로 파싱
+            val jsonMessage = JSONObject(message)
+            Log.d(tag, "Received JSON message: $jsonMessage")
+
+            // Topic 기반 처리
+            when {
+                receivedTopic.contains("groups") -> {
+                    val groupInfo = jsonMessage.optString("groupInfo", "No Group Info")
+                    Log.d(tag, "Group Info: $groupInfo")
+
+                    // DeviceUtils로 Payload 생성
+                    val payload = DeviceUtils.getPublishPayload(context)
+
+                    // Thing Topic으로 Publish
+                    val thingTopic = "/mhn/command/device/info/things/$thingId"
+                    publish(thingTopic, payload)
+                    Log.d(tag, "Published Device Info to Thing Topic: Topic=$thingTopic, Payload=$payload")
+                }
+
+                receivedTopic.contains("things") -> {
+                    val thingId = receivedTopic.substringAfterLast("/")
+                    val status = jsonMessage.optString("status", "unknown")
+                    val batteryLevel = jsonMessage.optInt("batteryLevel", -1)
+                    Log.d(tag, "Thing ID: $thingId, Status: $status, Battery Level: $batteryLevel")
+                }
+
+                else -> {
+                    Log.d(tag, "Unhandled Topic: $receivedTopic, Message: $jsonMessage")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to process message on Topic: $receivedTopic, Error: ${e.message}", e)
+        }
+    }
+
+    // Shadow 메시지 처리 함수
     private fun handleShadowMessage(topic: String, message: String) {
         try {
-            val jsonObject: ShadowDeltaMsg = Json.decodeFromString<ShadowDeltaMsg>(message)
-            Log.d(tag, "처리된 메시지: $jsonObject")
-            // 메시지 내용에 따라 적절한 처리를 구현
+            val jsonObject: ShadowDeltaMsg = Json.decodeFromString(message)
+            Log.d(tag, "처리된 Shadow 메시지: $jsonObject")
+
             when {
                 topic.contains("delta") -> {
-                    // Delta 메시지 처리 로직
                     Log.d(tag, "Delta 메시지 수신: $jsonObject")
-
-                    // kvsChannelDeleteRequested가 true라면
                     if (jsonObject.state.delta.kvsChannelDeleteRequested) {
-                        // IoT 디바이스 삭제
                         iotClientHelper.deleteDevice()
                         Log.d(tag, "IoT 디바이스 삭제 성공")
                     } else {
-                        // 그렇지 않다면 내 정보를 update
-
+                        Log.d(tag, "Delta 처리 완료: $jsonObject")
                     }
                 }
 
                 topic.contains("accepted") -> {
-                    // Update/Accepted 메시지 처리 로직
                     Log.d(tag, "Accepted 메시지 수신: $jsonObject")
                 }
 
                 topic.contains("rejected") -> {
-                    // Update/Rejected 메시지 처리 로직
                     Log.e(tag, "Rejected 메시지 수신: $jsonObject")
                 }
 
                 topic.contains("documents") -> {
-                    // Update/Documents 메시지 처리 로직
                     Log.d(tag, "Documents 메시지 수신: $jsonObject")
                 }
 
                 else -> {
-                    Log.w(tag, "알 수 없는 Shadow Topic 수신: $topic")
+                    Log.w(tag, "Unhandled Shadow Topic: $topic")
                 }
             }
         } catch (e: Exception) {
@@ -307,25 +281,5 @@ class MqttViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e(tag, "MQTT 이벤트 발행 실패: ${e.message}", e)
         }
-    }
-
-    fun getBatteryLevel(context: Context): Int {
-        val batteryIntent =
-            context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
-        val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
-        return if (level != -1 && scale != -1) {
-            (level * 100) / scale
-        } else {
-            -1 // 오류 발생 시
-        }
-    }
-
-    fun getAvailableMemory(context: Context): Long {
-        val activityManager =
-            context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val memoryInfo = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(memoryInfo)
-        return memoryInfo.availMem / (1024 * 1024) // MB 단위
     }
 }
