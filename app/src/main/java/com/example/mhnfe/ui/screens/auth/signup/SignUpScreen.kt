@@ -174,7 +174,7 @@ fun SignUpScreen(
     }
 
     // Create an instance of the Repository for calling the Sign-Up API
-    val authRepository = AuthRepository()
+//    val authRepository = AuthRepository()
 
     Scaffold(
         modifier = modifier,
@@ -385,7 +385,7 @@ fun SignUpScreen(
                                             // Log before calling the Sign-Up API
                                             //Log.d("SignUpScreen", "회원가입 데이터: email=$email, password=$password, passwordConfirm=$confirmPassword, nickname=$nickname")
 
-                                            SignUpResponse = authRepository.signUp(
+                                            signUpViewModel.signUpUser(
                                                 email = email,
                                                 password = password,
                                                 passwordConfirm = confirmPassword,
