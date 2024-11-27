@@ -21,7 +21,7 @@ import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.screens.auth.login.LoginScreen
-import com.example.mhnfe.ui.screens.auth.MainScreen
+import com.example.mhnfe.ui.screens.auth.main.MainScreen
 import com.example.mhnfe.ui.screens.auth.select.SelectScreen
 import com.example.mhnfe.ui.screens.auth.signup.SignUpScreen
 import com.example.mhnfe.ui.screens.monitoring.kvs.KVSSignalingViewModel
@@ -98,10 +98,7 @@ fun AppNavigation() {
             }
             composable(NavRoutes.Auth.Login.route) {
                 LoginScreen(
-                    navController = navController,
-                    onLoginClick = {
-                        navController.navigate(NavRoutes.Monitoring.Group.route)
-                    }
+                    navController = navController
                 )
             }
             composable(NavRoutes.Auth.SignUp.route) {
@@ -116,8 +113,7 @@ fun AppNavigation() {
             }
             composable(NavRoutes.Auth.Select.route) {
                 SelectScreen(
-                    navController = navController,
-                )
+                    navController = navController)
             }
             composable(NavRoutes.Auth.QRScanner.route) {
                 // QRScannerScreen
