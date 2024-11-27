@@ -10,11 +10,4 @@ interface UserApi {
     fun refreshAccessToken(
         @Header("Authorization") refreshToken: String
     ): RefreshAccessTokenResponse
-
-    /*
-    @POST("/api/group")
-    suspend fun createGroup(
-        @Header("Authorization") authToken: String,
-        @Body request: CreateGroupRequest
-    ): GroupResponse*/
 }
