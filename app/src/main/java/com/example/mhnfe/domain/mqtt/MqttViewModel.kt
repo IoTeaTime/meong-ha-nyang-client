@@ -299,6 +299,16 @@ class MqttViewModel @Inject constructor(
         }
     }
 
+    fun publishAIResult(payload: String) {
+        try {
+            val topic = "/mhn/event/detect/things/$thingId" // MQTT 토픽
+            awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
+            Log.d(tag, "MQTT 이벤트 발행 성공 - Topic: $topic, Payload: $payload")
+        } catch (e: Exception) {
+            Log.e(tag, "MQTT 이벤트 발행 실패: ${e.message}", e)
+        }
+    }
+
     fun getBatteryLevel(context: Context): Int {
         val batteryIntent =
             context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
