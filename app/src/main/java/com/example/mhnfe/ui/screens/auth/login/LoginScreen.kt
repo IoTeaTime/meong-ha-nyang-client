@@ -58,8 +58,6 @@ fun LoginScreen(
 
 //    // SharedPreferences를 사용해 자동 로그인 상태와 사용자 정보를 저장
     val context = LocalContext.current
-//    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-//    val editor = sharedPreferences.edit()
 
     Scaffold(
         modifier = modifier,
