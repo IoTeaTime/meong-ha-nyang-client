@@ -95,7 +95,6 @@ class MqttViewModel @Inject constructor(
                             continuation.resumeWithException(throwable)
                         }
                     } else {
-                        Log.d(tag, "MQTT Connection Status: $status")
                         if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected) {
                             if (continuation.isActive) {
                                 continuation.resume(true) // 성공 시 true 반환

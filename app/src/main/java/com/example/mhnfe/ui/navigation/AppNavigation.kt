@@ -60,7 +60,7 @@ sealed class NavRoutes(val route: String) {
         }
 
         object DeviceInformation : NavRoutes("device_information/{cctvId}") {
-            fun createRoute(cctvId: String) = "device_information/$cctvId"
+            fun createRoute(cctvId: Long) = "device_information/$cctvId"
         }
         object QRGenerate : NavRoutes("qr_generate/{userType}") {
             fun createRoute(userType: UserType) = "qr_generate/${userType.name.lowercase()}"

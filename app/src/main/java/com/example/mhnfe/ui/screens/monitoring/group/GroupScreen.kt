@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +26,7 @@ import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
 import com.example.mhnfe.data.model.sampleCCTVList
+import com.example.mhnfe.data.remote.response.CctvInfo
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTopBar
@@ -38,14 +41,15 @@ import kotlinx.coroutines.withContext
 @Composable
 fun GroupScreen(
     modifier: Modifier = Modifier,
-    groupId: String = "그룹1",
     userType: UserType = UserType.MASTER,
     //나중에 뷰모델로 뺄 것
-    cctv: List<CCTV> = sampleCCTVList,
+//    cctv: List<CCTV> = sampleCCTVList,
     navController: NavController,
-    mqttViewModel: MqttViewModel = hiltViewModel()
+    mqttViewModel: MqttViewModel = hiltViewModel(),
+    groupViewModel: GroupViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val groupInfo by groupViewModel.groupInfo.collectAsState()
 
     LaunchedEffect(Unit) {
         // UserType을 확인
@@ -80,7 +84,7 @@ fun GroupScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            MainTopBar(text = groupId)
+            MainTopBar(text = groupInfo?.groupName ?: "그룹")
         },
     ) { innerPadding ->
         Column(
@@ -121,7 +125,8 @@ fun GroupScreen(
                     )
                 }
             }
-            if (cctv.isEmpty()) {
+            val cctvList = groupInfo?.cctv ?: emptyList()
+            if (cctvList.isEmpty()) {
                 Column(
                     modifier = modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -141,28 +146,26 @@ fun GroupScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(
-                        items = cctv,
-                        key = { it.id }
+                        items = cctvList,
+                        key = { it.cctvId }
                     ) { cctvItem ->
                         CCTVItemCard(
-                            cctv = cctvItem,
+                            cctv = cctvItem.toCCTV(),
                             onClick = {
-//                                navController.currentBackStackEntry?.savedStateHandle?.set("channelName", cctvItem.channelName)
                                 navController.currentBackStackEntry?.savedStateHandle?.set(
                                     "role",
                                     ChannelRole.VIEWER
                                 )
-//                                navController.navigate(NavRoutes.Monitoring.Viewer.route)
                                 navController.navigate(
                                     NavRoutes.Monitoring.Viewer.createRoute(
-                                        channelName = cctvItem.channelName
+                                        channelName = cctvItem.kvsChannelName
                                     )
                                 )
                             },
                             onEdit = {
                                 navController.navigate(
                                     NavRoutes.Monitoring.DeviceInformation.createRoute(
-                                        cctvItem.id
+                                        cctvItem.cctvId
                                     )
                                 )
                             }
@@ -173,4 +176,11 @@ fun GroupScreen(
         }
     }
 }
+
+fun CctvInfo.toCCTV() = CCTV(
+    id = cctvId,
+    deviceName = cctvNickname,
+    thingId = thingId,
+    channelName = kvsChannelName,
+)
 
