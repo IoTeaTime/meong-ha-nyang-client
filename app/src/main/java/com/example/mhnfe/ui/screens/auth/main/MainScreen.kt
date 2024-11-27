@@ -1,4 +1,4 @@
-package com.example.mhnfe.ui.screens.auth
+package com.example.mhnfe.ui.screens.auth.main
 
 import android.content.Context
 import android.util.Log
@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
@@ -24,7 +25,8 @@ import com.example.mhnfe.ui.navigation.NavRoutes
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
@@ -33,23 +35,19 @@ fun MainScreen(
 
     // 자동 로그인 로직
     LaunchedEffect(Unit) {
-        if (!savedId.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
-            // 저장된 로그인 정보로 자동 로그인 시도
-            val authRepository = AuthRepository()
-            try {
-                val response = authRepository.login(savedId, savedPassword)
-                if (response.result.code == 200) {
-                    // 자동 로그인 성공 -> 다음 화면으로 이동
-                    navController.navigate(NavRoutes.Auth.Select.route) {
-                        popUpTo(NavRoutes.Auth.route) { inclusive = true }
-                    }
+        mainViewModel.autoLogin(savedId, savedPassword,
+            onSuccess = {
+                // 자동 로그인 성공 -> 다음 화면으로 이동
+                navController.navigate(NavRoutes.Auth.Select.route) {
+                    popUpTo(NavRoutes.Auth.route) { inclusive = true }
                 }
-            } catch (e: Exception) {
+            },
+            onFailure = { e ->
                 Log.e("MainScreen", "자동 로그인 실패", e)
             }
-        }
+        )
     }
-
+//    viewModel.initializeWithContext(context)
     Column(
         modifier = modifier
             .fillMaxSize()

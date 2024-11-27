@@ -28,7 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,6 +45,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
+import com.example.mhnfe.domain.ai.AiViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
@@ -56,6 +59,7 @@ import org.webrtc.Logging
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen (
+    aiViewModel: AiViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
     viewModel: KVSSignalingViewModel,
     navController: NavController,
@@ -71,6 +75,8 @@ fun WebRtcScreen (
     val eglBase = remember { EglBase.create() }
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
+    var aiResult by remember { mutableStateOf<String?>(null) }
+    var isProcessing by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         try {
@@ -139,7 +145,6 @@ fun WebRtcScreen (
             null -> {}
         }
     }
-
 
     // 리소스 정리 함수
     val cleanup = {
@@ -234,38 +239,30 @@ fun WebRtcScreen (
                 Text("카메라 끄기")
             }
 
-
-            // MQTT 이벤트 발행 button
-            Button (
+            // MQTT 이벤트 발행 및 AI 분석 button
+            Button(
                 onClick = {
+                    // AI 분석 및 MQTT 이벤트 발행
                     viewModel.viewModelScope.launch {
-                        try {
-                            val topic = "/mhn/command/device/info/groups/404"
-                            val payload = """
-                                {
-                                    "status": "online",
-                                    "batteryLevel": 78,
-                                    "temperature": 36.5
+                        aiViewModel.simulateAIProcessing(
+                            onResult = { result ->
+                                Log.d("WebRTCScreen", "AI Result: $result")
+                            },
+                            onPayloadReady = { payload ->
+                                try {
+                                    mqttViewModel.publishAIResult(payload) // MQTT 이벤트 발행
+                                    Toast.makeText(context, "MQTT 이벤트 발행 완료", Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
                                 }
-                            """.trimIndent()
-                            mqttViewModel.publish(topic, payload)
-                            Log.d(
-                                "WebRTCScreen",
-                                "MQTT 이벤트 발행 - Topic: $topic, Payload: $payload"
-                            )
-                            Toast.makeText(context, "이벤트 발행 완료", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
-                        }
+                            }
+                        )
                     }
                 },
                 modifier = Modifier.padding(8.dp)
-
             ) {
-                Text("이벤트")
-
+                Text("AI 이벤트")
             }
-
 
             IconButton(
                 modifier = modifier
@@ -319,7 +316,6 @@ fun WebRtcScreen (
                             },
                             modifier = modifier.fillMaxSize()
                         )
-
                     }
                 }
             }
@@ -334,7 +330,6 @@ fun WebRtcScreen (
                     remoteView?.let { renderer ->
                         AndroidView(
                             factory = {
-
                                 renderer.apply {
                                     (parent as? android.view.ViewGroup)?.removeView(this)
                                 }
