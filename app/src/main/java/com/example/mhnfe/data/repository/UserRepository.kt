@@ -7,12 +7,5 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class UserRepository @Inject constructor(
-    private val apiService: ApiService
-) {
-    private val api: UserApi = apiService.createApiService(UserApi::class.java)
-
-    fun refreshAccessToken(refreshToken: String): RefreshAccessTokenResponse {
-        return api.refreshAccessToken(refreshToken)
-    }
+class UserRepository () {
 }

@@ -19,14 +19,8 @@ import javax.inject.Singleton
 
 @Singleton
 class AuthRepository @Inject constructor(
-    private val apiService: ApiService
+    private val authApi: AuthApi
 ){
-    private val api: AuthApi
-
-    init {
-        api = apiService.createApiService(AuthApi::class.java)
-    }
-
     suspend fun signUp(
         email: String,
         password: String,
@@ -34,14 +28,14 @@ class AuthRepository @Inject constructor(
         nickname: String
     ): SignUpResponse {
         val request = SignUpRequest(email, password, passwordConfirm, nickname)
-        return api.signUp(request)
+        return authApi.signUp(request)
     }
 
     suspend fun checkEmailDuplicate(email: String): CheckEmailResponse {
         val emailRequest = EmailRequest(email)
 //        Log.d("AuthRepository", "checkEmailDuplicate 요청: $emailRequest")
         return try {
-            val response = api.checkEmailDuplicate(emailRequest)
+            val response = authApi.checkEmailDuplicate(emailRequest)
 //            Log.d("AuthRepository", "checkEmailDuplicate 응답2: $response")
             response
         } catch (e: HttpException) {
@@ -73,11 +67,11 @@ class AuthRepository @Inject constructor(
         password: String
     ): LoginResponse {
         val request = LoginRequest(email, password)
-        return api.login(request)
+        return authApi.login(request)
     }
 
     suspend fun refreshFcmToken(jwtToken: String, fcmToken: String): FCMResponse {
         val request = RefreshFcmTokenRequest(fcmToken)
-        return api.refreshFcmToken(jwtToken, request)
+        return authApi.refreshFcmToken(jwtToken, request)
     }
 }
