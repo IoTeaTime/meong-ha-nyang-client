@@ -3,6 +3,12 @@ package com.example.mhnfe.ui.screens.monitoring.kvs
 
 import android.content.ContentValues.TAG
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.Matrix
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.util.Base64
 import android.util.Log
 import android.widget.Toast
@@ -49,6 +55,7 @@ import org.webrtc.ApplicationContextProvider.getApplicationContext
 import org.webrtc.Camera1Enumerator
 import org.webrtc.CameraEnumerator
 import org.webrtc.CameraVideoCapturer
+import org.webrtc.CapturerObserver
 import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
 import org.webrtc.EglBase
@@ -62,9 +69,12 @@ import org.webrtc.SessionDescription
 import org.webrtc.SurfaceTextureHelper
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoCapturer
+import org.webrtc.VideoFrame
 import org.webrtc.VideoSource
 import org.webrtc.VideoTrack
+import java.io.ByteArrayOutputStream
 import java.net.URI
+import java.nio.ByteBuffer
 import java.util.Date
 import java.util.LinkedList
 import java.util.Optional
@@ -79,10 +89,6 @@ enum class ConnectionEvent {
     ConnectionSuccess
     // 필요한 다른 상태들 추가
 }
-
-
-
-
 
 data class WebRtcConfigData(
     val channelArn: String,
@@ -386,6 +392,9 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
 
+
+
+
     private fun initializeWebRTC(
         isMaster: Boolean,
         userNames: List<String>,
@@ -469,6 +478,14 @@ class KVSSignalingViewModel : ViewModel() {
         videoCapturer?.startCapture(1280, 720, 30)
         localVideoTrack?.setEnabled(true)
         Log.e("initCamera", "create video startCapture")
+
+        videoSource = peerConnectionFactory?.createVideoSource(false)!!
+
+        // Start capturing
+        videoCapturer?.startCapture(1280, 720, 30)
+        localVideoTrack?.setEnabled(true)
+        Log.d("initCamera", "create video startCapture")
+
     }
 
 
@@ -798,6 +815,133 @@ class KVSSignalingViewModel : ViewModel() {
         return client != null && client!!.isOpen()
     }
 
+    private val _frameData = MutableStateFlow<Bitmap?>(null)
+    val frameData = _frameData.asStateFlow()
+
+    private var lastFrameTime = 0L
+    private val frameInterval = 5000L // 1초 간격
+
+
+    private fun convertI420ToBitmap(buffer: VideoFrame.I420Buffer) {
+        try {
+            val width = buffer.width
+            val height = buffer.height
+
+            val ySize = width * height
+            val uvSize = ySize / 4
+
+            val nv21 = ByteArray(ySize + uvSize * 2)
+
+            // Y 데이터 복사
+            buffer.dataY.get(nv21, 0, ySize)
+            Log.d(TAG, "Copied Y data")
+
+            // U와 V 데이터를 NV21 포맷으로 인터리빙
+            val uBuffer = buffer.dataU
+            val vBuffer = buffer.dataV
+            var pos = ySize
+            for (i in 0 until uvSize) {
+                nv21[pos++] = vBuffer.get(i)
+                nv21[pos++] = uBuffer.get(i)
+            }
+            Log.d(TAG, "Copied UV data")
+
+            // YuvImage로 변환
+            val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
+            Log.d(TAG, "Created YuvImage")
+
+            val out = ByteArrayOutputStream()
+            yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
+            val imageBytes = out.toByteArray()
+
+            val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            bitmap?.let {
+                viewModelScope.launch(Dispatchers.Main) {
+                    _frameData.value = it
+                    Log.d(TAG, "Posted I420 bitmap: ${it.width}x${it.height}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error converting I420 to Bitmap", e)
+        }
+    }
+    private fun convertNV21ToBitmap(buffer: VideoFrame.Buffer, rotation: Int) {
+        try {
+            Log.d(TAG, "Converting frame: ${buffer.width}x${buffer.height}, rotation: $rotation")
+
+            // 먼저 I420로 변환
+            val i420Buffer = buffer.toI420()
+            Log.d(TAG, "Converted to I420Buffer: ${i420Buffer!!.width}x${i420Buffer.height}")
+
+            try {
+                val width = i420Buffer.width
+                val height = i420Buffer.height
+
+                // YUV 데이터 준비
+                val ySize = width * height
+                val uvSize = ySize / 4
+                val nv21 = ByteArray(ySize + uvSize * 2)
+
+                // Y 데이터 복사
+                i420Buffer.dataY.get(nv21, 0, ySize)
+                Log.d(TAG, "Copied Y data")
+
+                // U와 V 데이터를 NV21 포맷으로 인터리빙
+                val uBuffer = i420Buffer.dataU
+                val vBuffer = i420Buffer.dataV
+                var pos = ySize
+                for (i in 0 until uvSize) {
+                    nv21[pos++] = vBuffer.get(i)
+                    nv21[pos++] = uBuffer.get(i)
+                }
+                Log.d(TAG, "Copied UV data")
+
+                // YuvImage로 변환
+                val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
+                Log.d(TAG, "Created YuvImage")
+
+                val out = ByteArrayOutputStream()
+                yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
+                Log.d(TAG, "Compressed to JPEG")
+
+                val imageBytes = out.toByteArray()
+                var bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    ?: throw Exception("Failed to decode bitmap")
+                Log.d(TAG, "Decoded bitmap: ${bitmap.width}x${bitmap.height}")
+
+                // 회전 처리
+                if (rotation != 0) {
+                    val matrix = Matrix()
+                    matrix.postRotate(rotation.toFloat())
+                    bitmap = Bitmap.createBitmap(
+                        bitmap,
+                        0, 0,
+                        bitmap.width, bitmap.height,
+                        matrix,
+                        true
+                    )
+                    Log.d(TAG, "Applied rotation: $rotation")
+                }
+
+                Log.d(TAG, "Successfully created bitmap: ${bitmap.width}x${bitmap.height}")
+                viewModelScope.launch(Dispatchers.Main) {
+                    _frameData.value = bitmap
+                    Log.d(TAG, "Posted bitmap to StateFlow")
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error converting YUV to Bitmap", e)
+            } finally {
+                i420Buffer.release()  // 중요: 메모리 누수 방지
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in frame conversion", e)
+        }
+    }
+
+
+
     fun initializeSurfaceViews(context: Context, eglBaseContext: EglBase.Context, role: ChannelRole) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
@@ -821,6 +965,63 @@ class KVSSignalingViewModel : ViewModel() {
                 _remoteView.value = remoteRenderer
                 _isViewsInitialized.value = true
 
+                //AI 연결을 위한 프레임 처리
+                if (role == ChannelRole.MASTER) {  // MASTER 역할 체크 추가
+                    try {
+                        videoSource = peerConnectionFactory?.createVideoSource(false)!!
+                        videoCapturer = createVideoCapturer() ?: throw Exception("Failed to create video capturer")
+
+                        val surfaceTextureHelper = SurfaceTextureHelper.create("WebRTC-STH", eglBaseContext)
+                        // Observer 생성
+                        val observer = object : CapturerObserver {
+                            override fun onFrameCaptured(frame: VideoFrame) {
+                                val currentTime = System.currentTimeMillis()
+                                if (currentTime - lastFrameTime >= frameInterval) {
+                                    lastFrameTime = currentTime
+                                    Log.d(TAG, "Frame captured with timestamp: $currentTime")
+
+                                    try {
+                                        val buffer = frame.buffer
+                                        Log.d(TAG, "Got buffer: ${buffer?.javaClass?.simpleName}")
+
+                                        when (buffer) {
+                                            is VideoFrame.I420Buffer -> {
+                                                convertI420ToBitmap(buffer)
+                                            }
+                                            else -> {
+                                                convertNV21ToBitmap(buffer, frame.rotation)
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "Error in frame processing", e)
+                                    }
+                                }
+                                videoSource?.capturerObserver?.onFrameCaptured(frame)
+                            }
+
+                            override fun onCapturerStarted(success: Boolean) {
+                                Log.d(TAG, "Capturer started: $success")
+                            }
+
+                            override fun onCapturerStopped() {
+                                Log.d(TAG, "Capturer stopped")
+                            }
+                        }
+
+                        // 초기화
+                        videoCapturer.initialize(surfaceTextureHelper, context, observer)
+
+                        videoCapturer.startCapture(1280, 720, 30)
+
+                        localVideoTrack =
+                            peerConnectionFactory?.createVideoTrack("local_track", videoSource)!!
+                        localVideoTrack?.setEnabled(true)
+                        localVideoTrack?.addSink(localRenderer)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to initialize video components", e)
+                    }
+                }
+
                 // 로컬 트랙이 있으면 렌더러에 연결
                 localVideoTrack?.addSink(localRenderer)
 
@@ -832,6 +1033,7 @@ class KVSSignalingViewModel : ViewModel() {
             }
         }
     }
+
 
 
     private fun createLocalPeerConnection(clientId: String , isMaster : Boolean) {
@@ -1336,17 +1538,6 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
 }
 
 
@@ -1371,3 +1562,4 @@ sealed class WebRTCUiState {
     }
     data object NoMasterConnected : WebRTCUiState()
 }
+

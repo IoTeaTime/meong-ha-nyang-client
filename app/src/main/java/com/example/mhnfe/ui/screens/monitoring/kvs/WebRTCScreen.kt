@@ -39,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -49,6 +48,9 @@ import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.domain.ai.AiViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
@@ -63,10 +65,10 @@ fun WebRtcScreen (
     navController: NavController,
     channelName: String,
     role: ChannelRole,
-    mqttViewModel: MqttViewModel = hiltViewModel()
+    mqttViewModel: MqttViewModel = hiltViewModel(),
+    aiViewModel: AiViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
     val localView by viewModel.localView.collectAsState()
     val remoteView by viewModel.remoteView.collectAsState()
@@ -75,8 +77,6 @@ fun WebRtcScreen (
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
     var aiResult by remember { mutableStateOf<String?>(null) }
     var isProcessing by remember { mutableStateOf(false) }
-
-
 
     LaunchedEffect(Unit) {
         try {
@@ -282,6 +282,25 @@ fun WebRtcScreen (
             }
         }
         if (role == ChannelRole.MASTER) {
+            LaunchedEffect(Unit) {
+                try {
+                    viewModel.frameData
+                        .onEach { bitmap ->
+                            bitmap?.let {
+                                withContext(Dispatchers.Default) {
+                                    aiViewModel.processFrame(it)
+                                }
+                            } ?: Log.d("WebRtcScreen", "Received null bitmap")
+                        }
+                        .catch { e ->
+                            Log.e("WebRtcScreen", "Error collecting frames", e)
+                        }
+                        .launchIn(this)
+                } catch (e: Exception) {
+                    Log.e("WebRtcScreen", "Frame collection failed", e)
+                }
+            }
+            //UI
             Box(
                 modifier = modifier
                     .weight(1f)
@@ -318,19 +337,6 @@ fun WebRtcScreen (
                             modifier = modifier.fillMaxSize()
                         )
                     }
-//                    localView?.let { renderer ->
-//                        AndroidView(
-//                            factory = {
-//                                renderer.apply {
-//                                    (parent as? android.view.ViewGroup)?.removeView(this)
-//                                }
-//                            },
-//                            modifier = Modifier
-//                                .align(Alignment.TopEnd)
-//                                .size(120.dp)
-//                                .padding(8.dp)
-//                        )
-//                    }
                 }
             }
         }
