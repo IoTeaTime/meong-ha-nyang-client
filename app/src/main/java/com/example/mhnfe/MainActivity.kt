@@ -36,8 +36,8 @@ import com.amazonaws.mobile.client.UserStateDetails
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.ui.navigation.AppNavigation
 import com.example.mhnfe.ui.navigation.NavRoutes
-import com.example.mhnfe.ui.screens.master.KVSSignalingViewModel
-import com.example.mhnfe.ui.screens.master.WebRTCUiState
+import com.example.mhnfe.ui.screens.monitoring.kvs.KVSSignalingViewModel
+import com.example.mhnfe.ui.screens.monitoring.kvs.WebRTCUiState
 import com.example.mhnfe.utils.PermissionManager
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
