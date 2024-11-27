@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mhnfe.data.remote.api.AuthApi
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.FCMResponse
@@ -21,6 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
+//    private val authApi: AuthApi,
     private val authRepository: AuthRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
@@ -52,7 +54,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // 서버로 로그인 요청
-                val response = authRepository.login(email, password)
+                val response = authRepository.login(email,password)
 
                 if (response.result.code == 200) {
                     // JWT 엑세스, 리프레시 토큰 저장
