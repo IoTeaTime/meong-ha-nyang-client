@@ -1,5 +1,6 @@
 package com.example.mhnfe.domain.repository
 
+import com.example.mhnfe.data.remote.response.LogoutResponse
 import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
 import com.example.mhnfe.data.remote.response.RefreshedAccessToken
 
