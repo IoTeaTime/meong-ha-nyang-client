@@ -175,8 +175,36 @@ class MqttViewModel @Inject constructor(
 
     private fun handleShadowMessage(topic: String, message: String) {
         try {
-            val shadowDelta = Json.decodeFromString<ShadowDeltaMsg>(message)
-            Log.d(tag, "Processed shadow message: $shadowDelta")
+            val jsonObject: ShadowDeltaMsg = Json.decodeFromString(message)
+            Log.d(tag, "처리된 Shadow 메시지: $jsonObject")
+
+            when {
+                topic.contains("delta") -> {
+                    Log.d(tag, "Delta 메시지 수신: $jsonObject")
+                    if (jsonObject.state.delta.kvsChannelDeleteRequested) {
+                        iotClientHelper.deleteDevice()
+                        Log.d(tag, "IoT 디바이스 삭제 성공")
+                    } else {
+                        Log.d(tag, "Delta 처리 완료: $jsonObject")
+                    }
+                }
+
+                topic.contains("accepted") -> {
+                    Log.d(tag, "Accepted 메시지 수신: $jsonObject")
+                }
+
+                topic.contains("rejected") -> {
+                    Log.e(tag, "Rejected 메시지 수신: $jsonObject")
+                }
+
+                topic.contains("documents") -> {
+                    Log.d(tag, "Documents 메시지 수신: $jsonObject")
+                }
+
+                else -> {
+                    Log.w(tag, "Unhandled Shadow Topic: $topic")
+                }
+            }
         } catch (e: Exception) {
             Log.e(tag, "Failed to process shadow message: ${e.message}", e)
         }
