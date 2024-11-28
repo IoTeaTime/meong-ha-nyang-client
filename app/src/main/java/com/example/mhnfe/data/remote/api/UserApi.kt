@@ -1,7 +1,9 @@
 package com.example.mhnfe.data.remote.api
 
+import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
-import retrofit2.http.Body
+import com.example.mhnfe.data.remote.response.LogoutResponse
+import retrofit2.http.DELETE
 import retrofit2.http.Header
 import retrofit2.http.POST
 
@@ -10,4 +12,14 @@ interface UserApi {
     fun refreshAccessToken(
         @Header("Authorization") refreshToken: String
     ): RefreshAccessTokenResponse
+
+    @POST("/api/member/sign-out")
+    suspend fun logout(
+        @Header("Authorization") accessToken: String
+    ): LogoutResponse
+
+    @DELETE("/api/member")
+    suspend fun deleteMember(
+        @Header("Authorization") accessToken: String
+    ): DeleteResponse
 }

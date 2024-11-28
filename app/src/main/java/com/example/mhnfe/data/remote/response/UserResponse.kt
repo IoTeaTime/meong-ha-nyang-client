@@ -12,3 +12,11 @@ data class RefreshAccessTokenResponse(
 data class RefreshedAccessToken(
     val newAccessToken: String
 )
+
+data class LogoutResponse(
+    val result: Result
+)
+
+data class DeleteResponse(
+    val result: Result
+)
