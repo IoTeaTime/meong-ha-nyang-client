@@ -14,13 +14,15 @@ class AiViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             try {
                 bitmap?.let { bmp ->
-                    // 테스트를 위한 로그
+                    // Test Log
                     Log.e("AiViewModel", "Frame received: ${bmp.width}x${bmp.height}")
-                    // 여기서 Bitmap으로 AI 처리
+                    // Bitmap AI 처리
                 }
             } catch (e: Exception) {
                 Log.e("AiViewModel", "Frame processing error", e)
             }
         }
     }
+
+
 }

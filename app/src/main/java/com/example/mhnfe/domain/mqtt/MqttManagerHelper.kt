@@ -52,8 +52,9 @@ class MqttManagerHelper @Inject constructor(
             null
         }
     }
+
     fun getMqttManager(): AWSIotMqttManager {
-        // Double-checked locking으로 싱글톤
+        // Double-checked locking
         return mqttManager ?: synchronized(this) {
             mqttManager ?: createMqttManager().also {
                 mqttManager = it
@@ -66,6 +67,7 @@ class MqttManagerHelper @Inject constructor(
             isAutoReconnect = true
         }
     }
+
     private fun saveCertificateId(context: Context, certificateId: String) {
         val sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         with(sharedPreferences.edit()) {

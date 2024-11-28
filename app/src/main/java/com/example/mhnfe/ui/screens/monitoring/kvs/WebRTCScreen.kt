@@ -29,9 +29,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,7 +43,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
-import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
@@ -78,13 +75,11 @@ fun WebRtcScreen(
     val mqttState by mqttViewModel.isConnected.collectAsState()
 
     LaunchedEffect(Unit)    {
-        // Todo. 그룹 ID를 가져오는 로직 추가
-        val groupId = 404
-
+        // Todo. 그룹 ID 반환 로직 추가
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize(context)
             if(result) {
-                mqttViewModel.createShadowWithSubscribe(context, groupId)
+                mqttViewModel.createShadowWithSubscribe(context, 404)
             }
         }
     }
@@ -102,7 +97,7 @@ fun WebRtcScreen(
         }
     }
 
-    // 초기화는 한 번만 실행되도록 key를 사용
+    // 초기화 한 번만 실행을 위한 key 사용
     LaunchedEffect(channelName) {
         if (uiState !is WebRTCUiState.Success) {
             try {
@@ -163,7 +158,7 @@ fun WebRtcScreen(
         }
     }
 
-    // 뒤로가기 처리
+    // 뒤로 가기 처리
     BackHandler {
         Log.d("WebRTCScreen", "BackHandler 실행")
 
@@ -241,16 +236,11 @@ fun WebRtcScreen(
             // MQTT 기기 상태 요청 테스트
             Button(
                 onClick = {
-                    try {
-                        mqttViewModel.publishGroupTest("")
-                    } catch (e: Exception){
-                        Log.e("WebRTCScreen", "Pub Failed", e)
 
-                    }
                 },
                 modifier = Modifier.padding(8.dp)
             ) {
-                Text("구독 및 데이터 전달 테스트")
+                Text("기기 정보 요청 발행")
             }
 
             IconButton(
