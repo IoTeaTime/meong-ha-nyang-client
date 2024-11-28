@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.BatteryManager
 import android.os.Build
+import org.json.JSONObject
 
 object DeviceUtils {
     // Shadow용 Payload 생성
@@ -27,20 +28,27 @@ object DeviceUtils {
         """.trimIndent()
     }
 
-    // Publish용 Payload 생성
-    fun getPublishPayload(context: Context): String {
+    fun getPublishPayload(context: Context, groupMessage: JSONObject): String {
         val batteryLevel = getBatteryLevel(context)
         val availableMemory = getAvailableMemory(context)
-        val (deviceModel, osVersion) = getDeviceInfo()
-        val appVersion = getAppVersion(context)
 
+        // 그룹 정보에서 필요한 데이터 추출
+        val groupInfo = groupMessage.optString("groupInfo", "Unknown Group")
+        val timestamp = groupMessage.optLong("timestamp", System.currentTimeMillis() / 1000)
+        val metadata = groupMessage.optJSONObject("metadata")
+        val location = metadata?.optString("location", "Unknown Location")
+        val type = metadata?.optString("type", "Unknown Type")
+
+        // 페이로드 생성
         return """
         {
             "batteryLevel": $batteryLevel,
             "availableMemory": $availableMemory,
-            "deviceModel": "$deviceModel",
-            "osVersion": "$osVersion",
-            "appVersion": "$appVersion"
+            "status": "online",
+            "group": "$groupInfo",
+            "timestamp": $timestamp,
+            "location": "$location",
+            "type": "$type"
         }
         """.trimIndent()
     }
