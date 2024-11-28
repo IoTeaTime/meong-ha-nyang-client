@@ -38,7 +38,9 @@ data class LoginResponse(
 data class Jwt(
     val memberId: Int,
     val accessToken: String,
-    val refreshToken: String
+    val refreshToken: String,
+    val isGroupMember: Boolean,
+    val role: String
 )
 
 @Serializable
