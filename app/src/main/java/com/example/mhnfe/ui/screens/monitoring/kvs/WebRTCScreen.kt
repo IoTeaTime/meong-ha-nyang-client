@@ -82,6 +82,20 @@ fun WebRtcScreen(
                 mqttViewModel.createShadowWithSubscribe(context, 404)
             }
         }
+        if (role == ChannelRole.MASTER && mqttState) {
+            aiViewModel.detectEvent(
+                onResult = { result ->
+                    Log.d("WebRTCScreen", "AI Result: $result")
+                },
+                onPayloadReady = { payload ->
+                    try {
+                        mqttViewModel.publishAIResult(payload)
+                    } catch (e: Exception) {
+                        Log.e("WebRTCScreen", "Failed to publish AI event", e)
+                    }
+                }
+            )
+        }
     }
 
     DisposableEffect(Unit) {

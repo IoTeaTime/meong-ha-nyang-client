@@ -50,13 +50,13 @@ fun GroupScreen(
         // todo 1. API 호출 -> Group Id, Thing Id List 반환
         // 2. Thing Id를 Sub, Group Id로 Pub -> CCTV 기기에 정보 요청
         // 3. CCTV 기기는 자신의 Thing Id로 Pub
-        if (!mqttState) {
-            val result = mqttViewModel.initialize(context)
-            if(result) {
-                val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
-                mqttViewModel.viewerInitialSubscribe(context, thingList)
-            }
-        }
+//        if (!mqttState) {
+//            val result = mqttViewModel.initialize(context)
+//            if(result) {
+//                val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
+//                mqttViewModel.viewerInitialSubscribe(context, thingList)
+//            }
+//        }
 
         if (mqttState) {
             val payload = """
