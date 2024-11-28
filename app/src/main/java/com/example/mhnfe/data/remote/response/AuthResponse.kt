@@ -16,13 +16,6 @@ data class CheckEmailResponse(
     val data: Any? = null
 }
 
-data class Result(
-    val code: Int,
-    val message: String,
-    val description: String? = null
-)
-
-
 data class User(
     val email: String,
     val password: String,
