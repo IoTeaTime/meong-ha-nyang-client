@@ -72,7 +72,7 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    suspend fun connectToMqttManager(): Boolean = withContext(Dispatchers.IO) {
+    private suspend fun connectToMqttManager(): Boolean = withContext(Dispatchers.IO) {
         suspendCancellableCoroutine { continuation ->
             awsMqttManager.connect(keyStore) { status, throwable ->
                 when {
@@ -101,26 +101,8 @@ class MqttViewModel @Inject constructor(
         Log.d(tag, "MQTT disconnected.")
     }
 
-    fun publish(topic: String, payload: String) {
-        try {
-            awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
-            Log.d(tag, "Published to topic $topic: $payload")
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to publish message: ${e.message}", e)
-        }
-    }
-    // MQTT Subscribe 기능
-    fun subscribe(topic: String, onMessageReceived: (String, String) -> Unit) {
-        awsMqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0) { receivedTopic, message ->
-            onMessageReceived(receivedTopic, message.toString(Charsets.UTF_8))
-        }
-    }
-
     fun viewerInitialSubscribe(context: Context, thingList: List<String>) {
-        // List를 MutableList로 변환
         val topics = thingList.map { "/mhn/command/device/info/things/$it" }.toMutableList()
-        // 테스트용 토픽 추가
-        topics.add("/mhn/command/device/info/things/53f6de0c846034b8")
         topics.forEach { topic ->
             subscribe(topic) { receivedTopic, message ->
                 Log.d(tag, "Message received on topic $receivedTopic: $message")
@@ -183,7 +165,7 @@ class MqttViewModel @Inject constructor(
                     Log.d(tag, "Delta 메시지 수신: $jsonObject")
                     if (jsonObject.state.delta.kvsChannelDeleteRequested) {
                         iotClientHelper.deleteDevice()
-                        Log.d(tag, "IoT 디바이스 삭제 성공")
+                        Log.d(tag, "IoT Device 삭제 성공")
                     } else {
                         Log.d(tag, "Delta 처리 완료: $jsonObject")
                     }
@@ -210,18 +192,24 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    fun publishGroupTest(payload: String) {
-        val topic = "/mhn/command/device/info/groups/404"
-        val testPayload = """
-        {
-            "groupInfo": "TestGroup",
-            "timestamp": ${System.currentTimeMillis() / 1000},
-            "metadata": {
-                "location": "TestLocation",
-                "type": "TestType"
-            }
+    fun getDeviceInfo(payload: String, groupId: Int) {
+        val topic = "/mhn/command/device/info/groups/$groupId"
+        publish(topic, payload)
+    }
+
+    private fun publish(topic: String, payload: String) {
+        try {
+            awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
+            Log.d(tag, "Published to topic $topic: $payload")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to publish message: ${e.message}", e)
         }
-        """.trimIndent()
-        publish(topic, testPayload)
+    }
+
+    // MQTT Subscribe 기능
+    private fun subscribe(topic: String, onMessageReceived: (String, String) -> Unit) {
+        awsMqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0) { receivedTopic, message ->
+            onMessageReceived(receivedTopic, message.toString(Charsets.UTF_8))
+        }
     }
 }
