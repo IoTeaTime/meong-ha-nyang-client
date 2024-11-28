@@ -1,6 +1,5 @@
 package com.example.mhnfe.ui.screens.auth.signup
 
-import com.example.mhnfe.data.repository.AuthRepository
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.Text
@@ -37,8 +36,6 @@ import androidx.compose.ui.text.SpanStyle
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mhnfe.data.remote.response.SignUpResponse
 
 @Composable
 fun SignUpScreen(
@@ -50,7 +47,6 @@ fun SignUpScreen(
     val signUpResponse by signUpViewModel.signUpResponse.collectAsState()
 
     val scope = rememberCoroutineScope()
-    var SignUpResponse by remember { mutableStateOf<SignUpResponse?>(null) }
 
     var isEmailDuplicate by remember { mutableStateOf(false) }
     var isEmailChecked by remember { mutableStateOf(false) }
@@ -172,9 +168,6 @@ fun SignUpScreen(
             else -> false
         }
     }
-
-    // Create an instance of the Repository for calling the Sign-Up API
-//    val authRepository = AuthRepository()
 
     Scaffold(
         modifier = modifier,
@@ -328,7 +321,6 @@ fun SignUpScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                val signUpViewModel: SignUpViewModel = viewModel()
 
                 if (currentStep == 0) {
                     MiddleButton(
@@ -381,41 +373,32 @@ fun SignUpScreen(
                                     // Call the Sign-Up API
                                     scope.launch {
                                         try {
-
-                                            // Log before calling the Sign-Up API
-                                            //Log.d("SignUpScreen", "회원가입 데이터: email=$email, password=$password, passwordConfirm=$confirmPassword, nickname=$nickname")
-
                                             signUpViewModel.signUpUser(
                                                 email = email,
                                                 password = password,
                                                 passwordConfirm = confirmPassword,
                                                 nickname = nickname
                                             )
-                                            if (SignUpResponse?.result?.code == 201) {
-//                                                Log.d("SignUpScreen", "회원가입 성공: code=${SignUpResponse?.result?.code}, message=${SignUpResponse?.result?.message}, description=${SignUpResponse?.result?.description}")
-                                                onLoginClick()
-                                            } else {
-                                                Log.e(
-                                                    "SignUpScreen",
-                                                    "회원가입 실패: code=${SignUpResponse?.result?.code}, message=${SignUpResponse?.result?.message}, description=${SignUpResponse?.result?.description}"
-                                                )
-                                            }
                                         } catch (e: Exception) {
                                             Log.e(
                                                 "SignUpScreen",
-                                                "회원가입 중 오류 발생: code=${SignUpResponse?.result?.code}, message=${SignUpResponse?.result?.message}, description=${SignUpResponse?.result?.description}"
-                                            )
+                                                "회원가입 중 오류 발생: code=${signUpResponse?.result?.code}, message=${signUpResponse?.result?.message}, description=${signUpResponse?.result?.description}")
                                         }
                                     }
                                 }
                             }
                         }
                     )
-                }
-                // Call onLoginClick on successful sign-up
-                if (signUpResponse?.result?.code == 0) {
-                    LaunchedEffect(Unit) {
-                        onLoginClick()
+
+                    LaunchedEffect(signUpResponse) {
+                        signUpResponse?.let { response ->
+                            if (response.result.code == 201) {
+                                Log.d("SignUpScreen", "회원가입 성공: ${response.result.message} ${response.result.description}")
+                                onLoginClick()
+                            } else {
+                                Log.e("SignUpScreen", "회원가입 실패: ${response.result.message} ${response.result.description}")
+                            }
+                        }
                     }
                 }
             }
