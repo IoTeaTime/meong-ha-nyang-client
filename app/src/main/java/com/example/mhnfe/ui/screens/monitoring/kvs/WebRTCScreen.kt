@@ -45,6 +45,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
@@ -59,13 +60,13 @@ import org.webrtc.Logging
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
-    aiViewModel: AiViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
     viewModel: KVSSignalingViewModel,
     navController: NavController,
     channelName: String,
     role: ChannelRole,
-    mqttViewModel: MqttViewModel = hiltViewModel()
+    mqttViewModel: MqttViewModel = hiltViewModel(),
+    aiViewModel: AiViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -74,31 +75,20 @@ fun WebRtcScreen(
     val eglBase = remember { EglBase.create() }
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
-    var aiResult by remember { mutableStateOf<String?>(null) }
-    var isProcessing by remember { mutableStateOf(false) }
+    val mqttState by mqttViewModel.isConnected.collectAsState()
 
-    LaunchedEffect(Unit) {
-        try {
+    LaunchedEffect(Unit)    {
+        // Todo. 그룹 ID를 가져오는 로직 추가
+        val groupId = 404
 
-            // Todo. 역할을 가져오는 로직 추가
-            val roles = ChannelRole.MASTER
-            // Todo. 그룹 ID를 가져오는 로직 추가
-            val groupId = 404
-
-            withContext(Dispatchers.IO) {
-                // 1. MQTT 연결 시도 (MASTER일 때)
-                val isConnected = withContext(Dispatchers.IO) {
-                    mqttViewModel.initialize(context)
-                }
-                if (isConnected)
-                    if (roles == ChannelRole.MASTER)
-                        mqttViewModel.createShadowWithSubscribe(context, groupId)
+        if (role == ChannelRole.MASTER && !mqttState) {
+            val result = mqttViewModel.initialize(context)
+            if(result) {
+                mqttViewModel.createShadowWithSubscribe(context, groupId)
             }
-        } catch (e: Exception) {
-            Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
-            Toast.makeText(context, "MQTT 연결 실패 또는 구독 실패", Toast.LENGTH_SHORT).show()
         }
     }
+
     DisposableEffect(Unit) {
         onDispose {
             if (role == ChannelRole.MASTER) {
@@ -248,30 +238,19 @@ fun WebRtcScreen(
                 Text("카메라 끄기")
             }
 
-            // MQTT 이벤트 발행 및 AI 분석 button
+            // MQTT 기기 상태 요청 테스트
             Button(
                 onClick = {
-//                    // AI 분석 및 MQTT 이벤트 발행
-//                    viewModel.viewModelScope.launch {
-//                        aiViewModel.simulateAIProcessing(
-//                            onResult = { result ->
-//                                Log.d("WebRTCScreen", "AI Result: $result")
-//                            },
-//                            onPayloadReady = { payload ->
-//                                try {
-//                                    mqttViewModel.publishAIResult(payload) // MQTT 이벤트 발행
-//                                    Toast.makeText(context, "MQTT 이벤트 발행 완료", Toast.LENGTH_SHORT)
-//                                        .show()
-//                                } catch (e: Exception) {
-//                                    Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
-//                                }
-//                            }
-//                        )
-//                    }
+                    try {
+                        mqttViewModel.publishGroupTest("")
+                    } catch (e: Exception){
+                        Log.e("WebRTCScreen", "Pub Failed", e)
+
+                    }
                 },
                 modifier = Modifier.padding(8.dp)
             ) {
-                Text("AI 이벤트")
+                Text("구독 및 데이터 전달 테스트")
             }
 
             IconButton(

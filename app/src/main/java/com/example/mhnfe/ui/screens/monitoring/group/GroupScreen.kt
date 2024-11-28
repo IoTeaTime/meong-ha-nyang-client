@@ -15,6 +15,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,33 +51,15 @@ fun GroupScreen(
     mqttViewModel: MqttViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val mqttState by mqttViewModel.isConnected.collectAsState()
+
 
     LaunchedEffect(Unit) {
-        // UserType을 확인
-        if (userType != UserType.CCTV) {
-            withContext(Dispatchers.IO) {
-                // 1. MQTT 연결 시도 (VIEWER일 때)
-                val isConnected = withContext(Dispatchers.IO) {
-                    mqttViewModel.initialize(context)
-                }
-                if (isConnected) {
-                    // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
-                    val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
-
-                    mqttViewModel.viewerInitialSubscribe(context, thingList)
-                }
-            }
-        }
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            if (userType != UserType.CCTV) {
-                try {
-                    mqttViewModel.disconnectMqttManager()
-                    Log.d("GroupScreen", "MQTT Manager Disconnected Viewer Role")
-                } catch (e: Exception) {
-                    Log.e("GroupScreen", "Failed to disconnect MQTT Manager", e)
-                }
+        if (userType != UserType.CCTV && !mqttState) {
+            val result = mqttViewModel.initialize(context)
+            if(result) {
+                val thingList = listOf("thing1", "thing2", "thing3")
+                mqttViewModel.viewerInitialSubscribe(context, thingList)
             }
         }
     }
