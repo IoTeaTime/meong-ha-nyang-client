@@ -41,8 +41,7 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    loginViewModel: LoginViewModel = hiltViewModel(),
-    onChangePasswordClick: () -> Unit
+    loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val loginResponse by loginViewModel.loginResponse.collectAsState()
     val errorMessage by loginViewModel.errorMessage.collectAsState()
