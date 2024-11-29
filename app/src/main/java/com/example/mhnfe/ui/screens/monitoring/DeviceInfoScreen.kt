@@ -18,6 +18,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,11 +27,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.data.model.sampleCCTVList
 import com.example.mhnfe.ui.components.SubTopBar
+import com.example.mhnfe.ui.screens.monitoring.group.GroupViewModel
+import com.example.mhnfe.ui.screens.monitoring.group.toCCTV
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray2
@@ -37,10 +42,13 @@ import com.example.mhnfe.ui.theme.mainGray2
 @Composable
 fun DeviceInfoScreen(
     modifier: Modifier = Modifier,
-    cctvId: String,
+    cctvId: Long,
     navController: NavController,
+    groupViewModel: GroupViewModel = hiltViewModel()
 ) {
-    val cctv = sampleCCTVList.find { it.id == cctvId }
+    val groupInfo by groupViewModel.groupInfo.collectAsState()
+    val cctv = groupInfo?.cctv?.find { it.cctvId == cctvId }?.toCCTV()
+//    val cctv = sampleCCTVList.find { it.id == cctvId }
 
     Scaffold(
         topBar = {
@@ -154,16 +162,4 @@ private fun DeviceInfoCard(
         }
     }
 
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun GroupScreenPreview() {
-    val navController = rememberNavController()
-    val cctv = sampleCCTVList.first()
-    DeviceInfoScreen(cctvId = cctv.id,navController = navController)
-//    GroupScreen(
-//        userType = UserType.VIEWER,
-//        navController = navController
-//    )
 }

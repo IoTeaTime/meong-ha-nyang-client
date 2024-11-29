@@ -186,7 +186,7 @@ fun LoginScreen(
 
                             if(loginResponse?.body?.isGroupMember == true)
                             {
-                                if(loginResponse?.body?.role== "MASTER") {
+                                if(loginResponse?.body?.role== "ROLE_MASTER") {
                                     navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
                                         // Auth 플로우를 백스택에서 제거
                                         popUpTo(NavRoutes.Auth.route) {
