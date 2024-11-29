@@ -19,3 +19,32 @@ data class CreateGroupRequest(
     val thingId: String
 )
 
+data class GroupInfoResponse(
+    val result: GroupRequest,
+    val body: GroupInfo
+)
+
+data class GroupInfo(
+    val groupId: Long,
+    val groupName: String,
+    val createdAt: String,
+    val cctv: List<CctvInfo>
+)
+
+data class CctvInfo(
+    val cctvId: Long,
+    val cctvNickname: String,
+    val thingId: String,
+    val kvsChannelName: String,
+)
+
+data class QRApiResponse(
+    val result: GroupRequest,
+    val body: QRResponseBody
+)
+
+
+data class QRResponseBody(
+    val groupId: Long,
+    val kvsChannelId: String? = null // CCTV일 때만 사용
+)
