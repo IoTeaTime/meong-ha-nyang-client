@@ -98,19 +98,6 @@ fun WebRtcScreen(
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            if (role == ChannelRole.MASTER) {
-                try {
-                    mqttViewModel.disconnectMqttManager()
-                    Log.d("WebRTCScreen", "MQTT Manager Disconnected for MASTER role")
-                } catch (e: Exception) {
-                    Log.e("WebRTCScreen", "Failed to disconnect MQTT Manager", e)
-                }
-            }
-        }
-    }
-
     // 초기화 한 번만 실행을 위한 key 사용
     LaunchedEffect(channelName) {
         if (uiState !is WebRTCUiState.Success) {
