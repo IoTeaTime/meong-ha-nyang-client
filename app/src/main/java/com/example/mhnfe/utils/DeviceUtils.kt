@@ -2,8 +2,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
 import org.json.JSONObject
@@ -12,7 +11,7 @@ object DeviceUtils {
     fun getShadowPayload(context: Context): String {
         val kvsChannelActive = true
         val kvsChannelDeleteRequested = false
-        val networkStatus = getNetworkStatus(context)
+        val networkStatus = getWifiInfo(context)
 
         return """
         {
@@ -20,7 +19,7 @@ object DeviceUtils {
                 "reported": {
                     "kvsChannelActive": $kvsChannelActive,
                     "kvsChannelDeleteRequested": $kvsChannelDeleteRequested,
-                    "networkStatus": "$networkStatus"
+                    "networkStatus": $networkStatus
                 }
             }
         }
@@ -32,8 +31,7 @@ object DeviceUtils {
         val availableMemory = getAvailableMemory(context)
         val (deviceModel, osVersion) = getDeviceInfo()
         val appVersion = getAppVersion(context)
-
-        val groupInfo = groupMessage.optString("groupInfo", "Unknown Group")
+        val networkStatus = getWifiInfo(context)
         val timestamp = groupMessage.optLong("timestamp", System.currentTimeMillis() / 1000)
 
         return """
@@ -43,8 +41,7 @@ object DeviceUtils {
             "deviceModel": "$deviceModel",
             "osVersion": "$osVersion",
             "appVersion": "$appVersion",
-            "status": "online",
-            "group": "$groupInfo",
+            "networkStatus": "$networkStatus",
             "timestamp": $timestamp
         }
         """.trimIndent()
@@ -83,17 +80,22 @@ object DeviceUtils {
         }
     }
 
-    private fun getNetworkStatus(context: Context): String {
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val activeNetwork = connectivityManager.activeNetwork ?: return "No Connection"
-        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return "No Connection"
+    private fun getWifiInfo(context: Context): JSONObject {
+        val wifiInfoJson = JSONObject()
+        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val connectionInfo = wifiManager.connectionInfo
+        // ConnectivityManager로 이전됨,
+        // 그러나 ConnectivityManager는 wifi ssid가 "unknown"으로만 반환되어 우선 이렇게 사용
+        if (connectionInfo != null) {
+            val ssid = connectionInfo.ssid?.removeSurrounding("\"") ?: "Unknown"
 
-        return when {
-            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "WiFi"
-            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Cellular"
-            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "Ethernet"
-            else -> "Unknown"
+            val rssi = connectionInfo.rssi
+            val signalStrength = wifiManager.calculateSignalLevel(rssi) // 0~4로 정규화
+            wifiInfoJson.put("SSID", ssid)
+            wifiInfoJson.put("SignalStrength", signalStrength)
+        } else {
+            wifiInfoJson.put("Error", "No Wi-Fi connection")
         }
+        return wifiInfoJson
     }
 }
