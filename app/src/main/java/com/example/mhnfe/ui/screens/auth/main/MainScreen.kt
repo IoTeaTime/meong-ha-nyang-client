@@ -35,10 +35,27 @@ fun MainScreen(
     // 자동 로그인 로직
     LaunchedEffect(Unit) {
         mainViewModel.autoLogin(
-            onSuccess = {
-                // 자동 로그인 성공 -> 다음 화면으로 이동
-                navController.navigate(NavRoutes.Auth.Select.route) {
-                    popUpTo(NavRoutes.Auth.route) { inclusive = true }
+            onSuccess = { role ->
+                if(role == "ROLE_MASTER") {
+                    navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                        // Auth 플로우를 백스택에서 제거
+                        popUpTo(NavRoutes.Auth.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+                else if(role == "ROLE_VIEWER") {
+                    navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
+                        // Auth 플로우를 백스택에서 제거
+                        popUpTo(NavRoutes.Auth.route) {
+                            inclusive = true
+                        }
+                    }
+                } else {
+                    // 자동 로그인 성공 -> 다음 화면으로 이동
+                    navController.navigate(NavRoutes.Auth.Select.route) {
+                        popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                    }
                 }
             },
             onFailure = { e ->

@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,7 +40,6 @@ sealed class NavRoutes(val route: String) {
     object Auth : NavRoutes("auth") {
         object Main : NavRoutes("main")
         object Login : NavRoutes("login")
-        object Cognito : NavRoutes("cognito")
         object SignUp : NavRoutes("signup")
         object Select : NavRoutes("select")
         object QRScanner : NavRoutes("qr_scanner")
@@ -72,7 +72,9 @@ sealed class NavRoutes(val route: String) {
     }
     object MyPage : NavRoutes("myPage") {
         object Profile : NavRoutes("myPage/profile")
-        object ChangePassword : NavRoutes("myPage/change_password")
+        object ChangePassword : NavRoutes("myPage/change_password") {
+            fun createRoute(fromMain: Boolean) = "myPage/change_password/$fromMain"
+        }
         object DeviceManagement : NavRoutes("myPage/device_management")
     }
 }
@@ -107,7 +109,11 @@ fun AppNavigation() {
             }
             composable(NavRoutes.Auth.Login.route) {
                 LoginScreen(
-                    navController = navController
+                    navController = navController,
+                    onChangePasswordClick = {
+                        // 네비게이션: ChangePassword 화면으로 이동
+                        navController.navigate(NavRoutes.MyPage.ChangePassword.createRoute(fromMain = true))
+                    }
                 )
             }
             composable(NavRoutes.Auth.SignUp.route) {
@@ -150,7 +156,6 @@ fun AppNavigation() {
         }
     }
 }
-
 
 @Composable
 fun MainContent(
@@ -318,9 +323,10 @@ fun MainContent(
                 }
                 composable(NavRoutes.MyPage.ChangePassword.route) {
                     PasswordEditScreen(
-                        navController = bottomNavController
-                    ) {}
+                        bottomNavController = bottomNavController
+                    )
                 }
+
                 composable(NavRoutes.MyPage.DeviceManagement.route) {
                     DeviceManagementScreen(
                         navController = bottomNavController
@@ -330,4 +336,3 @@ fun MainContent(
         }
     }
 }
-

@@ -17,7 +17,7 @@ class MainViewModel @Inject constructor(
     private val loginRequestDataStore: DataStore<LoginRequest>
 ) : ViewModel() {
     fun autoLogin(
-        onSuccess: () -> Unit,
+        onSuccess: (String) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         Log.d("MainViewModel", "Start AutoLogin")
@@ -34,7 +34,7 @@ class MainViewModel @Inject constructor(
                     Log.d("MainViewModel", "AutoLogin data :$savedId $savedPassword")
                     if (response.result.code == 200) {
                         Log.d("MainViewModel", "AutoLogin Success!!")
-                        onSuccess()
+                        onSuccess(response.body.role)
                     } else {
                         Log.d("MainViewModel", "AutoLogin Failed: Invalid Credentials")
                         onFailure(Exception("Invalid credentials"))
