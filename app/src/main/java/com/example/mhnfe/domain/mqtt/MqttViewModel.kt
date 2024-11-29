@@ -166,7 +166,7 @@ class MqttViewModel @Inject constructor(
             when {
                 topic.contains("delta") -> {
                     Log.d(tag, "Delta 메시지 수신: $jsonObject")
-                    if (jsonObject.state.delta?.kvsChannelDeleteRequested == true) {
+                    if (jsonObject.state?.delta?.kvsChannelDeleteRequested == true) {
                         iotClientHelper.deleteDevice()
                         Log.d(tag, "IoT Device 삭제 성공")
                     } else {
