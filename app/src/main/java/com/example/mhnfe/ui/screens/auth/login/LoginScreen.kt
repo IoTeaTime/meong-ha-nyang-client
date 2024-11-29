@@ -59,6 +59,8 @@ fun LoginScreen(
     // SharedPreferences를 사용해 사용자 정보를 저장
     val context = LocalContext.current
 
+    val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier,
         topBar = {
