@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.domain.ai.BoundingBoxUtils
+import com.example.mhnfe.domain.ai.DetectionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,19 +28,20 @@ class AiViewModel @Inject constructor() : ViewModel() {
 
     fun detectEvent(onResult: (String) -> Unit, onPayloadReady: (String) -> Unit) {
         viewModelScope.launch {
-            val aiResult = "dog"
+            val trackingId = DetectionManager.getNextTrackingId()
+            val objectType = DetectionManager.getObjectType()
             val coordinatesJson = BoundingBoxUtils.boundingBoxJson()
 
             val payload = """
         {
-            "trackingId": 1,
+            "trackingId": $trackingId,
             "timestamp": ${System.currentTimeMillis() / 1000}, 
-            "objectType": "$aiResult", 
+            "objectType": "$objectType",
             "coordinates": $coordinatesJson
         }
         """.trimIndent()
             // Callback
-            onResult(aiResult)
+            onResult(objectType)
             onPayloadReady(payload)
         }
     }
