@@ -17,4 +17,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "mhnFE"
 include(":app")
-include(":opencv")

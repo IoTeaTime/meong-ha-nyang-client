@@ -1,2 +1,0 @@
-C:\Users\r2com\Desktop\meong-ha-nyang-client\opencv\java\src\org\opencv\core\MatMatMul.kt
-C:\Users\r2com\Desktop\meong-ha-nyang-client\opencv\java\src\org\opencv\core\MatAt.kt
