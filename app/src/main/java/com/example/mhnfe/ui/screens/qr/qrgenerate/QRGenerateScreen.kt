@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mhnfe.di.UserType
@@ -33,8 +34,8 @@ import com.example.mhnfe.ui.theme.mainBlack
 fun QRGenerateScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    viewModel: QRViewModel = viewModel(),
-    userType: UserType = UserType.CCTV,
+    userType: UserType,
+    viewModel: QRViewModel = hiltViewModel()
 ){
     val uiState by viewModel.uiState.collectAsState()
 
@@ -43,9 +44,13 @@ fun QRGenerateScreen(
         viewModel.setUserType(userType)
     }
 
-    //QR 이미지 생성
+    // QR 이미지는 qrContent가 변경될 때만 생성
     val qrBitmap = remember(uiState.qrContent) {
-        viewModel.generateQRBitmap(500)
+        if (uiState.qrContent.isNotEmpty()) {
+            viewModel.generateQRBitmap(500)
+        } else {
+            null
+        }
     }
     Scaffold(
         topBar = {
@@ -75,25 +80,16 @@ fun QRGenerateScreen(
                     color = mainBlack,
                     text = uiState.message
                 )
-                Image(
-                    bitmap = qrBitmap.asImageBitmap(),
-                    contentDescription = "QR Code",
-                    modifier = modifier
-                        .size(200.dp)
-                        .border(1.dp, mainBlack)
-                )
+                qrBitmap?.let {
+                    Image(
+                        bitmap = it.asImageBitmap(),
+                        contentDescription = "QR Code",
+                        modifier = modifier
+                            .size(200.dp)
+                            .border(1.dp, mainBlack)
+                    )
+                }
             }
         }
     }
 }
-
-
-//@Preview(showBackground = true)
-//@Composable
-//fun QRGeneratePreview(){
-//    val navController = rememberNavController()
-//    val viewModel: QRViewModel = viewModel()
-//
-//    QRGenerateScreen(viewModel = viewModel, navController = navController)
-//
-//}
