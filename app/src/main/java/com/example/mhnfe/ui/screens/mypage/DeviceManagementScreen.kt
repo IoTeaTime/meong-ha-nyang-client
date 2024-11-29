@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.mypage
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,10 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
@@ -34,8 +37,10 @@ enum class DeviceType {
 @Composable
 fun DeviceManagementScreen(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    deviceManagementViewModel: DeviceManagementViewModel = hiltViewModel()
 ) {
+
     var cctvDevices by remember {
         mutableStateOf(listOf(
             Device("1", "주방", DeviceType.CCTV),
@@ -81,7 +86,10 @@ fun DeviceManagementScreen(
                     onDelete = { cctvDevices = cctvDevices.filter { it.id != device.id } },
                     onUpdate = { updatedDevice ->
                         cctvDevices = cctvDevices.map {
-                            if (it.id == updatedDevice.id) updatedDevice else it
+                            if (it.id == updatedDevice.id) {
+                                deviceManagementViewModel.changeCctvName(updatedDevice.id.toLong(),updatedDevice.name)
+                                updatedDevice
+                            } else it
                         }
                     }
                 )
