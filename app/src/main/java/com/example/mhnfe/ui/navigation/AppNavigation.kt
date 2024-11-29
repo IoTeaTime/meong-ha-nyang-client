@@ -21,7 +21,7 @@ import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.screens.auth.login.LoginScreen
-import com.example.mhnfe.ui.screens.auth.MainScreen
+import com.example.mhnfe.ui.screens.auth.main.MainScreen
 import com.example.mhnfe.ui.screens.auth.select.SelectScreen
 import com.example.mhnfe.ui.screens.auth.signup.SignUpScreen
 import com.example.mhnfe.ui.screens.monitoring.kvs.KVSSignalingViewModel
@@ -77,6 +77,15 @@ sealed class NavRoutes(val route: String) {
     }
 }
 
+// 추가: 로그인에서 메인으로 네비게이션할 때 사용할 익스텐션 함수
+fun NavController.navigateToMain(userType: UserType) {
+    navigate(NavRoutes.Main.createRoute(userType)) {
+        popUpTo(NavRoutes.MyPage.route) {
+            inclusive = true  // Auth 그래프를 백스택에서 완전히 제거
+        }
+    }
+}
+
 @Composable
 fun AppNavigation() {
     val auth = remember { AWSMobileClient.getInstance() }
@@ -98,10 +107,7 @@ fun AppNavigation() {
             }
             composable(NavRoutes.Auth.Login.route) {
                 LoginScreen(
-                    navController = navController,
-                    onLoginClick = {
-                        navController.navigate(NavRoutes.Monitoring.Group.route)
-                    }
+                    navController = navController
                 )
             }
             composable(NavRoutes.Auth.SignUp.route) {
@@ -116,8 +122,7 @@ fun AppNavigation() {
             }
             composable(NavRoutes.Auth.Select.route) {
                 SelectScreen(
-                    navController = navController,
-                )
+                    navController = navController)
             }
             composable(NavRoutes.Auth.QRScanner.route) {
                 // QRScannerScreen
@@ -142,15 +147,6 @@ fun AppNavigation() {
                 auth = auth,
                 userType = userType
             )
-        }
-
-        // 추가: 로그인에서 메인으로 네비게이션할 때 사용할 익스텐션 함수
-        fun NavController.navigateToMain(userType: UserType) {
-            navigate(NavRoutes.Main.createRoute(userType)) {
-                popUpTo(NavRoutes.Auth.route) {
-                    inclusive = true  // Auth 그래프를 백스택에서 완전히 제거
-                }
-            }
         }
     }
 }
@@ -316,7 +312,8 @@ fun MainContent(
             ) {
                 composable(NavRoutes.MyPage.Profile.route) {
                     ProfileScreen(
-                        navController = bottomNavController
+                        bottomNavController= bottomNavController,
+                        mainNavController = mainNavController
                     )
                 }
                 composable(NavRoutes.MyPage.ChangePassword.route) {

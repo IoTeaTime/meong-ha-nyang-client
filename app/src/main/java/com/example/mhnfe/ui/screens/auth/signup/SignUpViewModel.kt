@@ -4,22 +4,28 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.repository.AuthRepository
-import com.example.mhnfe.data.remote.response.ApiResponse
+import com.example.mhnfe.data.remote.response.SignUpResponse
+import com.example.mhnfe.data.remote.response.CheckEmailResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
-class SignUpViewModel(private val authRepository: AuthRepository) : ViewModel() {
+@HiltViewModel
+class SignUpViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
-    private val _signUpResponse = MutableStateFlow<ApiResponse?>(null)
-    val signUpResponse: StateFlow<ApiResponse?> = _signUpResponse
+    private val _signUpResponse = MutableStateFlow<SignUpResponse?>(null)
+    val signUpResponse: StateFlow<SignUpResponse?> = _signUpResponse
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val _emailCheckResponse = MutableStateFlow<ApiResponse?>(null)
-    val emailCheckResponse: StateFlow<ApiResponse?> = _emailCheckResponse
+    private val _emailCheckResponse = MutableStateFlow<CheckEmailResponse?>(null)
+    val emailCheckResponse: StateFlow<CheckEmailResponse?> = _emailCheckResponse
 
     suspend fun checkEmailStatus(email: String): Pair<Int, String> {
 //        Log.d("SignUpScreen", "checkEmailDuplicate 호출, email=$email")
@@ -48,13 +54,13 @@ class SignUpViewModel(private val authRepository: AuthRepository) : ViewModel() 
         viewModelScope.launch {
             try {
                 val response = authRepository.signUp(email, password, passwordConfirm, nickname)
-                if (response.result?.code == 0) {
-                    _signUpResponse.value = response
-                } else {
-                    _errorMessage.value = response.result?.message
-                }
+                _signUpResponse.value = response
+            } catch (e: HttpException) {
+                Log.e("SignUpViewModel", "HTTP 오류 발생: ${e.code()} - ${e.message()}")
+                _signUpResponse.value = null // 실패시 null로 초기화
             } catch (e: Exception) {
-                _errorMessage.value = "회원가입 중 오류가 발생했습니다: ${e.message}"
+                Log.e("SignUpViewModel", "회원가입 중 오류: ${e.message}", e)
+                _signUpResponse.value = null // 실패시 null로 초기화
             }
         }
     }

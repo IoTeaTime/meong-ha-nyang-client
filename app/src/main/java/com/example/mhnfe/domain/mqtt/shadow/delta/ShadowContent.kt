@@ -4,8 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ShadowContent(
-    val batteryLevel: Long,
-    val webRTCActive: Boolean,
-    val kvsChannelDeleteRequested: Boolean,
-    val isBackCamera: Boolean,
-    val flashActivate: Boolean)
+    val batteryLevel: Long? = null,
+    val webRTCActive: Boolean? = null,
+    val kvsChannelDeleteRequested: Boolean? = null,
+    val isBackCamera: Boolean? = null,
+    val flashActivate: Boolean? = null
+ )

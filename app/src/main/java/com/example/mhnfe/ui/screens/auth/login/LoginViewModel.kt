@@ -1,23 +1,37 @@
 package com.example.mhnfe.ui.screens.auth.login
 
-import android.content.SharedPreferences
 import android.util.Log
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.remote.response.ApiResponse
+import com.example.mhnfe.data.remote.request.LoginRequest
+import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.FCMResponse
 import com.example.mhnfe.data.remote.response.LoginResponse
+import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.data.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val accessTokenDataStore: DataStore<AccessToken>,
+    private val refreshTokenDataStore: DataStore<RefreshToken>,
+    private val loginRequestDataStore: DataStore<LoginRequest>
+) : ViewModel() {
 
     // 로그인 결과 상태
     private val _loginResponse = MutableStateFlow<LoginResponse?>(null)
     val loginResponse: StateFlow<LoginResponse?> = _loginResponse
+
     // FCM 토큰 전송 결과 상태
-    private val _apiResponse = MutableStateFlow<ApiResponse?>(null)
+    private val _apiResponse = MutableStateFlow<FCMResponse?>(null)
 
     // 에러 메시지 상태
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -33,22 +47,26 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
     }
 
     // 로그인 함수
-    fun loginUser(editor: SharedPreferences.Editor, email: String, password: String) {
+    fun loginUser(email: String, password: String, isAutoLogin: Boolean) {
         viewModelScope.launch {
             try {
                 // 서버로 로그인 요청
-                val response = authRepository.login(email, password)
+                val response = authRepository.login(email,password)
 
-                val token = response.body.accessToken
-                editor.putString("jwt_token", token)
-                editor.commit()
-                Log.d("LoginViewModel", "JWT 토큰 저장 완료: $token")
-
-                Log.d("LoginViewModel","response: " + response.result.message)
                 if (response.result.code == 200) {
-                    // 성공적으로 로그인한 경우
+                    // JWT 엑세스, 리프레시 토큰 저장
+                    saveTokens(
+                        response.body.accessToken.toString(),
+                        response.body.refreshToken.toString()
+                    )
+                    Log.d("LoginViewModel","response: " + response.body.accessToken)
+
+                    // 자동 로그인 정보 저장 (isAutoLogin이 true일 경우)
+                    if (isAutoLogin) {
+                        saveAutoLoginInfo(email, password)
+                    }
+
                     _loginResponse.value = response
-                    Log.d("LoginViewModel","_loginResponse.value: " + _loginResponse.value)
                     _errorMessage.value = null
                 } else {
                     Log.d("LoginViewModel","response: " + response.result.message)
@@ -65,6 +83,26 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 Log.e("LoginViewModel", "Login error", e)
                 _errorMessage.value = "로그인 중 오류가 발생했습니다. ${e.message}"
             }
+        }
+    }
+
+    // 엑세스 토큰과 리프레시 토큰 저장
+    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+        // 엑세스 토큰 저장
+        accessTokenDataStore.updateData { currentToken ->
+            currentToken.copy(accessToken = accessToken)
+        }
+        // 리프레시 토큰 저장
+        refreshTokenDataStore.updateData { currentToken ->
+            currentToken.copy(refreshToken = refreshToken)
+        }
+        Log.d("LoginViewModel", "엑세스 토큰 및 리프레시 토큰 저장 완료.")
+    }
+
+    fun getAccessToken(onTokenRetrieved: (String?) -> Unit) {
+        viewModelScope.launch {
+            val token = accessTokenDataStore.data.map { it.accessToken }.first()
+            onTokenRetrieved(token)
         }
     }
 
@@ -97,5 +135,14 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 _errorMessage.value = "FCM 토큰 전송 중 오류가 발생했습니다. ${e.message}"
             }
         }
+    }
+
+    // ViewModel에 자동 로그인 정보 저장 메서드 추가
+    suspend fun saveAutoLoginInfo(id: String, password: String) {
+        // DataStore에 자동 로그인 정보 저장
+        loginRequestDataStore.updateData { currentLoginInfo ->
+            currentLoginInfo.copy(email = id, password = password)
+        }
+        Log.d("LoginViewModel", "자동 로그인 정보 저장 완료: $id, $password")
     }
 }

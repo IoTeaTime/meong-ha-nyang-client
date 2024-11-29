@@ -1,7 +1,6 @@
 package com.example.mhnfe.ui.screens.monitoring.kvs
 
 import android.annotation.SuppressLint
-import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -26,6 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,7 +38,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -47,6 +46,9 @@ import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
@@ -54,55 +56,49 @@ import org.webrtc.Logging
 
 @Composable
 @SuppressLint("HardwareIds")
-fun WebRtcScreen (
+fun WebRtcScreen(
     modifier: Modifier = Modifier,
     viewModel: KVSSignalingViewModel,
     navController: NavController,
     channelName: String,
     role: ChannelRole,
-    mqttViewModel: MqttViewModel = hiltViewModel()
+    mqttViewModel: MqttViewModel = hiltViewModel(),
+    aiViewModel: AiViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
     val localView by viewModel.localView.collectAsState()
     val remoteView by viewModel.remoteView.collectAsState()
     val eglBase = remember { EglBase.create() }
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
-    val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+    val mqttState by mqttViewModel.isConnected.collectAsState()
 
-    LaunchedEffect(Unit) {
-        try {
-            // 1. MQTT 연결 시도
-            val isConnected = withContext(Dispatchers.IO) {
-                mqttViewModel.initialize(context)
+    LaunchedEffect(Unit)    {
+        // Todo. 그룹 ID 반환 로직 추가
+        if (role == ChannelRole.MASTER && !mqttState) {
+            val result = mqttViewModel.initialize(context)
+            if(result) {
+                mqttViewModel.createShadowWithSubscribe(context, 404)
             }
-
-            if (isConnected) {
-                // Todo. 역할을 가져오는 로직도 추가
-                val roles = ChannelRole.VIEWER
-
-                withContext(Dispatchers.IO) {
-                    if (roles == ChannelRole.MASTER) {
-                        mqttViewModel.createShadowWithSubscribe(context)
-                    } else {
-                        // Todo. groupId를 가져와서 구독
-                        val groupId = 404
-                        // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
-                        val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
-
-                        mqttViewModel.viewerInitialSubscribe(thingList, groupId)
+        }
+        if (role == ChannelRole.MASTER && mqttState) {
+            aiViewModel.detectEvent(
+                onResult = { result ->
+                    Log.d("WebRTCScreen", "AI Result: $result")
+                },
+                onPayloadReady = { payload ->
+                    try {
+                        mqttViewModel.publishAIResult(payload)
+                    } catch (e: Exception) {
+                        Log.e("WebRTCScreen", "Failed to publish AI event", e)
                     }
                 }
-            }
-        } catch (e: Exception) {
-            Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
-            Toast.makeText(context, "MQTT 연결 실패 또는 구독 실패", Toast.LENGTH_SHORT).show()
+            )
         }
     }
 
-    // 초기화는 한 번만 실행되도록 key를 사용
+    // 초기화 한 번만 실행을 위한 key 사용
     LaunchedEffect(channelName) {
         if (uiState !is WebRTCUiState.Success) {
             try {
@@ -132,14 +128,15 @@ fun WebRtcScreen (
                 navController.navigateUp()
                 viewModel.onConnectionEventHandled()
             }
+
             ConnectionEvent.ConnectionSuccess -> {
                 Log.d("WebRtcScreen", "연결 성공: MQTT 초기화 시작")
                 viewModel.onConnectionEventHandled()
             }
+
             null -> {}
         }
     }
-
 
     // 리소스 정리 함수
     val cleanup = {
@@ -162,7 +159,7 @@ fun WebRtcScreen (
         }
     }
 
-    // 뒤로가기 처리
+    // 뒤로 가기 처리
     BackHandler {
         Log.d("WebRTCScreen", "BackHandler 실행")
 
@@ -197,8 +194,11 @@ fun WebRtcScreen (
 //        }
 //    }
 
+
     Column(
-        modifier = modifier.fillMaxSize().background(color = mainBlack)
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = mainBlack)
     ) {
         Row(
             modifier = modifier
@@ -234,38 +234,15 @@ fun WebRtcScreen (
                 Text("카메라 끄기")
             }
 
-
-            // MQTT 이벤트 발행 button
-            Button (
+            // MQTT 기기 상태 요청 테스트
+            Button(
                 onClick = {
-                    viewModel.viewModelScope.launch {
-                        try {
-                            val topic = "/mhn/command/device/info/groups/404"
-                            val payload = """
-                                {
-                                    "status": "online",
-                                    "batteryLevel": 78,
-                                    "temperature": 36.5
-                                }
-                            """.trimIndent()
-                            mqttViewModel.publish(topic, payload)
-                            Log.d(
-                                "WebRTCScreen",
-                                "MQTT 이벤트 발행 - Topic: $topic, Payload: $payload"
-                            )
-                            Toast.makeText(context, "이벤트 발행 완료", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
-                        }
-                    }
+
                 },
                 modifier = Modifier.padding(8.dp)
-
             ) {
-                Text("이벤트")
-
+                Text("기기 정보 요청 발행")
             }
-
 
             IconButton(
                 modifier = modifier
@@ -285,6 +262,25 @@ fun WebRtcScreen (
             }
         }
         if (role == ChannelRole.MASTER) {
+            LaunchedEffect(Unit) {
+                try {
+                    viewModel.frameData
+                        .onEach { bitmap ->
+                            bitmap?.let {
+                                withContext(Dispatchers.Default) {
+                                    aiViewModel.processFrame(it)
+                                }
+                            } ?: Log.d("WebRtcScreen", "Received null bitmap")
+                        }
+                        .catch { e ->
+                            Log.e("WebRtcScreen", "Error collecting frames", e)
+                        }
+                        .launchIn(this)
+                } catch (e: Exception) {
+                    Log.e("WebRtcScreen", "Frame collection failed", e)
+                }
+            }
+            //UI
             Box(
                 modifier = modifier
                     .weight(1f)
@@ -300,7 +296,6 @@ fun WebRtcScreen (
                             },
                             modifier = modifier.fillMaxSize()
                         )
-
                     }
                 }
             }
@@ -315,7 +310,6 @@ fun WebRtcScreen (
                     remoteView?.let { renderer ->
                         AndroidView(
                             factory = {
-
                                 renderer.apply {
                                     (parent as? android.view.ViewGroup)?.removeView(this)
                                 }
@@ -323,19 +317,6 @@ fun WebRtcScreen (
                             modifier = modifier.fillMaxSize()
                         )
                     }
-//                    localView?.let { renderer ->
-//                        AndroidView(
-//                            factory = {
-//                                renderer.apply {
-//                                    (parent as? android.view.ViewGroup)?.removeView(this)
-//                                }
-//                            },
-//                            modifier = Modifier
-//                                .align(Alignment.TopEnd)
-//                                .size(120.dp)
-//                                .padding(8.dp)
-//                        )
-//                    }
                 }
             }
         }
@@ -386,7 +367,8 @@ fun WebRtcScreen (
                     }
                 }
 
-                else -> { /* 다른 상태 처리 */ }
+                else -> { /* 다른 상태 처리 */
+                }
             }
         }
     }
