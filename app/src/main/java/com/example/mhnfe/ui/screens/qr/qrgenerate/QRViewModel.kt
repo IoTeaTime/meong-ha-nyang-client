@@ -36,8 +36,7 @@ data class QRScreenUiState(
 
 @HiltViewModel
 class QRViewModel @Inject constructor(
-    private val groupApi: GroupApi,
-    private val accessTokenDataStore: DataStore<AccessToken>
+    private val groupRepository: GroupRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(QRScreenUiState())
     val uiState = _uiState.asStateFlow()
@@ -65,14 +64,9 @@ class QRViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                Log.d("QRViewModel", "Fetching token...")
-                val token = accessTokenDataStore.data.map { it.accessToken }.first()
-                Log.d("QRViewModel", "Token fetched: ${token.take(10)}...")
-
-                Log.d("QRViewModel", "Making API call for type: ${_uiState.value.userType}")
                 val response = when (_uiState.value.userType) {
-                    UserType.CCTV -> groupApi.generateCctvQR(token)
-                    UserType.VIEWER -> groupApi.generateViewerQR(token)
+                    UserType.CCTV -> groupRepository.generateCctvQR()
+                    UserType.VIEWER -> groupRepository.generateViewerQR()
                     else -> null
                 }
                 Log.d("QRViewModel", "API response received: $response")
@@ -89,14 +83,12 @@ class QRViewModel @Inject constructor(
                             }.toString()
                             else -> ""
                         }
-                        Log.d("QRViewModel", "Generated QR content: $jsonContent")
 
                         _uiState.update { it.copy(
                             qrContent = jsonContent,
                             isLoading = false
                         ) }
                     } else {
-                        Log.e("QRViewModel", "API error: ${apiResponse.result.message}")
                         _uiState.update { it.copy(
                             error = apiResponse.result.message,
                             isLoading = false
@@ -104,7 +96,6 @@ class QRViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("QRViewModel", "Error generating QR code", e)
                 _uiState.update { it.copy(
                     error = "QR 코드 생성 중 오류가 발생했습니다.: ${e.message}",
                     isLoading = false

@@ -1,6 +1,5 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,8 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
-import com.example.mhnfe.data.model.sampleCCTVList
-import com.example.mhnfe.data.remote.response.CctvInfo
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTopBar
@@ -34,8 +31,7 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+
 
 
 @Composable

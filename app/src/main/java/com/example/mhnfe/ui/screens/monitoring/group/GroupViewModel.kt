@@ -5,8 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.remote.request.GroupInfo
 import com.example.mhnfe.data.remote.response.AccessToken
-import com.example.mhnfe.data.remote.response.GroupInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

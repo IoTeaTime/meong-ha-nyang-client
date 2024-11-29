@@ -1,28 +1,56 @@
 package com.example.mhnfe.data.repository
 
+import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.api.GroupApi
-import com.example.mhnfe.data.remote.response.Group
+import com.example.mhnfe.data.remote.request.CreateGroupRequest
+import com.example.mhnfe.data.remote.request.Group
+import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.GroupResponse
 import com.example.mhnfe.data.remote.response.QRApiResponse
 import com.example.mhnfe.domain.repository.GroupRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class GroupRepositoryImpl @Inject constructor(
-    private val groupApi: GroupApi
+    private val groupApi: GroupApi,
+    private val accessTokenDataStore: DataStore<AccessToken>
 ) : GroupRepository {
     override suspend fun getGroup(response: GroupResponse): Group {
-        return response.body
-    }
-    override suspend fun generateCctvQR(response: QRApiResponse): QRApiResponse {
-        return response
+        return Group(
+            groupId = response.body.groupId,
+            groupName = response.body.groupName,
+            createdAt = response.body.createdAt
+        )
     }
 
-    override suspend fun generateViewerQR(response: QRApiResponse): QRApiResponse {
-        return response
+    override suspend fun createGroup(thingId: String): Result<Group> {
+        return try {
+            val token = accessTokenDataStore.data.map { it.accessToken }.first()
+            val request = CreateGroupRequest(thingId = thingId)
+            val response = withContext(Dispatchers.IO) {
+                groupApi.createGroup(token, request)
+            }
+            Result.success(getGroup(response))
+        } catch (e: HttpException) {
+            Result.failure(e)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun generateCctvQR(): QRApiResponse {
+        val token = accessTokenDataStore.data.map { it.accessToken }.first()
+        return groupApi.generateCctvQR(token)
+    }
+
+    override suspend fun generateViewerQR(): QRApiResponse {
+        val token = accessTokenDataStore.data.map { it.accessToken }.first()
+        return groupApi.generateViewerQR(token)
     }
 }
