@@ -1,11 +1,15 @@
 package com.example.mhnfe.data.remote.api
 
+import com.example.mhnfe.data.remote.request.ChangePasswordRequest
+import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
 import com.example.mhnfe.data.remote.response.LogoutResponse
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface UserApi {
     @POST("/api/member/refresh-token")
@@ -22,4 +26,10 @@ interface UserApi {
     suspend fun deleteMember(
         @Header("Authorization") accessToken: String
     ): DeleteResponse
+
+    @PUT("/api/member/password")
+    suspend fun changePassword(
+        @Header("Authorization") accessToken: String,
+        @Body request: ChangePasswordRequest
+    ): ChangePasswordResponse
 }

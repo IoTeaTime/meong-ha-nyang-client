@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.screens.mypage
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -99,7 +100,10 @@ fun DeviceManagementScreen(
                         cctvDevices = cctvDevices.filter { it.id != device.id } },
                     onUpdate = { updatedDevice ->
                         cctvDevices = cctvDevices.map {
-                            if (it.id == updatedDevice.id) updatedDevice else it
+                            if (it.id == updatedDevice.id) {
+                                deviceManagementViewModel.changeCctvName(updatedDevice.id.toLong(),updatedDevice.name)
+                                updatedDevice
+                            } else it
                         }
                     }
                 )
@@ -172,7 +176,7 @@ private fun DeviceItem(
                 )
             }
 
-            Text (
+            Text(
                 text = "기기삭제",
                 style = Typography.bodySmall.copy(color = Color.Gray),
                 modifier = modifier.clickable { onDelete() }
