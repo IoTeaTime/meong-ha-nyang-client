@@ -17,6 +17,9 @@ class MqttManagerHelper @Inject constructor(
     private val tag = "MqttManagerHelper"
     private val keyStoreFilePath = "keystore.bks"
 
+    @Volatile
+    private var mqttManager: AWSIotMqttManager? = null
+
     companion object {
         private const val PREFS_NAME = "IoTPreferences"
         private const val CERTIFICATE_ID_KEY = "certificateId"
@@ -50,7 +53,16 @@ class MqttManagerHelper @Inject constructor(
         }
     }
 
-    fun createMqttManager(): AWSIotMqttManager {
+    fun getMqttManager(): AWSIotMqttManager {
+        // Double-checked locking
+        return mqttManager ?: synchronized(this) {
+            mqttManager ?: createMqttManager().also {
+                mqttManager = it
+            }
+        }
+    }
+
+    private fun createMqttManager(): AWSIotMqttManager {
         return AWSIotMqttManager(thingId, BuildConfig.MQTT_END_POINT).apply {
             isAutoReconnect = true
         }

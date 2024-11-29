@@ -48,37 +48,31 @@ fun GroupScreen(
 ) {
     val context = LocalContext.current
     val groupInfo by groupViewModel.groupInfo.collectAsState()
+    val mqttState by mqttViewModel.isConnected.collectAsState()
+
 
     LaunchedEffect(Unit) {
-        // UserType을 확인
-        if (userType != UserType.CCTV) {
-            withContext(Dispatchers.IO) {
-                // 1. MQTT 연결 시도 (VIEWER일 때)
-                val isConnected = withContext(Dispatchers.IO) {
-                    mqttViewModel.initialize(context)
-                }
-                if (isConnected) {
-                    // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
-                    val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
+        // todo 1. API 호출 -> Group Id, Thing Id List 반환
+        // 2. Thing Id를 Sub, Group Id로 Pub -> CCTV 기기에 정보 요청
+        // 3. CCTV 기기는 자신의 Thing Id로 Pub
+//        if (!mqttState) {
+//            val result = mqttViewModel.initialize(context)
+//            if(result) {
+//                val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
+//                mqttViewModel.viewerInitialSubscribe(context, thingList)
+//            }
+//        }
 
-                    mqttViewModel.viewerInitialSubscribe(context, thingList)
-                }
+        if (mqttState) {
+            val payload = """
+            {
+                "groupInfo": "$groupInfo?.groupName",
+                "timestamp": ${System.currentTimeMillis() / 1000}
             }
+            """.trimIndent()
+            mqttViewModel.getDeviceInfo(payload, 404)
         }
     }
-    DisposableEffect(Unit) {
-        onDispose {
-            if (userType != UserType.CCTV) {
-                try {
-                    mqttViewModel.disconnectMqttManager()
-                    Log.d("GroupScreen", "MQTT Manager Disconnected Viewer Role")
-                } catch (e: Exception) {
-                    Log.e("GroupScreen", "Failed to disconnect MQTT Manager", e)
-                }
-            }
-        }
-    }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
