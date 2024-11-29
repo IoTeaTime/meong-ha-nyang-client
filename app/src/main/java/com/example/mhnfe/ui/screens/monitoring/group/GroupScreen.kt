@@ -1,6 +1,5 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,13 +12,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,16 +31,13 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-
 
 @Composable
 fun GroupScreen(
     modifier: Modifier = Modifier,
     groupId: String = "그룹1",
     userType: UserType = UserType.MASTER,
-    //나중에 뷰모델로 뺄 것
+    //나중에 뷰 모델로 뺄 것
     cctv: List<CCTV> = sampleCCTVList,
     navController: NavController,
     mqttViewModel: MqttViewModel = hiltViewModel()
@@ -55,12 +47,25 @@ fun GroupScreen(
 
 
     LaunchedEffect(Unit) {
-        if (userType != UserType.CCTV && !mqttState) {
-            val result = mqttViewModel.initialize(context)
-            if(result) {
-                val thingList = listOf("thing1", "thing2", "thing3")
-                mqttViewModel.viewerInitialSubscribe(context, thingList)
+        // todo 1. API 호출 -> Group Id, Thing Id List 반환
+        // 2. Thing Id를 Sub, Group Id로 Pub -> CCTV 기기에 정보 요청
+        // 3. CCTV 기기는 자신의 Thing Id로 Pub
+//        if (!mqttState) {
+//            val result = mqttViewModel.initialize(context)
+//            if(result) {
+//                val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
+//                mqttViewModel.viewerInitialSubscribe(context, thingList)
+//            }
+//        }
+
+        if (mqttState) {
+            val payload = """
+            {
+                "groupInfo": "$groupId",
+                "timestamp": ${System.currentTimeMillis() / 1000}
             }
+            """.trimIndent()
+            mqttViewModel.getDeviceInfo(payload, 404)
         }
     }
 
