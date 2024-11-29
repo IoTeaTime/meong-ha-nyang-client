@@ -60,7 +60,7 @@ sealed class NavRoutes(val route: String) {
         }
 
         object DeviceInformation : NavRoutes("device_information/{cctvId}") {
-            fun createRoute(cctvId: String) = "device_information/$cctvId"
+            fun createRoute(cctvId: Long) = "device_information/$cctvId"
         }
         object QRGenerate : NavRoutes("qr_generate/{userType}") {
             fun createRoute(userType: UserType) = "qr_generate/${userType.name.lowercase()}"
@@ -262,10 +262,10 @@ fun MainContent(
                 composable(
                     route = NavRoutes.Monitoring.DeviceInformation.route,
                     arguments = listOf(
-                        navArgument("cctvId") { type = NavType.StringType }
+                        navArgument("cctvId") { type = NavType.LongType }
                     )
                 ) { backStackEntry ->
-                    val cctvId = backStackEntry.arguments?.getString("cctvId") ?: return@composable
+                    val cctvId = backStackEntry.arguments?.getLong("cctvId") ?: return@composable
                     DeviceInfoScreen(
                         cctvId = cctvId,
                         navController = bottomNavController
