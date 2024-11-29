@@ -72,9 +72,7 @@ sealed class NavRoutes(val route: String) {
     }
     object MyPage : NavRoutes("myPage") {
         object Profile : NavRoutes("myPage/profile")
-        object ChangePassword : NavRoutes("myPage/change_password") {
-            fun createRoute(fromMain: Boolean) = "myPage/change_password/$fromMain"
-        }
+        object ChangePassword : NavRoutes("myPage/change_password")
         object DeviceManagement : NavRoutes("myPage/device_management")
     }
 }
@@ -109,11 +107,7 @@ fun AppNavigation() {
             }
             composable(NavRoutes.Auth.Login.route) {
                 LoginScreen(
-                    navController = navController,
-                    onChangePasswordClick = {
-                        // 네비게이션: ChangePassword 화면으로 이동
-                        navController.navigate(NavRoutes.MyPage.ChangePassword.createRoute(fromMain = true))
-                    }
+                    navController = navController
                 )
             }
             composable(NavRoutes.Auth.SignUp.route) {
