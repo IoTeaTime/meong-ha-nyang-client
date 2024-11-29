@@ -39,6 +39,17 @@ data class GroupMemberInfo(
 )
 // 그룹 회원 리스트 응답
 
+// 그룹 cctv 리스트 응답
+data class CctvListResponse(
+    val result: Result,
+    val body: CctvList
+)
+
+data class CctvList(
+    val cctv: List<CctvInfo>
+)
+// 그룹 cctv 리스트 응답
+
 data class Group(
     val groupId: Int,
     val groupName: String,
