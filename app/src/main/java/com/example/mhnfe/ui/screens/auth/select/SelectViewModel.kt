@@ -1,6 +1,5 @@
 package com.example.mhnfe.ui.screens.auth.select
 
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
