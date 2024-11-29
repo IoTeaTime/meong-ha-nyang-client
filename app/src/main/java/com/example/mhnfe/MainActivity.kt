@@ -136,6 +136,7 @@ fun SignalingChannelTest(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+        Log.d("SignalingChannelTest", "Initializing KVSSignalingViewModel")
         kvsViewModel.initialize(context)
     }
 
@@ -173,7 +174,10 @@ fun SignalingChannelTest(
     ) {
         OutlinedTextField(
             value = channelName,
-            onValueChange = { channelName = it },
+            onValueChange = {
+                channelName = it
+                Log.d("SignalingChannelTest", "Channel Name updated: $channelName")
+                            },
             label = { Text("채널 이름") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -193,9 +197,10 @@ fun SignalingChannelTest(
         // Viewer 버튼
         Button(
             onClick = {
+                Log.d("SignalingChannelTest", "Entering as VIEWER with Channel Name: $channelName")
                 navController.currentBackStackEntry?.savedStateHandle?.set("channelName", channelName)
                 navController.currentBackStackEntry?.savedStateHandle?.set("role", ChannelRole.VIEWER)
-                navController.navigate(NavRoutes.Monitoring.Viewer.route)
+                navController.navigate(NavRoutes.Monitoring.Viewer.createRoute(channelName))
             },
             modifier = Modifier.fillMaxWidth()
         ) {

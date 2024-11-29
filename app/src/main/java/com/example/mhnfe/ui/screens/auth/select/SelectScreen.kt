@@ -84,7 +84,7 @@ fun SelectScreen(
                 MiddleButton(
                     text = "참여 QR",
                     onClick = {
-                        navController.navigate(NavRoutes.Auth.QRScanner.route) {
+                        navController.navigate(NavRoutes.Auth.QRScanner.createRoute(UserType.VIEWER)) {
                             popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
                         }
                     },

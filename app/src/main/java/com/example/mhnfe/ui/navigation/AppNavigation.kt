@@ -42,7 +42,14 @@ sealed class NavRoutes(val route: String) {
         object Cognito : NavRoutes("cognito")
         object SignUp : NavRoutes("signup")
         object Select : NavRoutes("select")
-        object QRScanner : NavRoutes("qr_scanner")
+        object Master {
+            const val route = "master/{channelName}"
+            fun createRoute(channelName: String) = "master/$channelName"
+        }
+        object QRScanner {
+            const val route = "qr_scanner/{userType}"
+            fun createRoute(userType: UserType) = "qr_scanner/${userType.name}"
+        }
     }
 
     object Main : NavRoutes("main/{userType}") {
@@ -124,10 +131,41 @@ fun AppNavigation() {
                 SelectScreen(
                     navController = navController)
             }
-            composable(NavRoutes.Auth.QRScanner.route) {
-                // QRScannerScreen
+            composable(
+                route = NavRoutes.Auth.QRScanner.route,
+                arguments = listOf(
+                    navArgument("userType") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                val userType = UserType.valueOf(
+                    backStackEntry.arguments?.getString("userType") ?: UserType.VIEWER.name
+                )
                 QRScanningScreen(
-                    navController = navController
+                    navController = navController,
+                    userType = userType
+                )
+            }
+            //cctv화면
+            composable(
+                route = NavRoutes.Auth.Master.route,
+                arguments = listOf(
+                    navArgument("channelName") { type = NavType.StringType }
+                )
+            ) {
+                backStackEntry ->
+                val kvsSignalingViewModel: KVSSignalingViewModel = viewModel()
+
+                // channelName을 arguments에서 읽기
+                val channelName = backStackEntry.arguments?.getString("channelName") ?: "demo-channel"
+                val role = ChannelRole.MASTER
+
+                WebRtcScreen(
+                    navController = navController,
+                    viewModel = kvsSignalingViewModel,
+                    channelName = channelName,
+                    role = role
                 )
             }
         }

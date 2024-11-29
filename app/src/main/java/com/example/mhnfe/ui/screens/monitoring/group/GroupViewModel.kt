@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.request.GroupInfo
 import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,8 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GroupViewModel @Inject constructor(
-    private val groupApi: GroupApi,
-    private val accessTokenDataStore: DataStore<AccessToken>
+    private val groupRepository: GroupRepository
 ) : ViewModel() {
     private val _groupInfo = MutableStateFlow<GroupInfo?>(null)
     val groupInfo = _groupInfo.asStateFlow()
@@ -39,30 +39,33 @@ class GroupViewModel @Inject constructor(
             _isLoading.value = true
             _error.value = null
 
-            try {
-                val token = accessTokenDataStore.data.map { it.accessToken }.first()
-                val response = groupApi.getGroupInfo(token)
-                Log.d("GroupViewModel", "응답 바디: ${response.body}")
-                Log.d("GroupViewModel", "응답 result: ${response.result}")
-
-                _groupInfo.value = response.body
-
-            } catch (e: HttpException) {
-                when (e.code()) {
-                    500 -> {
-                        Log.e("GroupViewModel", "Server error response: ${e.response()?.errorBody()?.string()}")
-                        _error.value = "서버 내부 오류가 발생했습니다."
+            groupRepository.getGroupInfo().fold(
+                onSuccess = { response ->
+                    Log.d("GroupViewModel", "응답 바디: ${response.body}")
+                    Log.d("GroupViewModel", "응답 result: ${response.result}")
+                    _groupInfo.value = response.body
+                },
+                onFailure = { e ->
+                    when (e) {
+                        is HttpException -> {
+                            when (e.code()) {
+                                500 -> {
+                                    Log.e("GroupViewModel", "Server error response: ${e.response()?.errorBody()?.string()}")
+                                    _error.value = "서버 내부 오류가 발생했습니다."
+                                }
+                                401 -> _error.value = "인증에 실패했습니다."
+                                404 -> _error.value = "해당 그룹을 찾을 수 없습니다."
+                                else -> _error.value = "오류가 발생했습니다: ${e.code()}"
+                            }
+                        }
+                        else -> {
+                            Log.e("GroupViewModel", "Unexpected error", e)
+                            _error.value = "예기치 못한 오류가 발생했습니다: ${e.message}"
+                        }
                     }
-                    401 -> _error.value = "인증에 실패했습니다."
-                    404 -> _error.value = "해당 그룹을 찾을 수 없습니다."
-                    else -> _error.value = "오류가 발생했습니다: ${e.code()}"
                 }
-            } catch (e: Exception) {
-                Log.e("GroupViewModel", "Unexpected error", e)
-                _error.value = "예기치 못한 오류가 발생했습니다: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
+            )
+            _isLoading.value = false
         }
     }
 }

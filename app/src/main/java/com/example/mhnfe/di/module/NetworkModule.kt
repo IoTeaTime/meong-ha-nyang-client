@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.remote.api.QRApi
 import com.example.mhnfe.data.remote.api.UserApi
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -43,6 +44,11 @@ object NetworkModule {
     @Singleton
     fun provideGroupApi(retrofit: Retrofit): GroupApi {
         return retrofit.create(GroupApi::class.java)  // Retrofit을 통해 GroupApi 생성
+    }
+    @Provides
+    @Singleton
+    fun provideQRApi(retrofit: Retrofit): QRApi {
+        return retrofit.create(QRApi::class.java)
     }
 
 //    @Provides

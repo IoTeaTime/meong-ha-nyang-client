@@ -11,13 +11,9 @@ import com.example.mhnfe.data.remote.request.Group
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -25,7 +21,6 @@ import kotlin.coroutines.cancellation.CancellationException
 @HiltViewModel
 class SelectViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
-    private val thingId: String
 ) : ViewModel() {
 
     private val _groupState = MutableStateFlow<Group?>(null)
@@ -44,7 +39,7 @@ class SelectViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                groupRepository.createGroup(thingId)
+                groupRepository.createGroup()
                     .onSuccess { group ->
                         _groupState.value = group
                         _navigateNext.value = true
