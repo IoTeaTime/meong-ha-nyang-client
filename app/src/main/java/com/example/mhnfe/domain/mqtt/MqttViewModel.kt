@@ -6,10 +6,14 @@ import androidx.lifecycle.ViewModel
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos
 import com.example.mhnfe.domain.mqtt.shadow.delta.ShadowDeltaMsg
+import com.example.mhnfe.utils.DataObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -24,8 +28,10 @@ import kotlin.coroutines.resumeWithException
 class MqttViewModel @Inject constructor(
     private val thingId: String,
     private val iotClientHelper: IoTClientHelper,
-    private val mqttHelper: MqttManagerHelper
+    private val mqttHelper: MqttManagerHelper,
+    @ApplicationContext private val appContext: Context
 ) : ViewModel() {
+    private var dataObserver: DataObserver? = null
     private val awsMqttManager = mqttHelper.getMqttManager()
     private var keyStore: KeyStore? = null
     private val tag = "MqttViewModel"
@@ -33,28 +39,28 @@ class MqttViewModel @Inject constructor(
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> get() = _isConnected
 
-    suspend fun initialize(context: Context): Boolean = withContext(Dispatchers.IO) {
+    suspend fun initialize(): Boolean = withContext(Dispatchers.IO) {
         try {
-            val keyStoreFile = File("${context.filesDir}/keystore.bks")
+            val keyStoreFile = File("${appContext.filesDir}/keystore.bks")
             if (keyStoreFile.exists()) {
-                initializeWithExistingKeyStore(context)
+                initializeWithExistingKeyStore()
             } else {
-                initializeWithNewKeyStore(context)
+                initializeWithNewKeyStore(appContext)
             }
             val isConnected = connectToMqttManager()
             _isConnected.value = isConnected
             isConnected
         } catch (e: Exception) {
             Log.e(tag, "Initialization failed: ${e.message}", e)
-            initializeWithNewKeyStore(context)
+            initializeWithNewKeyStore(appContext)
             val isConnected = connectToMqttManager()
             _isConnected.value = isConnected
             isConnected
         }
     }
 
-    private fun initializeWithExistingKeyStore(context: Context) {
-        keyStore = mqttHelper.getKeyStore(context)
+    private fun initializeWithExistingKeyStore() {
+        keyStore = mqttHelper.getKeyStore(appContext)
         Log.d(tag, "KeyStore found and initialized.")
     }
 
@@ -78,11 +84,13 @@ class MqttViewModel @Inject constructor(
                         Log.e(tag, "MQTT connection error: ${throwable.message}", throwable)
                         if (continuation.isActive) continuation.resumeWithException(throwable)
                     }
+
                     status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected -> {
                         _isConnected.value = true
                         Log.d(tag, "MQTT connected.")
                         if (continuation.isActive) continuation.resume(true)
                     }
+
                     status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.ConnectionLost -> {
                         _isConnected.value = false
                         Log.d(tag, "MQTT connection lost.")
@@ -130,8 +138,7 @@ class MqttViewModel @Inject constructor(
         subscribe(groupTopic) { receivedTopic, message ->
             handleTopicMessage(receivedTopic, message, context)
         }
-
-        publish("\$aws/things/${thingId}/shadow/update", DeviceUtils.getShadowPayload(context))
+        updateShadow()
         Log.d(tag, "Shadow subscriptions and publication complete.")
     }
 
@@ -143,9 +150,11 @@ class MqttViewModel @Inject constructor(
                     val payload = DeviceUtils.getPublishPayload(context, jsonMessage)
                     publish("/mhn/command/device/info/things/$thingId", payload)
                 }
+
                 receivedTopic.contains("things") -> {
                     Log.d(tag, "Thing message: $message")
                 }
+
                 else -> Log.w(tag, "Unhandled topic: $receivedTopic")
             }
         } catch (e: Exception) {
@@ -203,6 +212,53 @@ class MqttViewModel @Inject constructor(
     fun publishAIResult(payload: String) {
         val topic = "/mhn/event/detect/things/$thingId"
         publish(topic, payload)
+    }
+
+    private fun updateShadow() {
+        publish("\$aws/things/${thingId}/shadow/update", DeviceUtils.getShadowPayload(appContext))
+    }
+    private fun updateShadowWithPayload(payload: String) {
+        val topic = "\$aws/things/${thingId}/shadow/update"
+        try {
+            awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
+            Log.d(tag, "Published Shadow Update: $payload")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to publish shadow update: ${e.message}", e)
+        }
+    }
+    // 데이터 관찰 시작
+    fun startObservingData(context: Context) {
+        if (dataObserver == null) {
+            dataObserver = DataObserver(context).apply {
+                startObserving()
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    batteryLevel.collect { newBatteryLevel ->
+                        val payload = DeviceUtils.getBatteryPayload(newBatteryLevel)
+                        updateShadowWithPayload(payload)
+                    }
+                }
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    networkStatus.collect { newNetworkStatus ->
+                        val payload = DeviceUtils.getNetworkPayload(newNetworkStatus)
+                        updateShadowWithPayload(payload)
+                    }
+                }
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    kvsChannelActive.collect { isActive ->
+                        val payload = DeviceUtils.getKvsChannelPayload(isActive)
+                        updateShadowWithPayload(payload)
+                    }
+                }
+            }
+        }
+    }
+
+    // 데이터 관찰 중지
+    fun stopObservingData() {
+        dataObserver = null // todo. mqtt 연결 해제될 때 같이 수정
     }
 
     private fun publish(topic: String, payload: String) {

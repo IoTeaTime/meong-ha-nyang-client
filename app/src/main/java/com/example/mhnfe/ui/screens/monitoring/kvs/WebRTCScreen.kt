@@ -74,11 +74,11 @@ fun WebRtcScreen(
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
     val mqttState by mqttViewModel.isConnected.collectAsState()
 
-    LaunchedEffect(Unit)    {
+    LaunchedEffect(Unit) {
         // Todo. 그룹 ID 반환 로직 추가
         if (role == ChannelRole.MASTER && !mqttState) {
-            val result = mqttViewModel.initialize(context)
-            if(result) {
+            val result = mqttViewModel.initialize()
+            if (result) {
                 mqttViewModel.createShadowWithSubscribe(context, 404)
             }
         }
@@ -95,6 +95,7 @@ fun WebRtcScreen(
                     }
                 }
             )
+            mqttViewModel.startObservingData(context)
         }
     }
 
