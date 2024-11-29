@@ -1,12 +1,12 @@
-//package com.example.mhnfe.data.remote.request
-//
-//data class CCTVRequest(
-//    val groupId: Int,
-//    val thingId: String,
-//    val kvsChannelName: String
-//)
-//
-//data class ViewerRequest(
-//    val groupId: Int,
-//    val thingId: String
-//)
+package com.example.mhnfe.data.remote.request
+
+data class CctvQRRequest(
+    val groupId: Int,
+    val thingId: String,
+    val kvsChannelName: String
+)
+
+data class ViewerQRRequest(
+    val groupId: Int,
+    val thingId: String
+)

@@ -207,7 +207,7 @@ fun WebRtcScreen(
 //        }
 //    }
 
-
+    Log.d("WebRtcScreen", "channelName: $channelName, role: $role")
     Column(
         modifier = modifier
             .fillMaxSize()

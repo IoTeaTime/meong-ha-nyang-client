@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.request.LoginRequest
+import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val loginRequestDataStore: DataStore<LoginRequest>
+    private val loginRequestDataStore: DataStore<LoginRequest>,
+    private val cctvResponseDataStore: DataStore<CCTVResponseBody>
 ) : ViewModel() {
     fun autoLogin(
         onSuccess: () -> Unit,
@@ -46,6 +48,18 @@ class MainViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.d("MainViewModel", "AutoLogin Failed...")
+                onFailure(e)
+            }
+        }
+    }
+
+    // CCTV ID를 불러오는 메서드
+    fun fetchCctvId(onSuccess: (Int) -> Unit, onFailure: (Throwable) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val cctvId = cctvResponseDataStore.data.first().cctvId
+                onSuccess(cctvId)
+            } catch (e: Exception) {
                 onFailure(e)
             }
         }

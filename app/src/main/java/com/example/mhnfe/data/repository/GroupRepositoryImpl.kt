@@ -1,10 +1,12 @@
 package com.example.mhnfe.data.repository
 
+
 import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.request.CreateGroupRequest
 import com.example.mhnfe.data.remote.request.Group
 import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.GroupInfoResponse
 import com.example.mhnfe.data.remote.response.GroupResponse
 import com.example.mhnfe.data.remote.response.QRApiResponse
 import com.example.mhnfe.domain.repository.GroupRepository
@@ -19,7 +21,8 @@ import javax.inject.Singleton
 @Singleton
 class GroupRepositoryImpl @Inject constructor(
     private val groupApi: GroupApi,
-    private val accessTokenDataStore: DataStore<AccessToken>
+    private val accessTokenDataStore: DataStore<AccessToken>,
+    private val thingId: String
 ) : GroupRepository {
     override suspend fun getGroup(response: GroupResponse): Group {
         return Group(
@@ -29,7 +32,7 @@ class GroupRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun createGroup(thingId: String): Result<Group> {
+    override suspend fun createGroup(): Result<Group> {
         return try {
             val token = accessTokenDataStore.data.map { it.accessToken }.first()
             val request = CreateGroupRequest(thingId = thingId)
@@ -37,6 +40,19 @@ class GroupRepositoryImpl @Inject constructor(
                 groupApi.createGroup(token, request)
             }
             Result.success(getGroup(response))
+        } catch (e: HttpException) {
+            Result.failure(e)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    override suspend fun getGroupInfo(): Result<GroupInfoResponse> {
+        return try {
+            val token = accessTokenDataStore.data.map { it.accessToken }.first()
+            val response = withContext(Dispatchers.IO) {
+                groupApi.getGroupInfo(token)
+            }
+            Result.success(response)
         } catch (e: HttpException) {
             Result.failure(e)
         } catch (e: Exception) {

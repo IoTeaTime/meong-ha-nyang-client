@@ -42,9 +42,29 @@ fun MainScreen(
                 }
             },
             onFailure = { e ->
-                Log.e("MainScreen", "자동 로그인 실패", e)
+                mainViewModel.fetchCctvId(
+                    onSuccess = { cctvId ->
+                        if (cctvId > 0) {
+                            Log.d("MainScreen", "Loaded CCTV ID: $cctvId")
+                        } else {
+                            Log.e("MainScreen", "자동 로그인 실패", e)
+                        }
+                    },
+                    onFailure = { fetchError ->
+                        Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
+                    }
+                )
+
             }
         )
+//        mainViewModel.fetchCctvId(
+//            onSuccess = { cctvId ->
+//                Log.d("MainScreen", "Loaded CCTV ID: $cctvId")
+//            },
+//            onFailure = { e ->
+//                Log.e("MainScreen", "Failed to load CCTV ID", e)
+//            }
+//        )
     }
 //    viewModel.initializeWithContext(context)
     Column(
@@ -90,7 +110,7 @@ fun MainScreen(
             MiddleButton(
                 text = "Cam 참여",
                 onClick = {
-                    navController.navigate(NavRoutes.Auth.QRScanner.route)
+                    navController.navigate(NavRoutes.Auth.QRScanner.createRoute(UserType.CCTV))
                 },
             )
 

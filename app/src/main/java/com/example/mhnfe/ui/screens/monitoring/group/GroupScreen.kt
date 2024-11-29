@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +49,7 @@ fun GroupScreen(
 
 
     LaunchedEffect(Unit) {
+        groupViewModel.fetchGroupInfo()
         // todo 1. API 호출 -> Group Id, Thing Id List 반환
         // 2. Thing Id를 Sub, Group Id로 Pub -> CCTV 기기에 정보 요청
         // 3. CCTV 기기는 자신의 Thing Id로 Pub
@@ -137,6 +139,7 @@ fun GroupScreen(
                         items = cctvList,
                         key = { it.cctvId }
                     ) { cctvItem ->
+
                         CCTVItemCard(
                             cctv = cctvItem.toCCTV(),
                             onClick = {
@@ -165,10 +168,13 @@ fun GroupScreen(
     }
 }
 
-fun CctvInfo.toCCTV() = CCTV(
-    id = cctvId,
-    deviceName = cctvNickname,
-    thingId = thingId,
-    channelName = kvsChannelName,
-)
+fun CctvInfo.toCCTV(): CCTV {
+    return CCTV(
+        id = cctvId,
+        deviceName = cctvNickname,
+        thingId = thingId,
+        channelName = kvsChannelName
+    )
+}
+
 
