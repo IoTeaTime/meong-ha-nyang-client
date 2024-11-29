@@ -12,10 +12,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.datastore.core.DataStore
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MiddleButton
@@ -29,13 +31,10 @@ fun MainScreen(
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
-    val savedId = sharedPreferences.getString("saved_id", null)
-    val savedPassword = sharedPreferences.getString("saved_password", null)
 
     // 자동 로그인 로직
     LaunchedEffect(Unit) {
-        mainViewModel.autoLogin(savedId, savedPassword,
+        mainViewModel.autoLogin(
             onSuccess = {
                 // 자동 로그인 성공 -> 다음 화면으로 이동
                 navController.navigate(NavRoutes.Auth.Select.route) {

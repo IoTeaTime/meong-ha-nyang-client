@@ -18,17 +18,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-//    @Provides
-//    @Singleton
-//    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
-//        return OkHttpClient.Builder()
-//            .addInterceptor(authInterceptor) // AuthInterceptor 추가
-//            .connectTimeout(30, TimeUnit.SECONDS)
-//            .readTimeout(30, TimeUnit.SECONDS)
-//            .writeTimeout(30, TimeUnit.SECONDS)
-//            .build()
-//    }
-//
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit {

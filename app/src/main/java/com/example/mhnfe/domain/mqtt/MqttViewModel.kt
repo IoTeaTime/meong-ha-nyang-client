@@ -1,22 +1,22 @@
 package com.example.mhnfe.domain.mqtt
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
-import com.amazonaws.mobileconnectors.iot.AWSIotMqttManager
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos
 import com.example.mhnfe.domain.mqtt.shadow.delta.ShadowDeltaMsg
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import org.json.JSONObject
 import java.io.File
 import java.security.KeyStore
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -26,43 +26,36 @@ class MqttViewModel @Inject constructor(
     private val iotClientHelper: IoTClientHelper,
     private val mqttHelper: MqttManagerHelper
 ) : ViewModel() {
-    private var awsMqttManager: AWSIotMqttManager = mqttHelper.createMqttManager()
+    private val awsMqttManager = mqttHelper.getMqttManager()
     private var keyStore: KeyStore? = null
     private val tag = "MqttUtils"
 
+    private val _isConnected = MutableStateFlow(false)
+    val isConnected: StateFlow<Boolean> get() = _isConnected
 
-    @SuppressLint("HardwareIds")
     suspend fun initialize(context: Context): Boolean = withContext(Dispatchers.IO) {
-        val keyStoreFile = File("${context.filesDir}/keystore.bks")
-        return@withContext try {
+        try {
+            val keyStoreFile = File("${context.filesDir}/keystore.bks")
             if (keyStoreFile.exists()) {
-                // 기존 KeyStore를 사용하는 경우
                 initializeWithExistingKeyStore(context)
             } else {
-                // 새로운 KeyStore를 생성해야 하는 경우
                 initializeWithNewKeyStore(context)
             }
-            // MQTT Manager 연결
             val isConnected = connectToMqttManager()
-            if (isConnected) {
-                Log.d(tag, "MQTT 연결 성공")
-            } else {
-                Log.e(tag, "MQTT 연결 실패")
-            }
-            isConnected // 연결 성공 여부 반환
+            _isConnected.value = isConnected
+            isConnected
         } catch (e: Exception) {
-            Log.e(tag, "Initialization error: ${e.message}", e)
-            false // 실패 시 false 반환
+            Log.e(tag, "Initialization failed: ${e.message}", e)
+            false
         }
     }
-
 
     private fun initializeWithExistingKeyStore(context: Context) {
         try {
             keyStore = mqttHelper.getKeyStore(context)
-            Log.d(tag, "KeyStore found and MQTT Manager initialized.")
+            Log.d(tag, "KeyStore found and initialized.")
         } catch (e: Exception) {
-            Log.e(tag, "KeyStore access error: ${e.message}", e)
+            Log.e(tag, "Failed to access KeyStore: ${e.message}", e)
             initializeWithNewKeyStore(context)
         }
     }
@@ -70,182 +63,114 @@ class MqttViewModel @Inject constructor(
     private fun initializeWithNewKeyStore(context: Context) {
         try {
             val awsKeyAndCert = iotClientHelper.getKeyAndCert()
-            awsKeyAndCert.let {
-                // KeyStore 생성 및 저장
-                iotClientHelper.registerDevice(context, it)
-                mqttHelper.createKeyStore(context, it)
-
-                keyStore = mqttHelper.getKeyStore(context)
-                Log.d(tag, "New KeyStore created and MQTT Manager initialized.")
-            }
+            iotClientHelper.registerDevice(context, awsKeyAndCert)
+            mqttHelper.createKeyStore(context, awsKeyAndCert)
+            keyStore = mqttHelper.getKeyStore(context)
+            Log.d(tag, "New KeyStore created and initialized.")
         } catch (e: Exception) {
-            Log.e(tag, "Error while creating new KeyStore: ${e.message}", e)
+            Log.e(tag, "Failed to create new KeyStore: ${e.message}", e)
         }
     }
 
-
     private suspend fun connectToMqttManager(): Boolean = withContext(Dispatchers.IO) {
-        return@withContext try {
-            suspendCancellableCoroutine<Boolean> { continuation ->
-                awsMqttManager?.connect(keyStore) { status, throwable ->
-                    if (throwable != null) {
-                        Log.e(tag, "Connection error: ${throwable.message}", throwable)
-                        // 예외 전달하여 코루틴 재개
-                        if (continuation.isActive) {
-                            continuation.resumeWithException(throwable)
-                        }
-                    } else {
-                        if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected) {
-                            if (continuation.isActive) {
-                                continuation.resume(true) // 성공 시 true 반환
-                            }
-                        } else if (status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.ConnectionLost) {
-                            if (continuation.isActive) {
-                                continuation.resume(false) // 연결 끊김 시 false 반환
-                            }
-                        }
+        suspendCancellableCoroutine { continuation ->
+            awsMqttManager.connect(keyStore) { status, throwable ->
+                when {
+                    throwable != null -> {
+                        Log.e(tag, "MQTT connection error: ${throwable.message}", throwable)
+                        if (continuation.isActive) continuation.resumeWithException(throwable)
+                    }
+                    status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.Connected -> {
+                        _isConnected.value = true
+                        Log.d(tag, "MQTT connected.")
+                        if (continuation.isActive) continuation.resume(true)
+                    }
+                    status == AWSIotMqttClientStatusCallback.AWSIotMqttClientStatus.ConnectionLost -> {
+                        _isConnected.value = false
+                        Log.d(tag, "MQTT connection lost.")
+                        if (continuation.isActive) continuation.resume(false)
                     }
                 }
             }
-        } catch (e: Exception) {
-            Log.e(tag, "MQTT Connection failed: ${e.message}", e)
-            false // 실패 시 false 반환
         }
     }
 
     fun disconnectMqttManager() {
         awsMqttManager.disconnect()
-        Log.d(tag, "MQTT Manager Disconnected")
-    }
-
-    // MQTT Publish 기능
-    fun publish(topic: String, payload: String) {
-        awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
-    }
-
-    // MQTT Subscribe 기능
-    fun subscribe(topic: String, onMessageReceived: (String, String) -> Unit) {
-        awsMqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0) { receivedTopic, message ->
-            onMessageReceived(receivedTopic, message.toString(Charsets.UTF_8))
-        }
+        _isConnected.value = false
+        Log.d(tag, "MQTT disconnected.")
     }
 
     fun viewerInitialSubscribe(context: Context, thingList: List<String>) {
-        try {
-            val topicsToSubscribe: MutableList<String> = mutableListOf()
-
-            // Thing 리스트의 각 Thing에 대해 토픽 생성 및 추가
-            thingList.forEach { subthingId ->
-                val thingTopic = "/mhn/command/device/info/things/$subthingId"
-                topicsToSubscribe.add(thingTopic)
+        val topics = thingList.map { "/mhn/command/device/info/things/$it" }.toMutableList()
+        topics.forEach { topic ->
+            subscribe(topic) { receivedTopic, message ->
+                Log.d(tag, "Message received on topic $receivedTopic: $message")
+                handleTopicMessage(receivedTopic, message, context)
             }
-
-            // 각 Topic에 대해 구독 설정
-            topicsToSubscribe.forEach { topic ->
-                subscribe(topic) { receivedTopic, message ->
-                    Log.d(tag, "Message received on Topic: $receivedTopic, Payload: $message")
-                    // 메시지 내용을 처리
-                    handleTopicMessage(receivedTopic, message, context)
-                }
-            }
-            Log.d(tag, "Viewer 초기 구독 완료: Topics=${topicsToSubscribe.joinToString(", ")}")
-        } catch (e: Exception) {
-            Log.e(tag, "MQTT 구독 실패: ${e.message}", e)
         }
+        Log.d(tag, "Subscribed to topics: ${topics.joinToString(", ")}")
     }
 
     fun createShadowWithSubscribe(context: Context, groupId: Int) {
-        try {
-            // Shadow 관련 Topic 구독
-            val shadowTopics = listOf(
-                "\$aws/things/${thingId}/shadow/update/delta",
-                "\$aws/things/${thingId}/shadow/update/accepted",
-                "\$aws/things/${thingId}/shadow/update/rejected",
-                "\$aws/things/${thingId}/shadow/update/documents",
-                "\$aws/things/${thingId}/shadow/get/accepted",
-                "\$aws/things/${thingId}/shadow/get/rejected"
-            )
+        val shadowTopics = listOf(
+            "\$aws/things/${thingId}/shadow/update/delta",
+            "\$aws/things/${thingId}/shadow/update/accepted",
+            "\$aws/things/${thingId}/shadow/update/rejected",
+            "\$aws/things/${thingId}/shadow/update/documents",
+            "\$aws/things/${thingId}/shadow/get/accepted",
+            "\$aws/things/${thingId}/shadow/get/rejected"
+        )
 
-            // 각 Topic에 대해 구독 설정
-            shadowTopics.forEach { shadowTopic ->
-                subscribe(shadowTopic) { receivedTopic, message ->
-                    Log.d(tag, "Message received on Topic: $receivedTopic, Payload: $message")
-                    // 추가 로직: 메시지 내용을 처리 (예: Shadow 업데이트, UI 반영 등)
-                    handleShadowMessage(receivedTopic, message)
-                }
+        shadowTopics.forEach { topic ->
+            subscribe(topic) { receivedTopic, message ->
+                handleShadowMessage(receivedTopic, message)
             }
-
-            // Pub-Topic
-            val topic = "\$aws/things/${thingId}/shadow/update"
-            val payload = DeviceUtils.getShadowPayload(context)
-
-            // Shadow 상태 업데이트 메시지 발행
-            publish(topic, payload)
-
-            // 그룹 관련 Sub-Topic 구독
-            val groupTopic = "/mhn/command/device/info/groups/$groupId"
-            subscribe(groupTopic) { receivedTopic, message ->
-                Log.d(tag, "Message received on Group Topic: $receivedTopic, Payload: $message")
-                // 메시지 내용 처리
-                handleTopicMessage(receivedTopic, message, context)
-            }
-
-            Log.d(tag, "MQTT 메시지 발행 성공: Topic=$topic, Payload=$payload")
-        } catch (e: Exception) {
-            Log.e(tag, "MQTT 메시지 발행 실패: ${e.message}", e)
         }
+
+        val groupTopic = "/mhn/command/device/info/groups/$groupId"
+        subscribe(groupTopic) { receivedTopic, message ->
+            handleTopicMessage(receivedTopic, message, context)
+        }
+
+        publish("\$aws/things/${thingId}/shadow/update", DeviceUtils.getShadowPayload(context))
+        Log.d(tag, "Shadow subscriptions and publication complete.")
     }
 
-    // Subscribe Topic 처리 함수
     private fun handleTopicMessage(receivedTopic: String, message: String, context: Context) {
         try {
-            // JSON 메시지를 JSONObject로 파싱
             val jsonMessage = JSONObject(message)
-            Log.d(tag, "Received JSON message: $jsonMessage")
-
-            // Topic 기반 처리
             when {
                 receivedTopic.contains("groups") -> {
-                    val groupInfo = jsonMessage.optString("groupInfo", "No Group Info")
-                    Log.d(tag, "Group Info: $groupInfo")
-
-                    // DeviceUtils로 Payload 생성
-                    val payload = DeviceUtils.getPublishPayload(context)
-
-                    // Thing Topic으로 Publish
-                    val thingTopic = "/mhn/command/device/info/things/$thingId"
-                    publish(thingTopic, payload)
-                    Log.d(tag, "Published Device Info to Thing Topic: Topic=$thingTopic, Payload=$payload")
+                    val payload = DeviceUtils.getPublishPayload(context, jsonMessage)
+                    publish("/mhn/command/device/info/things/$thingId", payload)
                 }
-
                 receivedTopic.contains("things") -> {
-                    val thingId = receivedTopic.substringAfterLast("/")
-                    val status = jsonMessage.optString("status", "unknown")
-                    val batteryLevel = jsonMessage.optInt("batteryLevel", -1)
-                    Log.d(tag, "Thing ID: $thingId, Status: $status, Battery Level: $batteryLevel")
+                    Log.d(tag, "Thing message: $message")
                 }
-
-                else -> {
-                    Log.d(tag, "Unhandled Topic: $receivedTopic, Message: $jsonMessage")
-                }
+                else -> Log.w(tag, "Unhandled topic: $receivedTopic")
             }
         } catch (e: Exception) {
-            Log.e(tag, "Failed to process message on Topic: $receivedTopic, Error: ${e.message}", e)
+            Log.e(tag, "Failed to process topic message: ${e.message}", e)
         }
     }
 
-    // Shadow 메시지 처리 함수
     private fun handleShadowMessage(topic: String, message: String) {
         try {
-            val jsonObject: ShadowDeltaMsg = Json.decodeFromString(message)
-            Log.d(tag, "처리된 Shadow 메시지: $jsonObject")
+            // JSON 파싱 시 ignoreUnknownKeys = true 설정
+            val jsonObject: ShadowDeltaMsg = try {
+                Json { ignoreUnknownKeys = true }.decodeFromString(message)
+            } catch (e: Exception) {
+                Log.e(tag, "Failed to decode shadow message: ${e.message}", e)
+                return
+            }
 
             when {
                 topic.contains("delta") -> {
                     Log.d(tag, "Delta 메시지 수신: $jsonObject")
-                    if (jsonObject.state.delta.kvsChannelDeleteRequested) {
+                    if (jsonObject.state.delta?.kvsChannelDeleteRequested == true) {
                         iotClientHelper.deleteDevice()
-                        Log.d(tag, "IoT 디바이스 삭제 성공")
+                        Log.d(tag, "IoT Device 삭제 성공")
                     } else {
                         Log.d(tag, "Delta 처리 완료: $jsonObject")
                     }
@@ -268,17 +193,32 @@ class MqttViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e(tag, "Shadow 메시지 처리 실패: ${e.message}", e)
+            Log.e(tag, "Failed to process shadow message: ${e.message}", e)
         }
     }
 
+    fun getDeviceInfo(payload: String, groupId: Int) {
+        val topic = "/mhn/command/device/info/groups/$groupId"
+        publish(topic, payload)
+    }
+
     fun publishAIResult(payload: String) {
+        val topic = "/mhn/event/detect/things/$thingId"
+        publish(topic, payload)
+    }
+
+    private fun publish(topic: String, payload: String) {
         try {
-            val topic = "/mhn/event/detect/things/$thingId" // MQTT 토픽
             awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
-            Log.d(tag, "MQTT 이벤트 발행 성공 - Topic: $topic, Payload: $payload")
+            Log.d(tag, "Published to topic $topic: $payload")
         } catch (e: Exception) {
-            Log.e(tag, "MQTT 이벤트 발행 실패: ${e.message}", e)
+            Log.e(tag, "Failed to publish message: ${e.message}", e)
+        }
+    }
+
+    private fun subscribe(topic: String, onMessageReceived: (String, String) -> Unit) {
+        awsMqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0) { receivedTopic, message ->
+            onMessageReceived(receivedTopic, message.toString(Charsets.UTF_8))
         }
     }
 }

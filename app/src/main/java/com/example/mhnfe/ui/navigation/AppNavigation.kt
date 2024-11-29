@@ -77,6 +77,15 @@ sealed class NavRoutes(val route: String) {
     }
 }
 
+// 추가: 로그인에서 메인으로 네비게이션할 때 사용할 익스텐션 함수
+fun NavController.navigateToMain(userType: UserType) {
+    navigate(NavRoutes.Main.createRoute(userType)) {
+        popUpTo(NavRoutes.MyPage.route) {
+            inclusive = true  // Auth 그래프를 백스택에서 완전히 제거
+        }
+    }
+}
+
 @Composable
 fun AppNavigation() {
     val auth = remember { AWSMobileClient.getInstance() }
@@ -138,15 +147,6 @@ fun AppNavigation() {
                 auth = auth,
                 userType = userType
             )
-        }
-
-        // 추가: 로그인에서 메인으로 네비게이션할 때 사용할 익스텐션 함수
-        fun NavController.navigateToMain(userType: UserType) {
-            navigate(NavRoutes.Main.createRoute(userType)) {
-                popUpTo(NavRoutes.Auth.route) {
-                    inclusive = true  // Auth 그래프를 백스택에서 완전히 제거
-                }
-            }
         }
     }
 }
@@ -312,7 +312,8 @@ fun MainContent(
             ) {
                 composable(NavRoutes.MyPage.Profile.route) {
                     ProfileScreen(
-                        navController = bottomNavController
+                        bottomNavController= bottomNavController,
+                        mainNavController = mainNavController
                     )
                 }
                 composable(NavRoutes.MyPage.ChangePassword.route) {
