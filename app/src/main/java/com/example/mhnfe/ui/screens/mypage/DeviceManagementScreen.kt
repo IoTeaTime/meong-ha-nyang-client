@@ -1,7 +1,6 @@
 package com.example.mhnfe.ui.screens.mypage
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,17 +22,6 @@ import com.example.mhnfe.data.remote.response.CctvInfo
 import com.example.mhnfe.data.remote.response.GroupMemberInfo
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.theme.Typography
-
-data class Device(
-    val id: String,
-    val name: String,
-    val type: DeviceType
-)
-
-enum class DeviceType {
-    CCTV,
-    VIEWER
-}
 
 @Composable
 fun DeviceManagementScreen(
@@ -253,68 +241,6 @@ private fun CctvDeviceItem(
             onDismiss = { showEditDialog = false },
             onConfirm = { newName ->
                 onUpdate(device.copy(cctvNickname = newName))
-                showEditDialog = false
-            }
-        )
-    }
-}
-
-@Composable
-private fun DeviceItem(
-    modifier: Modifier = Modifier,
-    device: Device,
-    onDelete: () -> Unit,
-    onUpdate: (Device) -> Unit
-) {
-    var showEditDialog by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF5F5F5)
-        ),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 34.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = device.name,
-                    style = Typography.bodyMedium
-                )
-
-                Icon(
-                    painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "수정",
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { showEditDialog = true },
-                    tint = Color.Gray
-                )
-            }
-
-            Text(
-                text = "기기삭제",
-                style = Typography.bodySmall.copy(color = Color.Gray),
-                modifier = modifier.clickable { onDelete() }
-            )
-        }
-    }
-
-    if (showEditDialog) {
-        EditDeviceDialog(
-            initialName = device.name,
-            onDismiss = { showEditDialog = false },
-            onConfirm = { newName ->
-                onUpdate(device.copy(name = newName))
                 showEditDialog = false
             }
         )
