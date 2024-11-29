@@ -1,6 +1,7 @@
 package com.example.mhnfe.data.repository
 
 import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.Group
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberResponse
@@ -38,5 +39,9 @@ class GroupRepositoryImpl @Inject constructor(
 
     override suspend fun generateViewerQR(response: QRApiResponse): QRApiResponse {
         return response
+    }
+
+    override suspend fun getCctvList(groupId: Long, token: String): Response<CctvListResponse> {
+        return groupApi.getCctvList(groupId, token)
     }
 }

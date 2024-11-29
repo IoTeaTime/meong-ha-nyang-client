@@ -19,6 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.data.remote.response.CctvInfo
 import com.example.mhnfe.data.remote.response.GroupMemberInfo
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.theme.Typography
@@ -42,6 +43,7 @@ fun DeviceManagementScreen(
 ) {
     val errorMessage by deviceManagementViewModel.errorMessage.collectAsState()
     val groupMemberInfoList by deviceManagementViewModel.groupMemberInfoList.collectAsState()
+    val cctvList by deviceManagementViewModel.cctvList.collectAsState()
 
     val context = LocalContext.current
     LaunchedEffect(errorMessage) {
@@ -52,15 +54,15 @@ fun DeviceManagementScreen(
             }
         }
 
+        // 그룹 CCTV 정보 리스트 조회
+        deviceManagementViewModel.getCctvList()
+
         // 그룹 회원 정보 리스트 조회
         deviceManagementViewModel.getGroupMemberList()
     }
 
     var cctvDevices by remember {
-        mutableStateOf(listOf(
-            Device("1", "주방", DeviceType.CCTV),
-            Device("2", "거실", DeviceType.CCTV)
-        ))
+        mutableStateOf(cctvList)
     }
 
     var viewerDevices by remember {
@@ -91,16 +93,16 @@ fun DeviceManagementScreen(
             )
 
             // CCTV Devices
-            cctvDevices.forEach { device ->
-                DeviceItem(
+            cctvDevices?.forEach { device ->
+                CctvDeviceItem(
                     device = device,
                     onDelete = {
-                        deviceManagementViewModel.deleteDevice(device.id.toLong())
-                        cctvDevices = cctvDevices.filter { it.id != device.id } },
+                        deviceManagementViewModel.deleteDevice(device.cctvId)
+                        cctvDevices = cctvDevices!!.filter { it.cctvId != device.cctvId } },
                     onUpdate = { updatedDevice ->
-                        cctvDevices = cctvDevices.map {
-                            if (it.id == updatedDevice.id) {
-                                deviceManagementViewModel.changeCctvName(updatedDevice.id.toLong(),updatedDevice.name)
+                        cctvDevices = cctvDevices!!.map {
+                            if (it.cctvId == updatedDevice.cctvId) {
+                                deviceManagementViewModel.changeCctvName(updatedDevice.cctvId, updatedDevice.cctvNickname)
                                 updatedDevice
                             } else it
                         }
@@ -189,6 +191,68 @@ private fun ViewerDeviceItem(
             onDismiss = { showEditDialog = false },
             onConfirm = { newName ->
                 onUpdate(device.copy(nickname = newName))
+                showEditDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun CctvDeviceItem(
+    modifier: Modifier = Modifier,
+    device: CctvInfo,
+    onDelete: () -> Unit,
+    onUpdate: (CctvInfo) -> Unit
+) {
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF5F5F5)
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 34.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = device.cctvNickname,
+                    style = Typography.bodyMedium
+                )
+
+                Icon(
+                    painter = painterResource(id = R.drawable.edit),
+                    contentDescription = "수정",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { showEditDialog = true },
+                    tint = Color.Gray
+                )
+            }
+
+            Text (
+                text = "기기삭제",
+                style = Typography.bodySmall.copy(color = Color.Gray),
+                modifier = modifier.clickable { onDelete() }
+            )
+        }
+    }
+
+    if (showEditDialog) {
+        EditDeviceDialog(
+            initialName = device.cctvNickname,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { newName ->
+                onUpdate(device.copy(cctvNickname = newName))
                 showEditDialog = false
             }
         )
