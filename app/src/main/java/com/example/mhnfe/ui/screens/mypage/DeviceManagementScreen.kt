@@ -21,7 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.theme.Typography
-import com.example.mhnfe.ui.theme.mainGray2
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 data class Device(
     val id: String,
@@ -40,6 +41,17 @@ fun DeviceManagementScreen(
     navController: NavController,
     deviceManagementViewModel: DeviceManagementViewModel = hiltViewModel()
 ) {
+    val errorMessage by deviceManagementViewModel.errorMessage.collectAsState()
+
+    val context = LocalContext.current
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            if(!errorMessage.isNullOrBlank()) {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                deviceManagementViewModel.clearErrorMessage()
+            }
+        }
+    }
 
     var cctvDevices by remember {
         mutableStateOf(listOf(
@@ -83,7 +95,9 @@ fun DeviceManagementScreen(
             cctvDevices.forEach { device ->
                 DeviceItem(
                     device = device,
-                    onDelete = { cctvDevices = cctvDevices.filter { it.id != device.id } },
+                    onDelete = {
+                        deviceManagementViewModel.deleteDevice(device.id.toLong())
+                        cctvDevices = cctvDevices.filter { it.id != device.id } },
                     onUpdate = { updatedDevice ->
                         cctvDevices = cctvDevices.map {
                             if (it.id == updatedDevice.id) {
