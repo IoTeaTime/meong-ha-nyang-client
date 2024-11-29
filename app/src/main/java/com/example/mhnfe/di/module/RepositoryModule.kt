@@ -1,6 +1,8 @@
 package com.example.mhnfe.di.module
 
+import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.remote.response.AccessToken
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +16,10 @@ import javax.inject.Singleton
 object RepositoryModule {
     @Provides
     @Singleton
-    fun provideGroupRepository(groupApi: GroupApi): GroupRepository {
-        return GroupRepositoryImpl(groupApi)
+    fun provideGroupRepository(
+        groupApi: GroupApi,
+        accessTokenDataStore: DataStore<AccessToken>
+    ): GroupRepository {
+        return GroupRepositoryImpl(groupApi, accessTokenDataStore)
     }
 }
