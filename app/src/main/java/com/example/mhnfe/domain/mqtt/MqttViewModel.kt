@@ -28,7 +28,7 @@ class MqttViewModel @Inject constructor(
 ) : ViewModel() {
     private val awsMqttManager = mqttHelper.getMqttManager()
     private var keyStore: KeyStore? = null
-    private val tag = "MqttUtils"
+    private val tag = "MqttViewModel"
 
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> get() = _isConnected
@@ -46,18 +46,16 @@ class MqttViewModel @Inject constructor(
             isConnected
         } catch (e: Exception) {
             Log.e(tag, "Initialization failed: ${e.message}", e)
-            false
+            initializeWithNewKeyStore(context)
+            val isConnected = connectToMqttManager()
+            _isConnected.value = isConnected
+            isConnected
         }
     }
 
     private fun initializeWithExistingKeyStore(context: Context) {
-        try {
-            keyStore = mqttHelper.getKeyStore(context)
-            Log.d(tag, "KeyStore found and initialized.")
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to access KeyStore: ${e.message}", e)
-            initializeWithNewKeyStore(context)
-        }
+        keyStore = mqttHelper.getKeyStore(context)
+        Log.d(tag, "KeyStore found and initialized.")
     }
 
     private fun initializeWithNewKeyStore(context: Context) {

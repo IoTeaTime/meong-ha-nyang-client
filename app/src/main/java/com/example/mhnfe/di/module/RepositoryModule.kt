@@ -1,11 +1,15 @@
 package com.example.mhnfe.di.module
 
+import com.example.mhnfe.data.remote.api.DeviceApi
+import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.repository.DeviceRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import com.example.mhnfe.domain.repository.GroupRepository
 import com.example.mhnfe.data.repository.GroupRepositoryImpl
+import com.example.mhnfe.domain.repository.DeviceRepository
 import javax.inject.Singleton
 
 @Module
@@ -13,7 +17,13 @@ import javax.inject.Singleton
 object RepositoryModule {
     @Provides
     @Singleton
-    fun provideGroupRepository(): GroupRepository {
-        return GroupRepositoryImpl()
+    fun provideGroupRepository(groupApi: GroupApi): GroupRepository {
+        return GroupRepositoryImpl(groupApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeviceRepository(deviceApi: DeviceApi): DeviceRepository {
+        return DeviceRepositoryImpl(deviceApi)
     }
 }
