@@ -1,9 +1,7 @@
 package com.example.mhnfe.utils
 
 import android.Manifest
-import android.app.Activity.MODE_PRIVATE
 import android.app.AlertDialog
-import android.content.ContentValues.TAG
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -13,8 +11,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.firebase.messaging.FirebaseMessaging
 
 class PermissionManager(private val activity: ComponentActivity) {
     private var isCheckingPermissions = false
@@ -24,14 +20,22 @@ class PermissionManager(private val activity: ComponentActivity) {
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.POST_NOTIFICATIONS,
-            Manifest.permission.MODIFY_AUDIO_SETTINGS
+            Manifest.permission.MODIFY_AUDIO_SETTINGS,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
         )
     } else {
         arrayOf(
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.MODIFY_AUDIO_SETTINGS
+            Manifest.permission.MODIFY_AUDIO_SETTINGS,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
         )
     }
 
@@ -148,6 +152,10 @@ class PermissionManager(private val activity: ComponentActivity) {
             Manifest.permission.POST_NOTIFICATIONS -> "알림"
             Manifest.permission.WRITE_EXTERNAL_STORAGE -> "저장소"
             Manifest.permission.MODIFY_AUDIO_SETTINGS -> "오디오 설정"
+            Manifest.permission.ACCESS_WIFI_STATE -> "Wi-Fi 상태"
+            Manifest.permission.CHANGE_WIFI_STATE -> "Wi-Fi 설정 변경"
+            Manifest.permission.ACCESS_FINE_LOCATION -> "정확한 위치 정보"
+            Manifest.permission.ACCESS_COARSE_LOCATION -> "대략적인 위치 정보"
             else -> permission
         }
     }
