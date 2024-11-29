@@ -1,5 +1,6 @@
 package com.example.mhnfe.di.module
 
+import com.example.mhnfe.data.remote.api.GroupApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,7 +14,7 @@ import javax.inject.Singleton
 object RepositoryModule {
     @Provides
     @Singleton
-    fun provideGroupRepository(): GroupRepository {
-        return GroupRepositoryImpl()
+    fun provideGroupRepository(groupApi: GroupApi): GroupRepository {
+        return GroupRepositoryImpl(groupApi)
     }
 }

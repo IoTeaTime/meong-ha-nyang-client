@@ -42,8 +42,6 @@ import kotlinx.coroutines.withContext
 fun GroupScreen(
     modifier: Modifier = Modifier,
     userType: UserType = UserType.MASTER,
-    //나중에 뷰모델로 뺄 것
-//    cctv: List<CCTV> = sampleCCTVList,
     navController: NavController,
     mqttViewModel: MqttViewModel = hiltViewModel(),
     groupViewModel: GroupViewModel = hiltViewModel(),

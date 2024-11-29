@@ -37,3 +37,14 @@ data class CctvInfo(
     val thingId: String,
     val kvsChannelName: String,
 )
+
+data class QRApiResponse(
+    val result: GroupRequest,
+    val body: QRResponseBody
+)
+
+
+data class QRResponseBody(
+    val groupId: Long,
+    val kvsChannelId: String? = null // CCTV일 때만 사용
+)
