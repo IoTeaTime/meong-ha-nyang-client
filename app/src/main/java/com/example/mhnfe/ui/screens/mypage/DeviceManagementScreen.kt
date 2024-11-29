@@ -19,10 +19,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.data.remote.response.GroupMemberInfo
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.theme.Typography
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 
 data class Device(
     val id: String,
@@ -42,6 +41,7 @@ fun DeviceManagementScreen(
     deviceManagementViewModel: DeviceManagementViewModel = hiltViewModel()
 ) {
     val errorMessage by deviceManagementViewModel.errorMessage.collectAsState()
+    val groupMemberInfoList by deviceManagementViewModel.groupMemberInfoList.collectAsState()
 
     val context = LocalContext.current
     LaunchedEffect(errorMessage) {
@@ -51,6 +51,9 @@ fun DeviceManagementScreen(
                 deviceManagementViewModel.clearErrorMessage()
             }
         }
+
+        // 그룹 회원 정보 리스트 조회
+        deviceManagementViewModel.getGroupMemberList()
     }
 
     var cctvDevices by remember {
@@ -61,11 +64,7 @@ fun DeviceManagementScreen(
     }
 
     var viewerDevices by remember {
-        mutableStateOf(listOf(
-            Device("3", "V1", DeviceType.VIEWER),
-            Device("4", "V2", DeviceType.VIEWER),
-            Device("5", "V3", DeviceType.VIEWER)
-        ))
+        mutableStateOf(groupMemberInfoList)
     }
 
     Scaffold(
@@ -118,19 +117,81 @@ fun DeviceManagementScreen(
             )
 
             // Viewer Devices
-            viewerDevices.forEach { device ->
-                DeviceItem(
+            groupMemberInfoList?.forEach { device ->
+                ViewerDeviceItem(
                     device = device,
-                    onDelete = { viewerDevices = viewerDevices.filter { it.id != device.id } },
+                    onDelete = { viewerDevices = viewerDevices!!.filter { it.memberId != device.memberId } },
                     onUpdate = { updatedDevice ->
-                        viewerDevices = viewerDevices.map {
-                            if (it.id == updatedDevice.id) updatedDevice else it
+                        viewerDevices = viewerDevices!!.map {
+                            if (it.memberId == updatedDevice.memberId) updatedDevice else it
                         }
                     }
                 )
                 Spacer(modifier = modifier.height(8.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun ViewerDeviceItem(
+    modifier: Modifier = Modifier,
+    device: GroupMemberInfo,
+    onDelete: () -> Unit,
+    onUpdate: (GroupMemberInfo) -> Unit
+) {
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFF5F5F5)
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 34.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = device.nickname,
+                    style = Typography.bodyMedium
+                )
+
+                Icon(
+                    painter = painterResource(id = R.drawable.edit),
+                    contentDescription = "수정",
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable { showEditDialog = true },
+                    tint = Color.Gray
+                )
+            }
+
+            Text (
+                text = "기기삭제",
+                style = Typography.bodySmall.copy(color = Color.Gray),
+                modifier = modifier.clickable { onDelete() }
+            )
+        }
+    }
+
+    if (showEditDialog) {
+        EditDeviceDialog(
+            initialName = device.nickname,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { newName ->
+                onUpdate(device.copy(nickname = newName))
+                showEditDialog = false
+            }
+        )
     }
 }
 

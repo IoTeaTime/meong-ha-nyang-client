@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.GroupInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class GroupViewModel @Inject constructor(
     private val groupApi: GroupApi,
-    private val accessTokenDataStore: DataStore<AccessToken>
+    private val accessTokenDataStore: DataStore<AccessToken>,
+    private val groupIdDataStore: DataStore<GroupId>
 ) : ViewModel() {
     private val _groupInfo = MutableStateFlow<GroupInfo?>(null)
     val groupInfo = _groupInfo.asStateFlow()
@@ -46,6 +48,10 @@ class GroupViewModel @Inject constructor(
                 Log.d("GroupViewModel", "응답 result: ${response.result}")
 
                 _groupInfo.value = response.body
+
+                groupIdDataStore.updateData { currentGroupId ->
+                    currentGroupId.copy(groupId = response.body.groupId)
+                }
 
             } catch (e: HttpException) {
                 when (e.code()) {
