@@ -5,7 +5,6 @@ import com.example.mhnfe.data.remote.request.ChangeCctvNicknameRequest
 import com.example.mhnfe.data.remote.response.ChangeCctvDto
 import com.example.mhnfe.data.remote.response.ChangeCctvNicknameResponse
 import com.example.mhnfe.data.remote.response.DeleteDeviceResponse
-import com.example.mhnfe.data.remote.response.Result
 import com.example.mhnfe.domain.repository.DeviceRepository
 import retrofit2.Response
 import javax.inject.Inject
