@@ -66,7 +66,7 @@ fun ProfileScreen(
     val quitResponse by profileViewModel.quitResponse.collectAsState()
 
     logoutResponse?.let {
-        if (it.result?.code == 200) {
+        if (it.result.code == 200) {
             mainNavController.navigate(NavRoutes.Auth.Main.route) {
                 popUpTo(NavRoutes.Main.route) { inclusive = true }
             }
@@ -74,7 +74,7 @@ fun ProfileScreen(
     }
 
     quitResponse?.let {
-        if (it.result?.code == 200) {
+        if (it.result.code == 200) {
             mainNavController.navigate(NavRoutes.Auth.Main.route) {
                 popUpTo(NavRoutes.Main.route) { inclusive = true }
             }
@@ -329,14 +329,6 @@ fun ProfileScreen(
                     )
                 }
 
-//                LaunchedEffect(logoutResponse) {
-//                    if(logoutResponse?.result?.code == 200){
-//                        mainNavController.navigate(NavRoutes.Auth.Main.route){
-//                            popUpTo(NavRoutes.Main.route){ inclusive = true}
-//                        }
-//                    }
-//                }
-
                 TextButton(
                     onClick = { setDialogVisible1(true) },
                     contentPadding = PaddingValues(0.dp)
@@ -353,11 +345,12 @@ fun ProfileScreen(
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//private fun ProfileScreenPreview() {
-//    val navController = rememberNavController()
-//    ProfileScreen(
-//        navController = navController
-//    )
-//}
+@Preview(showBackground = true)
+@Composable
+private fun ProfileScreenPreview() {
+    val navController = rememberNavController()
+    ProfileScreen(
+        bottomNavController = navController,
+        mainNavController = navController
+    )
+}

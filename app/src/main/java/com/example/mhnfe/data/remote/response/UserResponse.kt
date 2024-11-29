@@ -20,3 +20,7 @@ data class LogoutResponse(
 data class DeleteResponse(
     val result: Result
 )
+
+data class ChangePasswordResponse(
+    val result: Result
+)

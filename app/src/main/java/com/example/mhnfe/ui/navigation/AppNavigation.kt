@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,7 +40,6 @@ sealed class NavRoutes(val route: String) {
     object Auth : NavRoutes("auth") {
         object Main : NavRoutes("main")
         object Login : NavRoutes("login")
-        object Cognito : NavRoutes("cognito")
         object SignUp : NavRoutes("signup")
         object Select : NavRoutes("select")
         object QRScanner : NavRoutes("qr_scanner")
@@ -150,7 +150,6 @@ fun AppNavigation() {
         }
     }
 }
-
 
 @Composable
 fun MainContent(
@@ -318,9 +317,10 @@ fun MainContent(
                 }
                 composable(NavRoutes.MyPage.ChangePassword.route) {
                     PasswordEditScreen(
-                        navController = bottomNavController
-                    ) {}
+                        bottomNavController = bottomNavController
+                    )
                 }
+
                 composable(NavRoutes.MyPage.DeviceManagement.route) {
                     DeviceManagementScreen(
                         navController = bottomNavController
@@ -330,4 +330,3 @@ fun MainContent(
         }
     }
 }
-

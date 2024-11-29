@@ -217,23 +217,25 @@ fun LoginScreen(
                     text = "비밀번호를 잊어버리셨나요?",
                     textAlign = TextAlign.Center,
                     color = mainGray,
-                    modifier = Modifier
-                        .clickable { navController.navigate("forgot_password") }
+                    modifier = modifier
+                        .clickable {
+//                            navController.navigate(NavRoutes.Auth.ChangePassword.route)
+                        }
                 )
             }
         }
     }
 }
 
-@Preview(
-    name = "Login Screen",
-    showBackground = true,
-    showSystemUi = true,
-    device = "spec:width=411dp,height=891dp"
-)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        navController = rememberNavController()
-    )
-}
+//@Preview(
+//    name = "Login Screen",
+//    showBackground = true,
+//    showSystemUi = true,
+//    device = "spec:width=411dp,height=891dp"
+//)
+//@Composable
+//fun LoginScreenPreview() {
+//    LoginScreen(
+//        navController = rememberNavController()
+//    )
+//}
