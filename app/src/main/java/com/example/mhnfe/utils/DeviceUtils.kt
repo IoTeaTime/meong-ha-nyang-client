@@ -9,6 +9,7 @@ import org.json.JSONObject
 
 object DeviceUtils {
     fun getShadowPayload(context: Context): String {
+        val batteryLevel = getBatteryLevel(context)
         val kvsChannelActive = true
         val kvsChannelDeleteRequested = false
         val networkStatus = getWifiInfo(context)
@@ -17,6 +18,7 @@ object DeviceUtils {
         {
             "state": {
                 "reported": {
+                    "batteryLevel": $batteryLevel,
                     "kvsChannelActive": $kvsChannelActive,
                     "kvsChannelDeleteRequested": $kvsChannelDeleteRequested,
                     "networkStatus": $networkStatus
@@ -47,7 +49,7 @@ object DeviceUtils {
         """.trimIndent()
     }
 
-    private fun getBatteryLevel(context: Context): Int {
+    fun getBatteryLevel(context: Context): Int {
         val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
         val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
@@ -97,5 +99,44 @@ object DeviceUtils {
             wifiInfoJson.put("Error", "No Wi-Fi connection")
         }
         return wifiInfoJson
+    }
+
+    fun getBatteryPayload(newBatteryLevel: Int): String {
+        return """
+        {
+            "state": {
+                "reported": {
+                    "batteryLevel": $newBatteryLevel
+                }
+            }
+        }
+        """.trimIndent()
+    }
+
+    fun getNetworkPayload(networkStatus: Pair<String, Int>): String {
+        return """
+        {
+            "state": {
+                "reported": {
+                    "networkStatus": {
+                        "SSID": "${networkStatus.first}",
+                        "SignalStrength": ${networkStatus.second}
+                    }
+                }
+            }
+        }
+        """.trimIndent()
+    }
+
+    fun getKvsChannelPayload(isActive: Boolean): String {
+        return """
+        {
+            "state": {
+                "reported": {
+                    "kvsChannelActive": $isActive
+                }
+            }
+        }
+        """.trimIndent()
     }
 }
