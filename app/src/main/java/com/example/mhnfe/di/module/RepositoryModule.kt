@@ -1,6 +1,9 @@
 package com.example.mhnfe.di.module
 
+import com.example.mhnfe.data.remote.api.DeviceApi
 import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.repository.DeviceRepository
+import com.example.mhnfe.data.repository.DeviceRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,5 +19,11 @@ object RepositoryModule {
     @Singleton
     fun provideGroupRepository(groupApi: GroupApi): GroupRepository {
         return GroupRepositoryImpl(groupApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeviceRepository(deviceApi: DeviceApi): DeviceRepository {
+        return DeviceRepositoryImpl(deviceApi)
     }
 }
