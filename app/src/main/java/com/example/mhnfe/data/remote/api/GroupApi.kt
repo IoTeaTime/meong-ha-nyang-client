@@ -1,6 +1,7 @@
 package com.example.mhnfe.data.remote.api
 
 
+import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.CreateGroupRequest
 import com.example.mhnfe.data.remote.response.GroupInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
@@ -46,4 +47,10 @@ interface GroupApi {
     suspend fun generateViewerQR(
         @Header("Authorization") authToken: String
     ): QRApiResponse
+
+    @GET("/api/cctv/list/{groupId}")
+    suspend fun getCctvList(
+        @Path("groupId") groupId: Long,
+        @Header("Authorization") token: String
+    ): Response<CctvListResponse>
 }
