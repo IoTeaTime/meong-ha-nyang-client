@@ -7,6 +7,7 @@ import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
 import com.example.mhnfe.data.remote.response.LogoutResponse
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.Header
@@ -16,9 +17,9 @@ import retrofit2.http.PUT
 
 interface UserApi {
     @POST("/api/member/refresh-token")
-    fun refreshAccessToken(
+    suspend fun refreshAccessToken(
         @Header("Authorization") refreshToken: String
-    ): RefreshAccessTokenResponse
+    ): Response<RefreshAccessTokenResponse>
 
     @POST("/api/member/sign-out")
     suspend fun logout(

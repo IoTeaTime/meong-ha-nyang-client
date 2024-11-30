@@ -6,6 +6,7 @@ import com.example.mhnfe.data.remote.request.ChangePasswordRequest
 import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
+import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.data.remote.response.RefreshedAccessToken
 import com.example.mhnfe.domain.repository.UserRepository
 import retrofit2.Response
@@ -18,9 +19,9 @@ class UserRepositoryImpl @Inject constructor(
 ) : UserRepository{
 
     override suspend fun getNewAccessToken(
-        response: RefreshAccessTokenResponse
-    ): RefreshedAccessToken {
-        return response.body
+        refreshToken: String
+    ): Response<RefreshAccessTokenResponse> {
+        return userApi.refreshAccessToken(refreshToken)
     }
 
     override suspend fun changePassword(
