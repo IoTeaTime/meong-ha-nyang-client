@@ -1,7 +1,10 @@
 package com.example.mhnfe.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,22 +12,28 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathHitTester
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainYellow
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.mhnfe.R
 import com.example.mhnfe.ui.theme.mainBlack
+import com.example.mhnfe.ui.theme.mainGray2
 
 @Composable
 fun SmallButton(
@@ -74,6 +83,52 @@ fun MiddleButton(
     }
 }
 
+@Composable
+fun LongButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    onClick: () -> Unit
+){
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = text,
+                style = Typography.bodyMedium
+            )
+
+            Box(
+                modifier = modifier
+                    .size(22.dp),
+            ) {
+                Icon(
+                    modifier = modifier
+                        .size(16.dp, 16.dp)
+                        .align(Alignment.Center),
+                    painter = painterResource(id = R.drawable.navigate_after),
+                    contentDescription = null,
+                    tint = Color.Unspecified
+                )
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun NewQuizPreview(){
@@ -94,45 +149,4 @@ fun NewQuizPreview(){
         }
         MiddleButton(text = "회원가입") { }
     }
-}
-
-
-// components/CommonComponents.kt
-@Composable
-fun ErrorDialog(
-    message: String,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Error") },
-        text = { Text(message) },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("OK")
-            }
-        }
-    )
-}
-
-@Composable
-fun PermissionDialog(
-    onDismiss: () -> Unit,
-    onGranted: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Permissions Required") },
-        text = { Text("Camera and microphone permissions are required for WebRTC.") },
-        confirmButton = {
-            TextButton(onClick = onGranted) {
-                Text("Grant")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
 }
