@@ -1,16 +1,15 @@
 package com.example.mhnfe.ui.screens.auth.login
 
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.remote.api.AuthApi
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.FCMResponse
 import com.example.mhnfe.data.remote.response.LoginResponse
 import com.example.mhnfe.data.remote.response.RefreshToken
+import com.example.mhnfe.data.remote.response.SendPasswordResponse
 import com.example.mhnfe.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +21,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-//    private val authApi: AuthApi,
     private val authRepository: AuthRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
@@ -39,6 +37,9 @@ class LoginViewModel @Inject constructor(
     // 에러 메시지 상태
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
+
+    // 임시 비밀번호 결과 상태
+    private val _sendPasswordResponse = MutableStateFlow<SendPasswordResponse?>(null)
 
     // 사용자 친화적인 에러 메시지를 매핑하는 함수
     private fun mapErrorMessage(code: Int, message: String, description: String?): String {
@@ -62,6 +63,7 @@ class LoginViewModel @Inject constructor(
                         response.body.accessToken.toString(),
                         response.body.refreshToken.toString()
                     )
+                    Log.d("LoginViewModel","response: " + response.body.accessToken)
 
                     // 자동 로그인 정보 저장 (isAutoLogin이 true일 경우)
                     if (isAutoLogin) {
@@ -135,6 +137,28 @@ class LoginViewModel @Inject constructor(
                 // 네트워크 오류 등 예외 처리
                 Log.e("LoginViewModel", "Login error", e)
                 _errorMessage.value = "FCM 토큰 전송 중 오류가 발생했습니다. ${e.message}"
+            }
+        }
+    }
+
+    // 임시 비밀번호 발급
+    fun sendPassword(email: String){
+        viewModelScope.launch {
+            try {
+                val response = authRepository.sendPassword(email)
+                Log.d("LoginViewModel","response: " + response.result.message)
+                if(response.result.code == 200) {
+                    _sendPasswordResponse.value = response
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = mapErrorMessage(
+                        response.result.code,
+                        response.result.message,
+                        response.result.description
+                    )
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "임시 비밀번호 발급 중 오류가 발생했습니다. ${e.message}"
             }
         }
     }

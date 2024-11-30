@@ -16,6 +16,18 @@ data class CheckEmailResponse(
     val data: Any? = null
 }
 
+data class ApiResponse(
+    val result: Result
+)
+
+@Serializable
+data class Result(
+    val code: Int,
+    val message: String,
+    val description: String? = null
+)
+
+
 data class User(
     val email: String,
     val password: String,
@@ -31,7 +43,9 @@ data class LoginResponse(
 data class Jwt(
     val memberId: Int,
     val accessToken: String,
-    val refreshToken: String
+    val refreshToken: String,
+    val isGroupMember: Boolean,
+    val role: String
 )
 
 @Serializable
@@ -49,3 +63,16 @@ data class FCMResponse(
 ) {
     val data: Any? = null
 }
+
+data class SendPasswordResponse(
+    val result: Result,
+    val body: Any? = null
+)
+
+data class SendEmailVerificationResponse(
+    val result: Result
+)
+
+data class CheckEmailVerificationResponse (
+    val result: Result
+)

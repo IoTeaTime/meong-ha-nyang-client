@@ -76,10 +76,6 @@ fun BottomNavigationBar(
                     currentRoute == "myPage/profile"
                 }
             }
-
-            // isSelected 상태 디버깅
-            Log.d("Navigation", "Item: ${item.title}, IsSelected: $isSelected")
-
             Box(
                 modifier = modifier
                     .weight(1f)

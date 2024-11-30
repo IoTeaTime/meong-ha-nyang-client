@@ -1,6 +1,5 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,8 +12,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,7 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
-import com.example.mhnfe.data.model.sampleCCTVList
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTopBar
@@ -31,56 +31,49 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+
 
 
 @Composable
 fun GroupScreen(
     modifier: Modifier = Modifier,
-    groupId: String = "그룹1",
     userType: UserType = UserType.MASTER,
-    //나중에 뷰모델로 뺄 것
-    cctv: List<CCTV> = sampleCCTVList,
     navController: NavController,
-    mqttViewModel: MqttViewModel = hiltViewModel()
+    mqttViewModel: MqttViewModel = hiltViewModel(),
+    groupViewModel: GroupViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val groupInfo by groupViewModel.groupInfo.collectAsState()
+    val mqttState by mqttViewModel.isConnected.collectAsState()
+
 
     LaunchedEffect(Unit) {
-        // UserType을 확인
-        if (userType != UserType.CCTV) {
-            withContext(Dispatchers.IO) {
-                // 1. MQTT 연결 시도 (VIEWER일 때)
-                val isConnected = withContext(Dispatchers.IO) {
-                    mqttViewModel.initialize(context)
-                }
-                if (isConnected) {
-                    // Todo. Role = ROLE_CCTV thingId List를 불러와서 구독
-                    val thingList = listOf("thing1", "thing2", "thing3") // Thing ID 리스트 예시
-
-                    mqttViewModel.viewerInitialSubscribe(context, thingList)
-                }
+        groupViewModel.fetchGroupInfo()
+        // todo 1. API 호출 -> Group Id, Thing Id List 반환
+        // 2. Thing Id를 Sub, Group Id로 Pub -> CCTV 기기에 정보 요청
+        // 3. CCTV 기기는 자신의 Thing Id로 Pub
+        if (!mqttState) {
+            val result = mqttViewModel.initialize()
+            if(result) {
+                val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
+                mqttViewModel.viewerInitialSubscribe(context, thingList)
             }
         }
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            if (userType != UserType.CCTV) {
-                try {
-                    mqttViewModel.disconnectMqttManager()
-                    Log.d("GroupScreen", "MQTT Manager Disconnected Viewer Role")
-                } catch (e: Exception) {
-                    Log.e("GroupScreen", "Failed to disconnect MQTT Manager", e)
-                }
+
+        if (mqttState) {
+            val payload = """
+            {
+                "groupInfo": "$groupInfo?.groupName",
+                "timestamp": ${System.currentTimeMillis() / 1000}
             }
+            """.trimIndent()
+            mqttViewModel.getDeviceInfo(payload, 404)
         }
     }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            MainTopBar(text = groupId)
+            MainTopBar(text = groupInfo?.groupName ?: "그룹")
         },
     ) { innerPadding ->
         Column(
@@ -121,7 +114,8 @@ fun GroupScreen(
                     )
                 }
             }
-            if (cctv.isEmpty()) {
+            val cctvList = groupInfo?.cctv ?: emptyList()
+            if (cctvList.isEmpty()) {
                 Column(
                     modifier = modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -141,28 +135,26 @@ fun GroupScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(
-                        items = cctv,
-                        key = { it.id }
+                        items = cctvList,
+                        key = { it.cctvId }
                     ) { cctvItem ->
                         CCTVItemCard(
-                            cctv = cctvItem,
+                            cctv = cctvItem.toCCTV(),
                             onClick = {
-//                                navController.currentBackStackEntry?.savedStateHandle?.set("channelName", cctvItem.channelName)
                                 navController.currentBackStackEntry?.savedStateHandle?.set(
                                     "role",
                                     ChannelRole.VIEWER
                                 )
-//                                navController.navigate(NavRoutes.Monitoring.Viewer.route)
                                 navController.navigate(
                                     NavRoutes.Monitoring.Viewer.createRoute(
-                                        channelName = cctvItem.channelName
+                                        channelName = cctvItem.kvsChannelName
                                     )
                                 )
                             },
                             onEdit = {
                                 navController.navigate(
                                     NavRoutes.Monitoring.DeviceInformation.createRoute(
-                                        cctvItem.id
+                                        cctvItem.cctvId
                                     )
                                 )
                             }
@@ -173,4 +165,14 @@ fun GroupScreen(
         }
     }
 }
+
+fun CctvInfo.toCCTV(): CCTV {
+    return CCTV(
+        id = cctvId,
+        deviceName = cctvNickname,
+        thingId = thingId,
+        channelName = kvsChannelName
+    )
+}
+
 

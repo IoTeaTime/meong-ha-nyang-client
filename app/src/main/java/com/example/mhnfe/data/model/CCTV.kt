@@ -2,7 +2,7 @@ package com.example.mhnfe.data.model
 
 import java.time.LocalDateTime
 
-data class CCTV(
+data class CCTV2(
     val id: String,
     val channelName: String,
     val deviceName: String,   // 기기명
@@ -12,13 +12,23 @@ data class CCTV(
     val batteryStatus: Int, // 배터리 상태
     val networkStatus: String  // 네트워크 상태
 )
+data class CCTV(
+    val id: Long,
+    val deviceName: String,
+    val thingId: String,
+    val channelName: String,
+    //mqtt에서 받아올 것들
+    val model: String = "Flip5",
+    val os: String = "Android 10",
+    val appVersion: String = "Android 10",
+    val networkStatus: String = "양호",
+    val batteryStatus: Int = 100
+)
 
-//아무것도 없는거 테스트 할때
-val emptyCCTVList = emptyList<CCTV>()
 
 //CCTV 예시 데이터
 val sampleCCTVList = listOf(
-    CCTV(
+    CCTV2(
         id = "1",
         channelName = "demo-channel",
         deviceName = "주방",
@@ -28,7 +38,7 @@ val sampleCCTVList = listOf(
         batteryStatus = 70,
         networkStatus = "양호"
     ),
-    CCTV(
+    CCTV2(
         id = "2",
         channelName = "demo-channel2",
         deviceName = "거실",
@@ -38,7 +48,7 @@ val sampleCCTVList = listOf(
         batteryStatus = 30,
         networkStatus = "나쁨"
     ),
-    CCTV(
+    CCTV2(
         id = "3",
         channelName = "demo-channel3",
         deviceName = "방1",

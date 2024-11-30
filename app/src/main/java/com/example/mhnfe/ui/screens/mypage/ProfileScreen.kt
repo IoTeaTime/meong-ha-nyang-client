@@ -1,6 +1,8 @@
 package com.example.mhnfe.ui.screens.mypage
 
 import EditPopup
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,12 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,10 +37,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.ui.components.LogoutPopUp
 import com.example.mhnfe.ui.components.MainTopBar
+import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
@@ -47,10 +56,32 @@ fun ProfileScreen(
     nickname: String = "막내가짱이야",
     id: String = "nahaha",
     groupId: String = "IoTeatime",
-    navController: NavController,
+    bottomNavController: NavController,
+    mainNavController: NavController,
+    profileViewModel: ProfileViewModel = hiltViewModel()
 ) {
     val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
     val (dialogVisible1, setDialogVisible1) = remember { mutableStateOf(false) }
+    val (dialogVisible2, setDialogVisible2) = remember { mutableStateOf(false) }
+
+    val logoutResponse by profileViewModel.logoutResponse.collectAsState()
+    val quitResponse by profileViewModel.quitResponse.collectAsState()
+
+    logoutResponse?.let {
+        if (it.result.code == 200) {
+            mainNavController.navigate(NavRoutes.Auth.Main.route) {
+                popUpTo(NavRoutes.Main.route) { inclusive = true }
+            }
+        }
+    }
+
+    quitResponse?.let {
+        if (it.result.code == 200) {
+            mainNavController.navigate(NavRoutes.Auth.Main.route) {
+                popUpTo(NavRoutes.Main.route) { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
         modifier = modifier
@@ -183,8 +214,20 @@ fun ProfileScreen(
 
                 if (dialogVisible1) {
                     deletePopup(
-                        onConfirmation = { setDialogVisible1(false) },
+                        onConfirmation = {
+                            profileViewModel.quit()
+                            setDialogVisible1(false) },
                         onDismissRequest = { setDialogVisible1(false) },
+                    )
+                }
+
+                if (dialogVisible2) {
+                    LogoutPopUp(
+                        onConfirmation = {
+                            profileViewModel.logout()
+                            setDialogVisible2(false)
+                        },
+                        onDismissRequest = { setDialogVisible2(false) }
                     )
                 }
 
@@ -193,7 +236,7 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
-                        .clickable(onClick = { navController.navigate("myPage/change_password") }),
+                        .clickable(onClick = { bottomNavController.navigate("myPage/change_password") }),
                     horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -231,7 +274,7 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
-                        .clickable(onClick = { navController.navigate("myPage/device_management") }),
+                        .clickable(onClick = { bottomNavController.navigate("myPage/device_management") }),
 
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -266,16 +309,40 @@ fun ProfileScreen(
                 }
             }
 
-            TextButton(
-                onClick = { setDialogVisible1(true) },
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text(
-                    text = "회원탈퇴",
-                    style = Typography.bodyMedium,
-                    color = mainGray,
-                    textDecoration = TextDecoration.Underline
-                )
+            Column (
+                modifier = modifier
+                    .wrapContentHeight()
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(35.dp, alignment = Alignment.CenterVertically)
+            ){
+                TextButton(
+                    onClick = {
+                        setDialogVisible2(true)
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, mainBlack)
+                ){
+                    Text(
+                        "로그아웃",
+                        style = Typography.labelLarge,
+                        color = mainBlack
+                    )
+                }
+
+                TextButton(
+                    onClick = { setDialogVisible1(true) },
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(
+                        text = "회원탈퇴",
+                        style = Typography.bodyMedium,
+                        color = mainGray,
+                        textDecoration = TextDecoration.Underline
+                    )
+                }
             }
         }
     }
@@ -286,6 +353,7 @@ fun ProfileScreen(
 private fun ProfileScreenPreview() {
     val navController = rememberNavController()
     ProfileScreen(
-        navController = navController
+        bottomNavController = navController,
+        mainNavController = navController
     )
 }
