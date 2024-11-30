@@ -23,6 +23,7 @@ class GroupViewModel @Inject constructor(
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val groupIdDataStore: DataStore<GroupId>
 ) : ViewModel() {
+
     private val _groupInfo = MutableStateFlow<GroupInfo?>(null)
     val groupInfo = _groupInfo.asStateFlow()
 
@@ -32,11 +33,7 @@ class GroupViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
-    init {
-        fetchGroupInfo()
-    }
-
-    fun fetchGroupInfo() {
+    fun fetchGroupInfo(groupInfoCallback: (GroupInfo) -> Unit ) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -46,13 +43,13 @@ class GroupViewModel @Inject constructor(
                 val response = groupApi.getGroupInfo(token)
                 Log.d("GroupViewModel", "응답 바디: ${response.body}")
                 Log.d("GroupViewModel", "응답 result: ${response.result}")
-
                 _groupInfo.value = response.body
 
                 groupIdDataStore.updateData { currentGroupId ->
                     currentGroupId.copy(groupId = response.body.groupId)
                 }
 
+                groupInfoCallback(response.body)
             } catch (e: HttpException) {
                 when (e.code()) {
                     500 -> {
