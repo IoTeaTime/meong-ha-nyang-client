@@ -19,6 +19,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Singleton
 import android.content.Context.MODE_PRIVATE
+import com.example.mhnfe.data.remote.response.GroupId
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -149,5 +150,44 @@ object AppModule {
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("login_prefs", MODE_PRIVATE)
+    }
+
+    // 그룹 ID 저장
+    @Provides
+    @Singleton
+    fun provideGroupIdDataStore(
+        @ApplicationContext context: Context,
+        serializer: Serializer<GroupId>
+    ): DataStore<GroupId> {
+        return DataStoreFactory.create(
+            serializer = serializer,
+            produceFile = { context.filesDir.resolve("group_id.pb") }
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGroupIdSerializer(): Serializer<GroupId> {
+        return object : Serializer<GroupId> {
+            override val defaultValue: GroupId = GroupId(0)
+
+            override suspend fun readFrom(input: InputStream): GroupId {
+                return try {
+                    Json.decodeFromString(
+                        GroupId.serializer(),
+                        input.readBytes().decodeToString()
+                    )
+                } catch (e: Exception) {
+                    defaultValue
+                }
+            }
+
+            override suspend fun writeTo(t: GroupId, output: OutputStream) {
+                output.write(Json.encodeToString(
+                    GroupId.serializer(),
+                    t
+                ).encodeToByteArray())
+            }
+        }
     }
 }

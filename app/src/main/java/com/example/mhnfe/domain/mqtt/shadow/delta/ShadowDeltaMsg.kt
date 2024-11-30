@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ShadowDeltaMsg(
-    val state: ShadowDeltaState,
+    val state: ShadowDeltaState? = null,
     val previous: ShadowDeltaState? = null
 )

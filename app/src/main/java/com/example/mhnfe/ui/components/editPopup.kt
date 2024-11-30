@@ -19,17 +19,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
+import com.example.mhnfe.ui.screens.mypage.ProfileViewModel
 
 @Composable
 fun EditPopup(
     modifier: Modifier = Modifier,
     onConfirmation: () -> Unit,
     onDismissRequest: () -> Unit,
-    isDialogVisible: Boolean
+    isDialogVisible: Boolean,
+    profileViewModel: ProfileViewModel = hiltViewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val (nickname, onNicknameChange) = remember { mutableStateOf("") }
@@ -148,7 +151,13 @@ fun EditPopup(
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         TextButton(
-                            onClick = { onConfirmation() },
+                            onClick = {
+                                profileViewModel.changeNicknameGroupName(nickname,groupName)
+                                if(!(nickname.isBlank() && groupName.isBlank())){
+                                    onConfirmation()
+
+                                }
+                                      },
                             shape = RoundedCornerShape(16.dp),
                             contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
