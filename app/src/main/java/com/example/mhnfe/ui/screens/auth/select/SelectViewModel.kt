@@ -1,13 +1,9 @@
 package com.example.mhnfe.ui.screens.auth.select
 
 import android.util.Log
-import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.remote.api.GroupApi
-import com.example.mhnfe.data.remote.request.CreateGroupRequest
-import com.example.mhnfe.data.remote.request.Group
-import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.Group
 import com.example.mhnfe.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
