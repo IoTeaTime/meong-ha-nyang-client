@@ -165,15 +165,6 @@ private fun ViewerDeviceItem(
                     text = device.nickname,
                     style = Typography.bodyMedium
                 )
-
-                Icon(
-                    painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "수정",
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { showEditDialog = true },
-                    tint = Color.Gray
-                )
             }
 
             Text (
