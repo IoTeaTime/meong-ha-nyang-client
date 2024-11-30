@@ -68,3 +68,11 @@ data class SendPasswordResponse(
     val result: Result,
     val body: Any? = null
 )
+
+data class SendEmailVerificationResponse(
+    val result: Result
+)
+
+data class CheckEmailVerificationResponse (
+    val result: Result
+)

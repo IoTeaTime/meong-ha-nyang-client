@@ -26,3 +26,12 @@ data class RefreshFcmTokenRequest (
 data class SendPasswordRequest (
     val email: String
 )
+
+data class SendEmailVerificationRequest (
+    val email: String
+)
+
+data class CheckEmailVerificationRequest (
+    val email: String,
+    val code: String
+)
