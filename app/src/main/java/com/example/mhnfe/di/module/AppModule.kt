@@ -19,6 +19,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Singleton
 import android.content.Context.MODE_PRIVATE
+import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.response.GroupId
 
 @Module
@@ -150,6 +151,46 @@ object AppModule {
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("login_prefs", MODE_PRIVATE)
+    }
+
+    // CCTV ID 직렬화
+    @Provides
+    @Singleton
+    fun provideCctvResponseSerializer(): Serializer<CCTVResponseBody> {
+        return object : Serializer<CCTVResponseBody> {
+            override val defaultValue: CCTVResponseBody = CCTVResponseBody(0)
+
+            override suspend fun readFrom(input: InputStream): CCTVResponseBody {
+                return try {
+                    Json.decodeFromString(
+                        CCTVResponseBody.serializer(),
+                        input.readBytes().decodeToString()
+                    )
+                } catch (e: Exception) {
+                    defaultValue
+                }
+            }
+
+            override suspend fun writeTo(t: CCTVResponseBody, output: OutputStream) {
+                output.write(Json.encodeToString(
+                    CCTVResponseBody.serializer(),
+                    t
+                ).encodeToByteArray())
+            }
+        }
+    }
+
+    // CCTV Response 데이터스토어 제공
+    @Provides
+    @Singleton
+    fun provideCctvResponseDataStore(
+        @ApplicationContext context: Context,
+        serializer: Serializer<CCTVResponseBody>
+    ): DataStore<CCTVResponseBody> {
+        return DataStoreFactory.create(
+            serializer = serializer,
+            produceFile = { context.filesDir.resolve("cctv_id.pb") }
+        )
     }
 
     // 그룹 ID 저장

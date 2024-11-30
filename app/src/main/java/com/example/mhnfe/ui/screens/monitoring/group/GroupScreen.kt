@@ -23,8 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
-import com.example.mhnfe.data.remote.response.CctvInfo
-import com.example.mhnfe.data.remote.response.GroupInfo
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTopBar
@@ -32,7 +31,6 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-
 
 @Composable
 fun GroupScreen(
@@ -55,7 +53,7 @@ fun GroupScreen(
         val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
         mqttViewModel.viewerInitialSubscribe(context, thingList)
         groupViewModel.fetchGroupInfo {
-            groupInfo: GroupInfo ->
+            groupInfo->
             val groupName = groupInfo.groupName
             val groupId = groupInfo.groupId
             val payload = """
@@ -166,10 +164,13 @@ fun GroupScreen(
     }
 }
 
-fun CctvInfo.toCCTV() = CCTV(
-    id = cctvId,
-    deviceName = cctvNickname,
-    thingId = thingId,
-    channelName = kvsChannelName,
-)
+fun CctvInfo.toCCTV(): CCTV {
+    return CCTV(
+        id = cctvId,
+        deviceName = cctvNickname,
+        thingId = thingId,
+        channelName = kvsChannelName
+    )
+}
+
 

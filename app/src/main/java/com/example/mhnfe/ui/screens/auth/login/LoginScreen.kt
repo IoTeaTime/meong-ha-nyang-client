@@ -42,6 +42,7 @@ import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.components.MiddleButton
+import com.example.mhnfe.ui.components.SendPasswordPopUp
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.mainGray
@@ -70,6 +71,8 @@ fun LoginScreen(
 
     // SharedPreferences를 사용해 사용자 정보를 저장
     val context = LocalContext.current
+
+    val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -153,6 +156,17 @@ fun LoginScreen(
                         )
                     }
                 }
+
+                if(dialogVisible) {
+                    SendPasswordPopUp(
+                        onConfirmation = {
+                            setDialogVisible(false)
+                        },
+                        onDismissRequest = {
+                            setDialogVisible(false)
+                        }
+                    )
+                }
             }
 
             // 하단부 버튼과 텍스트를 포함하는 Column
@@ -232,23 +246,10 @@ fun LoginScreen(
                     color = mainGray,
                     modifier = modifier
                         .clickable {
-//                            navController.navigate(NavRoutes.Auth.ChangePassword.route)
+                            setDialogVisible(true)
                         }
                 )
             }
         }
     }
 }
-
-//@Preview(
-//    name = "Login Screen",
-//    showBackground = true,
-//    showSystemUi = true,
-//    device = "spec:width=411dp,height=891dp"
-//)
-//@Composable
-//fun LoginScreenPreview() {
-//    LoginScreen(
-//        navController = rememberNavController()
-//    )
-//}

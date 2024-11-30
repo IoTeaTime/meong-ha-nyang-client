@@ -5,7 +5,10 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.ApiResponse
+import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.ChangeCctvNicknameResponse
 import com.example.mhnfe.data.remote.response.DeleteDeviceResponse
 import com.example.mhnfe.data.remote.response.GroupId
@@ -21,7 +24,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import retrofit2.Response
@@ -42,6 +44,8 @@ class DeviceManagementViewModel @Inject constructor(
     val groupMemberInfo: StateFlow<GroupMember?> = _groupMemberInfo
     private val _groupMemberInfoList = MutableStateFlow<List<GroupMemberInfo>?>(null)
     val groupMemberInfoList: StateFlow<List<GroupMemberInfo>?> = _groupMemberInfoList
+    private val _cctvList = MutableStateFlow<List<CctvInfo>?>(null)
+    val cctvList: StateFlow<List<CctvInfo>?> = _cctvList
 
     fun deleteDevice(cctvId: Long) {
         viewModelScope.launch {
@@ -106,6 +110,39 @@ class DeviceManagementViewModel @Inject constructor(
 
                 _errorMessage.value = errorBody.result.description
                 Log.e(TAG,"Error: " + _errorMessage.value)
+            }
+        }
+    }
+
+    fun getCctvList() {
+        viewModelScope.launch {
+            val token = accessTokenDataStore.data.map { it.accessToken }.first()
+            val groupId = groupIdDataStore.data.map { it.groupId }.first()
+            val response: Response<CctvListResponse> = groupRepository.getCctvList(groupId, token)
+            if(response.isSuccessful) {
+                _cctvList.value = response.body()?.body?.cctv
+            } else {
+                val jsonObject = JSONObject(response.errorBody()!!.string())
+                val errorBody = Json.decodeFromString<DeleteDeviceResponse>(jsonObject.toString())
+
+                _errorMessage.value = errorBody.result.description
+                Log.e(TAG,"Error: " + _errorMessage.value)
+            }
+        }
+    }
+
+    fun deleteViewer(groupMemberId: Long) {
+        viewModelScope.launch {
+            val groupId = groupIdDataStore.data.map { it.groupId }.first()
+            val token = accessTokenDataStore.data.map { it.accessToken }.first()
+            val response: Response<ApiResponse> =
+                groupRepository.deleteGroupMember(groupId, groupMemberId, token)
+            if (!response.isSuccessful) {
+                val jsonObject = JSONObject(response.errorBody()!!.string())
+                val errorBody = Json.decodeFromString<DeleteDeviceResponse>(jsonObject.toString())
+
+                _errorMessage.value = errorBody.result.description
+                Log.e(TAG, "Error: " + _errorMessage.value)
             }
         }
     }

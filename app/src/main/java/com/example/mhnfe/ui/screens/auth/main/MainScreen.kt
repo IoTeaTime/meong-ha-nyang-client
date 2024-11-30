@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -24,12 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
-
 
 @Composable
 fun MainScreen(
@@ -38,55 +36,53 @@ fun MainScreen(
     mqttViewModel: MqttViewModel = hiltViewModel(),
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
-    val loginState = remember { mutableStateOf<LoginState>(LoginState.Loading) }
+    val groupId = ""
 
-
-    // 자동 로그인 시도와 페이지 변경을 분리
     LaunchedEffect(Unit) {
+        mqttViewModel.initialize()
         mainViewModel.autoLogin(
-            onSuccess = { role ->
-                loginState.value = LoginState.Success(role)
+            onSuccess = { role, groupId ->
+                if(groupId != 0L) {
+                    if(role == "ROLE_MASTER") {
+                        navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
+                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                        }
+                    }
+                } else {
+                    navController.navigate(NavRoutes.Auth.Select.route) {
+                        popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                    }
+                    mqttViewModel.disconnectMqttManager()
+                }
             },
-            onFailure = { error ->
-                loginState.value = LoginState.Error(error)
+            onFailure = {
+                mqttViewModel.disconnectMqttManager()
+                mainViewModel.fetchCctvId(
+                    onSuccess = { cctvInfo ->
+                        Log.d("MainScreen", "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}")
+                        val channelName = cctvInfo.body.kvsChannelName
+
+                        // SavedStateHandle에 채널 정보 저장
+                        navController.currentBackStackEntry?.savedStateHandle?.apply {
+                            set("channelName", channelName)
+                            set("role", ChannelRole.MASTER)
+                        }
+
+                        // Master 화면으로 이동
+                        navController.navigate(NavRoutes.Auth.Master.createRoute(channelName = channelName))
+                    },
+                    onFailure = { fetchError ->
+                        Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
+                    }
+                )
             }
         )
     }
-
-    LaunchedEffect(loginState.value) {
-        when (val state = loginState.value) {
-            is LoginState.Success -> {
-                mqttViewModel.initialize()
-
-                    // 로그인 성공 후 화면 전환
-                    when (state.role) {
-                        "ROLE_MASTER" -> {
-                            navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
-                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
-                            }
-                        }
-
-                        "ROLE_VIEWER" -> {
-                            navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
-                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
-                            }
-                        }
-
-                        else -> {
-                            navController.navigate(NavRoutes.Auth.Select.route) {
-                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
-                            }
-                        }
-                    }
-                }
-
-
-            is LoginState.Error -> {
-                Log.e("MainScreen", "Auto Login Failed: ${state.error.message}")
-            }
-
-            else -> {}
-        }
+    LaunchedEffect(groupId) {
     }
 
     Column(
@@ -132,7 +128,7 @@ fun MainScreen(
             MiddleButton(
                 text = "Cam 참여",
                 onClick = {
-                    navController.navigate(NavRoutes.Auth.QRScanner.route)
+                    navController.navigate(NavRoutes.Auth.QRScanner.createRoute(UserType.CCTV))
                 },
             )
 
@@ -176,10 +172,4 @@ fun StartScreenPreview() {
     MainScreen(
         navController = rememberNavController(),
     )
-}
-
-sealed class LoginState {
-    data object Loading : LoginState()
-    data class Success(val role: String) : LoginState()
-    data class Error(val error: Exception) : LoginState()
 }

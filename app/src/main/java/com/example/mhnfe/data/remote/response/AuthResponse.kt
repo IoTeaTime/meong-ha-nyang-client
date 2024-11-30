@@ -16,6 +16,10 @@ data class CheckEmailResponse(
     val data: Any? = null
 }
 
+data class ApiResponse(
+    val result: Result
+)
+
 @Serializable
 data class Result(
     val code: Int,
@@ -59,3 +63,16 @@ data class FCMResponse(
 ) {
     val data: Any? = null
 }
+
+data class SendPasswordResponse(
+    val result: Result,
+    val body: Any? = null
+)
+
+data class SendEmailVerificationResponse(
+    val result: Result
+)
+
+data class CheckEmailVerificationResponse (
+    val result: Result
+)

@@ -1,6 +1,8 @@
 package com.example.mhnfe.data.remote.api
 
 
+import com.example.mhnfe.data.remote.response.ApiResponse
+import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.CreateGroupRequest
 import com.example.mhnfe.data.remote.response.GroupInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
@@ -9,6 +11,7 @@ import com.example.mhnfe.data.remote.response.GroupResponse
 import com.example.mhnfe.data.remote.response.QRApiResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -46,4 +49,17 @@ interface GroupApi {
     suspend fun generateViewerQR(
         @Header("Authorization") authToken: String
     ): QRApiResponse
+
+    @GET("/api/cctv/list/{groupId}")
+    suspend fun getCctvList(
+        @Path("groupId") groupId: Long,
+        @Header("Authorization") token: String
+    ): Response<CctvListResponse>
+
+    @DELETE("/api/group/{groupId}/member/{groupMemberId}")
+    suspend fun deleteGroupMember(
+        @Path("groupId") groupId: Long,
+        @Path("groupMemberId") groupMemberId: Long,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse>
 }
