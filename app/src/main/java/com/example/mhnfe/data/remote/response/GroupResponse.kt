@@ -1,9 +1,9 @@
 package com.example.mhnfe.data.remote.response
 
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.data.remote.request.Group
 import com.example.mhnfe.data.remote.request.GroupInfo
 import com.example.mhnfe.data.remote.request.QRResponseBody
-import com.example.mhnfe.data.remote.request.GroupRequest
 import kotlinx.serialization.Serializable
 
 data class GroupResponse(
