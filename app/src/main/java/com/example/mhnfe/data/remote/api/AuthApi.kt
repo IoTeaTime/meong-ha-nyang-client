@@ -1,14 +1,18 @@
 package com.example.mhnfe.data.remote.api
 
+import com.example.mhnfe.data.remote.request.CheckEmailVerificationRequest
 import com.example.mhnfe.data.remote.request.EmailRequest
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.request.RefreshFcmTokenRequest
+import com.example.mhnfe.data.remote.request.SendEmailVerificationRequest
 import com.example.mhnfe.data.remote.request.SendPasswordRequest
 import com.example.mhnfe.data.remote.response.SignUpResponse
 import com.example.mhnfe.data.remote.response.LoginResponse
 import com.example.mhnfe.data.remote.request.SignUpRequest
 import com.example.mhnfe.data.remote.response.CheckEmailResponse
+import com.example.mhnfe.data.remote.response.CheckEmailVerificationResponse
 import com.example.mhnfe.data.remote.response.FCMResponse
+import com.example.mhnfe.data.remote.response.SendEmailVerificationResponse
 import com.example.mhnfe.data.remote.response.SendPasswordResponse
 import retrofit2.http.Body
 import retrofit2.http.Header
@@ -41,4 +45,14 @@ interface AuthApi {
     suspend fun sendPassword(
         @Body request: SendPasswordRequest
     ): SendPasswordResponse
+
+    @POST("/open-api/auth/email-verification")
+    suspend fun sendEmailVerification(
+        @Body request: SendEmailVerificationRequest
+    ): SendEmailVerificationResponse
+
+    @POST("/open-api/auth/check-verification")
+    suspend fun checkEmailVerification(
+        @Body request: CheckEmailVerificationRequest
+    ): CheckEmailVerificationResponse
 }
