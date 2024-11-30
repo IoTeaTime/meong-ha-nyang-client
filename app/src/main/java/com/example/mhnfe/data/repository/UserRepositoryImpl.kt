@@ -1,7 +1,9 @@
 package com.example.mhnfe.data.repository
 
 import com.example.mhnfe.data.remote.api.UserApi
+import com.example.mhnfe.data.remote.request.ChangeNicknameOrGroupNameRequest
 import com.example.mhnfe.data.remote.request.ChangePasswordRequest
+import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
 import com.example.mhnfe.data.remote.response.RefreshedAccessToken
@@ -29,4 +31,15 @@ class UserRepositoryImpl @Inject constructor(
         val request = ChangePasswordRequest(currentPassword, newPassword)
         return userApi.changePassword(accessToken, request)
     }
+
+    override suspend fun changeNicknameOrGroupName(
+        accessToken: String,
+        nickname: String?,
+        groupName: String?
+    ): ChangeNicknameOrGroupNameResponse {
+        var request = ChangeNicknameOrGroupNameRequest(nickname,groupName)
+        return userApi.changeNicknameOrGroupName(accessToken, request)
+    }
+
+
 }
