@@ -1,25 +1,32 @@
 package com.example.mhnfe.ui.screens.auth.main
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.datastore.core.DataStore
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
-import com.example.mhnfe.data.remote.request.LoginRequest
-import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.di.UserType
+import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 
@@ -28,42 +35,60 @@ import com.example.mhnfe.ui.navigation.NavRoutes
 fun MainScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
+    mqttViewModel: MqttViewModel = hiltViewModel(),
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
-    val context = LocalContext.current
+    val loginState = remember { mutableStateOf<LoginState>(LoginState.Loading) }
 
-    // 자동 로그인 로직
+
+    // 자동 로그인 시도와 페이지 변경을 분리
     LaunchedEffect(Unit) {
         mainViewModel.autoLogin(
             onSuccess = { role ->
-                if(role == "ROLE_MASTER") {
-                    navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
-                        // Auth 플로우를 백스택에서 제거
-                        popUpTo(NavRoutes.Auth.route) {
-                            inclusive = true
-                        }
-                    }
-                }
-                else if(role == "ROLE_VIEWER") {
-                    navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
-                        // Auth 플로우를 백스택에서 제거
-                        popUpTo(NavRoutes.Auth.route) {
-                            inclusive = true
-                        }
-                    }
-                } else {
-                    // 자동 로그인 성공 -> 다음 화면으로 이동
-                    navController.navigate(NavRoutes.Auth.Select.route) {
-                        popUpTo(NavRoutes.Auth.route) { inclusive = true }
-                    }
-                }
+                loginState.value = LoginState.Success(role)
             },
-            onFailure = { e ->
-                Log.e("MainScreen", "자동 로그인 실패", e)
+            onFailure = { error ->
+                loginState.value = LoginState.Error(error)
             }
         )
     }
-//    viewModel.initializeWithContext(context)
+
+    LaunchedEffect(loginState.value) {
+        when (val state = loginState.value) {
+            is LoginState.Success -> {
+                mqttViewModel.initialize()
+
+                    // 로그인 성공 후 화면 전환
+                    when (state.role) {
+                        "ROLE_MASTER" -> {
+                            navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                            }
+                        }
+
+                        "ROLE_VIEWER" -> {
+                            navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
+                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                            }
+                        }
+
+                        else -> {
+                            navController.navigate(NavRoutes.Auth.Select.route) {
+                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                            }
+                        }
+                    }
+                }
+
+
+            is LoginState.Error -> {
+                Log.e("MainScreen", "Auto Login Failed: ${state.error.message}")
+            }
+
+            else -> {}
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -73,11 +98,11 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "명하냥 로고",
-                modifier = modifier.size(315.dp, 358.dp)
-            )
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "명하냥 로고",
+            modifier = modifier.size(315.dp, 358.dp)
+        )
 
         // 버튼 영역
         Column(
@@ -148,10 +173,13 @@ fun MainScreen(
 )
 @Composable
 fun StartScreenPreview() {
-
-
     MainScreen(
         navController = rememberNavController(),
     )
+}
 
+sealed class LoginState {
+    data object Loading : LoginState()
+    data class Success(val role: String) : LoginState()
+    data class Error(val error: Exception) : LoginState()
 }
