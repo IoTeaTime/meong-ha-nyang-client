@@ -1,12 +1,11 @@
 package com.example.mhnfe
 
-
+import android.content.ContentValues.TAG
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.mhnfe.ui.theme.MhnFETheme
-import android.content.ContentValues.TAG
-import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobile.client.Callback

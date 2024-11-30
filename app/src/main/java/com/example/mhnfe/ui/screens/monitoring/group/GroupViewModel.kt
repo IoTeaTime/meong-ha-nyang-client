@@ -4,22 +4,20 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.request.GroupInfo
-import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import javax.inject.Inject
 
 @HiltViewModel
 class GroupViewModel @Inject constructor(
-    private val groupRepository: GroupRepository
+    private val groupRepository: GroupRepository,
+    private val groupIdDataStore: DataStore<GroupId>
 ) : ViewModel() {
     private val _groupInfo = MutableStateFlow<GroupInfo?>(null)
     val groupInfo = _groupInfo.asStateFlow()
@@ -44,6 +42,10 @@ class GroupViewModel @Inject constructor(
                     Log.d("GroupViewModel", "응답 바디: ${response.body}")
                     Log.d("GroupViewModel", "응답 result: ${response.result}")
                     _groupInfo.value = response.body
+
+                    groupIdDataStore.updateData { currentGroupId ->
+                        currentGroupId.copy(groupId = response.body.groupId)
+                    }
                 },
                 onFailure = { e ->
                     when (e) {

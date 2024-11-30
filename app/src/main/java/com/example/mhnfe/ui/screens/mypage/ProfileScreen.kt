@@ -41,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.ui.components.LogoutPopUp
 import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
@@ -61,12 +62,13 @@ fun ProfileScreen(
 ) {
     val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
     val (dialogVisible1, setDialogVisible1) = remember { mutableStateOf(false) }
+    val (dialogVisible2, setDialogVisible2) = remember { mutableStateOf(false) }
 
     val logoutResponse by profileViewModel.logoutResponse.collectAsState()
     val quitResponse by profileViewModel.quitResponse.collectAsState()
 
     logoutResponse?.let {
-        if (it.result?.code == 200) {
+        if (it.result.code == 200) {
             mainNavController.navigate(NavRoutes.Auth.Main.route) {
                 popUpTo(NavRoutes.Main.route) { inclusive = true }
             }
@@ -74,7 +76,7 @@ fun ProfileScreen(
     }
 
     quitResponse?.let {
-        if (it.result?.code == 200) {
+        if (it.result.code == 200) {
             mainNavController.navigate(NavRoutes.Auth.Main.route) {
                 popUpTo(NavRoutes.Main.route) { inclusive = true }
             }
@@ -219,13 +221,15 @@ fun ProfileScreen(
                     )
                 }
 
-//                LaunchedEffect(quitResponse) {
-//                    if(quitResponse?.result?.code == 200){
-//                        mainNavController.navigate(NavRoutes.Auth.Main.route){
-//                            popUpTo(NavRoutes.Main.route){ inclusive = true}
-//                        }
-//                    }
-//                }
+                if (dialogVisible2) {
+                    LogoutPopUp(
+                        onConfirmation = {
+                            profileViewModel.logout()
+                            setDialogVisible2(false)
+                        },
+                        onDismissRequest = { setDialogVisible2(false) }
+                    )
+                }
 
                 Row(
                     modifier = modifier
@@ -314,8 +318,7 @@ fun ProfileScreen(
             ){
                 TextButton(
                     onClick = {
-                        profileViewModel.logout()
-
+                        setDialogVisible2(true)
                     },
                     shape = RoundedCornerShape(16.dp),
                     contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
@@ -328,14 +331,6 @@ fun ProfileScreen(
                         color = mainBlack
                     )
                 }
-
-//                LaunchedEffect(logoutResponse) {
-//                    if(logoutResponse?.result?.code == 200){
-//                        mainNavController.navigate(NavRoutes.Auth.Main.route){
-//                            popUpTo(NavRoutes.Main.route){ inclusive = true}
-//                        }
-//                    }
-//                }
 
                 TextButton(
                     onClick = { setDialogVisible1(true) },
@@ -353,11 +348,12 @@ fun ProfileScreen(
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//private fun ProfileScreenPreview() {
-//    val navController = rememberNavController()
-//    ProfileScreen(
-//        navController = navController
-//    )
-//}
+@Preview(showBackground = true)
+@Composable
+private fun ProfileScreenPreview() {
+    val navController = rememberNavController()
+    ProfileScreen(
+        bottomNavController = navController,
+        mainNavController = navController
+    )
+}
