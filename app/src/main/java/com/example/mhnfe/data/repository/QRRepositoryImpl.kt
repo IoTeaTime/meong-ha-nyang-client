@@ -7,6 +7,7 @@ import com.example.mhnfe.data.remote.request.CctvQRRequest
 import com.example.mhnfe.data.remote.request.ViewerQRRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
+import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.remote.response.CctvQRResponse
 import com.example.mhnfe.data.remote.response.ViewerQRResponse
 import com.example.mhnfe.domain.repository.QRRepository
@@ -48,12 +49,6 @@ class QRRepositoryImpl @Inject constructor(
         Log.d("QRRepository", "CCTV QR 응답: $response")
         return response
     }
-
-    // CCTV ID 조회 메서드 추가
-    suspend fun getCctvId(): Int {
-        return cctvResponseDataStore.data.first().cctvId
-    }
-
     override suspend fun generateViewerQR(
         groupId: Int
     ): ViewerQRResponse {
@@ -70,5 +65,11 @@ class QRRepositoryImpl @Inject constructor(
         }
         Log.d("QRRepository", "Viewer QR 응답: $response")
         return response
+    }
+    override suspend fun getCctvInfo(): CctvInfoResponse{
+        val cctvId = cctvResponseDataStore.data.map { it.cctvId }.first()
+        return withContext(Dispatchers.IO) {
+            qrApi.cctvIdInfo(cctvId)
+        }
     }
 }
