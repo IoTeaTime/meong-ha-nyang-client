@@ -22,3 +22,7 @@ data class LoginRequest(
 data class RefreshFcmTokenRequest (
     val token: String
 )
+
+data class SendPasswordRequest (
+    val email: String
+)
