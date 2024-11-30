@@ -13,6 +13,29 @@ data class RefreshedAccessToken(
     val newAccessToken: String
 )
 
+data class LogoutResponse(
+    val result: Result
+)
+
+data class DeleteResponse(
+    val result: Result
+)
+
+data class ChangePasswordResponse(
+    val result: Result
+)
+data class ChangeNicknameOrGroupNameResponse(
+    val result: Result,
+    val body: ChangeNicknameOrGroupNameBody? = null
+)
+
+@Serializable
+data class ChangeNicknameOrGroupNameBody(
+    val nickname: String,
+    val groupName: String
+)
+
+
 data class ProfileResponse(
     val result: Result,
     val body: ProfileBody?

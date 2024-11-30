@@ -1,34 +1,45 @@
 package com.example.mhnfe.ui.screens.qr.qrgenerate
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.di.UserType
+import com.example.mhnfe.domain.repository.GroupRepository
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.util.UUID
+import javax.inject.Inject
 
 data class QRScreenUiState(
     val title: String = "",
     val message: String = "",
-    val qrContent: String = UUID.randomUUID().toString(),
+    val qrContent: String = "",
     val qrBitmap: ImageBitmap? = null,
-    val userType: UserType = UserType.CCTV
+    val userType: UserType = UserType.CCTV,
+    val isLoading: Boolean = false,
+    val error: String? = null
 )
 
-class QRViewModel : ViewModel() {
+@HiltViewModel
+class QRViewModel @Inject constructor(
+    private val groupRepository: GroupRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(QRScreenUiState())
     val uiState = _uiState.asStateFlow()
-
-    init {
-        // 초기 QR 코드 생성
-        generateNewQRCode()
-    }
-
 
     fun setUserType(type: UserType) {
         _uiState.update { currentState ->
@@ -46,20 +57,56 @@ class QRViewModel : ViewModel() {
                 }
             )
         }
+        generateQRContent()
     }
 
-    // QR 코드에 들어갈 내용을 생성
-    fun generateNewQRCode() {
-        _uiState.update { currentState ->
-            currentState.copy(
-                qrContent = UUID.randomUUID().toString()
-            )
+    private fun generateQRContent() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val response = when (_uiState.value.userType) {
+                    UserType.CCTV -> groupRepository.generateCctvQR()
+                    UserType.VIEWER -> groupRepository.generateViewerQR()
+                    else -> null
+                }
+                Log.d("QRViewModel", "API response received: $response")
+
+                response?.let { apiResponse ->
+                    if (apiResponse.result.code == 200) {
+                        val jsonContent = when (_uiState.value.userType) {
+                            UserType.CCTV -> JSONObject().apply {
+                                put("groupId", apiResponse.body.groupId)
+                                put("kvsChannelId", apiResponse.body.kvsChannelId)
+                            }.toString()
+                            UserType.VIEWER -> JSONObject().apply {
+                                put("groupId", apiResponse.body.groupId)
+                            }.toString()
+                            else -> ""
+                        }
+
+                        _uiState.update { it.copy(
+                            qrContent = jsonContent,
+                            isLoading = false
+                        ) }
+                    } else {
+                        _uiState.update { it.copy(
+                            error = apiResponse.result.message,
+                            isLoading = false
+                        ) }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(
+                    error = "QR 코드 생성 중 오류가 발생했습니다.: ${e.message}",
+                    isLoading = false
+                ) }
+            }
         }
     }
 
-
-    // QR Content를 QR 코드 이미지로 변환
     fun generateQRBitmap(size: Int): Bitmap {
+        val content = uiState.value.qrContent
+
         val hints = hashMapOf<EncodeHintType, Any>().apply {
             put(EncodeHintType.MARGIN, 1)
             put(EncodeHintType.CHARACTER_SET, "UTF-8")
@@ -68,7 +115,7 @@ class QRViewModel : ViewModel() {
         return try {
             val writer = QRCodeWriter()
             val bitMatrix = writer.encode(
-                uiState.value.qrContent,  // uiState에서 qrContent 가져오기
+                content,  // qrContent 대신 content 사용
                 BarcodeFormat.QR_CODE,
                 size,
                 size,
@@ -102,7 +149,10 @@ class QRViewModel : ViewModel() {
             bitmap
         } catch (e: Exception) {
             e.printStackTrace()
-            throw e
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+            canvas.drawColor(android.graphics.Color.WHITE)
+            bitmap
         }
     }
 }

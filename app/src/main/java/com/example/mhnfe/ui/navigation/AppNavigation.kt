@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,7 +19,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
-import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.screens.auth.login.LoginScreen
 import com.example.mhnfe.ui.screens.auth.main.MainScreen
@@ -33,16 +33,23 @@ import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.qrgenerate.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.qrscannig.QRScanningScreen
 import com.example.mhnfe.ui.screens.mypage.DeviceManagementScreen
+import com.example.mhnfe.ui.screens.report.ReportDetailScreen
 
 
 sealed class NavRoutes(val route: String) {
     object Auth : NavRoutes("auth") {
         object Main : NavRoutes("main")
         object Login : NavRoutes("login")
-        object Cognito : NavRoutes("cognito")
         object SignUp : NavRoutes("signup")
         object Select : NavRoutes("select")
-        object QRScanner : NavRoutes("qr_scanner")
+        object Master {
+            const val route = "master/{channelName}"
+            fun createRoute(channelName: String) = "master/$channelName"
+        }
+        object QRScanner {
+            const val route = "qr_scanner/{userType}"
+            fun createRoute(userType: UserType) = "qr_scanner/${userType.name}"
+        }
     }
 
     object Main : NavRoutes("main/{userType}") {
@@ -60,7 +67,7 @@ sealed class NavRoutes(val route: String) {
         }
 
         object DeviceInformation : NavRoutes("device_information/{cctvId}") {
-            fun createRoute(cctvId: String) = "device_information/$cctvId"
+            fun createRoute(cctvId: Long) = "device_information/$cctvId"
         }
         object QRGenerate : NavRoutes("qr_generate/{userType}") {
             fun createRoute(userType: UserType) = "qr_generate/${userType.name.lowercase()}"
@@ -74,6 +81,15 @@ sealed class NavRoutes(val route: String) {
         object Profile : NavRoutes("myPage/profile")
         object ChangePassword : NavRoutes("myPage/change_password")
         object DeviceManagement : NavRoutes("myPage/device_management")
+    }
+}
+
+// 추가: 로그인에서 메인으로 네비게이션할 때 사용할 익스텐션 함수
+fun NavController.navigateToMain(userType: UserType) {
+    navigate(NavRoutes.Main.createRoute(userType)) {
+        popUpTo(NavRoutes.MyPage.route) {
+            inclusive = true  // Auth 그래프를 백스택에서 완전히 제거
+        }
     }
 }
 
@@ -115,10 +131,41 @@ fun AppNavigation() {
                 SelectScreen(
                     navController = navController)
             }
-            composable(NavRoutes.Auth.QRScanner.route) {
-                // QRScannerScreen
+            composable(
+                route = NavRoutes.Auth.QRScanner.route,
+                arguments = listOf(
+                    navArgument("userType") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+                val userType = UserType.valueOf(
+                    backStackEntry.arguments?.getString("userType") ?: UserType.VIEWER.name
+                )
                 QRScanningScreen(
-                    navController = navController
+                    navController = navController,
+                    userType = userType
+                )
+            }
+            //cctv화면
+            composable(
+                route = NavRoutes.Auth.Master.route,
+                arguments = listOf(
+                    navArgument("channelName") { type = NavType.StringType }
+                )
+            ) {
+                backStackEntry ->
+                val kvsSignalingViewModel: KVSSignalingViewModel = viewModel()
+
+                // channelName을 arguments에서 읽기
+                val channelName = backStackEntry.arguments?.getString("channelName") ?: "demo-channel"
+                val role = ChannelRole.MASTER
+
+                WebRtcScreen(
+                    navController = navController,
+                    viewModel = kvsSignalingViewModel,
+                    channelName = channelName,
+                    role = role
                 )
             }
         }
@@ -139,18 +186,8 @@ fun AppNavigation() {
                 userType = userType
             )
         }
-
-        // 추가: 로그인에서 메인으로 네비게이션할 때 사용할 익스텐션 함수
-        fun NavController.navigateToMain(userType: UserType) {
-            navigate(NavRoutes.Main.createRoute(userType)) {
-                popUpTo(NavRoutes.Auth.route) {
-                    inclusive = true  // Auth 그래프를 백스택에서 완전히 제거
-                }
-            }
-        }
     }
 }
-
 
 @Composable
 fun MainContent(
@@ -189,12 +226,6 @@ fun MainContent(
                 route = NavRoutes.Monitoring.route
             ) {
                 composable(NavRoutes.Monitoring.Group.route) {
-//                    entry ->
-//                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
-//                    SignalingChannelTest(
-//                        navController = bottomNavController,
-//                        kvsViewModel = kvsViewModel,
-//                    )
                     GroupScreen(
                         userType = userType,
                         navController = bottomNavController  // bottomNavController 전달
@@ -234,38 +265,13 @@ fun MainContent(
                         role = ChannelRole.VIEWER
                     )
                 }
-                //전 코드 확실해지면 나중에 지울게요
-//                composable(NavRoutes.Monitoring.Viewer.route) {
-////                    val parentEntry = remember(bottomNavController) {
-////                        bottomNavController.getBackStackEntry(NavRoutes.Report.ReportDetail.route)
-////                    }
-////                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel(
-////                        viewModelStoreOwner = parentEntry
-////                    )
-////
-////
-////                    val channelName = parentEntry.savedStateHandle.get<String>("channelName") ?: "demo-channel"
-////                    val role = ChannelRole.VIEWER  // Master route이므로 MASTER로 고정
-//                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel()
-//
-//                    // channelName을 현재 route의 arguments에서 가져오도록 수정
-//                    val channelName = it.arguments?.getString("channelName") ?: "demo-channel"
-//                    val role = ChannelRole.VIEWER
-//
-//                    WebRtcScreen(
-//                        navController = bottomNavController,
-//                        viewModel = kvsSignalingViewModel,
-//                        channelName = channelName,
-//                        role = role
-//                    )
-//                }
                 composable(
                     route = NavRoutes.Monitoring.DeviceInformation.route,
                     arguments = listOf(
-                        navArgument("cctvId") { type = NavType.StringType }
+                        navArgument("cctvId") { type = NavType.LongType }
                     )
                 ) { backStackEntry ->
-                    val cctvId = backStackEntry.arguments?.getString("cctvId") ?: return@composable
+                    val cctvId = backStackEntry.arguments?.getLong("cctvId") ?: return@composable
                     DeviceInfoScreen(
                         cctvId = cctvId,
                         navController = bottomNavController
@@ -294,13 +300,13 @@ fun MainContent(
                 route = NavRoutes.Report.route
             ) {
                 composable(NavRoutes.Report.ReportDetail.route) {
-                    entry ->
-                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
-                    SignalingChannelTest(
-                        navController = bottomNavController,
-                        kvsViewModel = kvsViewModel,
-                    )
-//                    ReportDetailScreen(navController = bottomNavController)
+//                    entry ->
+//                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
+//                    SignalingChannelTest(
+//                        navController = bottomNavController,
+//                        kvsViewModel = kvsViewModel,
+//                    )
+                    ReportDetailScreen(navController = bottomNavController)
                 }
                 //추후에 화면이 추가 될 수 있기 때문에 이렇게 따로 빼서 구현 추후 화면 추가가 없을 시 삭제
             }
@@ -312,14 +318,16 @@ fun MainContent(
             ) {
                 composable(NavRoutes.MyPage.Profile.route) {
                     ProfileScreen(
-                        navController = bottomNavController
+                        bottomNavController= bottomNavController,
+                        mainNavController = mainNavController
                     )
                 }
                 composable(NavRoutes.MyPage.ChangePassword.route) {
                     PasswordEditScreen(
-                        navController = bottomNavController
-                    ) {}
+                        bottomNavController = bottomNavController
+                    )
                 }
+
                 composable(NavRoutes.MyPage.DeviceManagement.route) {
                     DeviceManagementScreen(
                         navController = bottomNavController
@@ -329,4 +337,3 @@ fun MainContent(
         }
     }
 }
-

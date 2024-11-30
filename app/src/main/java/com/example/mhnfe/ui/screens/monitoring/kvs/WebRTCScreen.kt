@@ -1,7 +1,9 @@
 package com.example.mhnfe.ui.screens.monitoring.kvs
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.util.Log
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -29,9 +31,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,10 +60,11 @@ import org.webrtc.Logging
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
     modifier: Modifier = Modifier,
-    viewModel: KVSSignalingViewModel,
+
     navController: NavController,
     channelName: String,
     role: ChannelRole,
+    viewModel: KVSSignalingViewModel,
     mqttViewModel: MqttViewModel = hiltViewModel(),
     aiViewModel: AiViewModel = hiltViewModel()
 ) {
@@ -74,45 +75,35 @@ fun WebRtcScreen(
     val eglBase = remember { EglBase.create() }
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
-    var aiResult by remember { mutableStateOf<String?>(null) }
-    var isProcessing by remember { mutableStateOf(false) }
+    val mqttState by mqttViewModel.isConnected.collectAsState()
+    val window = (context as? Activity)?.window
 
     LaunchedEffect(Unit) {
-        try {
-
-            // Todo. 역할을 가져오는 로직 추가
-            val roles = ChannelRole.MASTER
-            // Todo. 그룹 ID를 가져오는 로직 추가
-            val groupId = 404
-
-            withContext(Dispatchers.IO) {
-                // 1. MQTT 연결 시도 (MASTER일 때)
-                val isConnected = withContext(Dispatchers.IO) {
-                    mqttViewModel.initialize(context)
-                }
-                if (isConnected)
-                    if (roles == ChannelRole.MASTER)
-                        mqttViewModel.createShadowWithSubscribe(context, groupId)
+        // Todo. 그룹 ID 반환 로직 추가
+        if (role == ChannelRole.MASTER && !mqttState) {
+            val result = mqttViewModel.initialize()
+            if (result) {
+                mqttViewModel.createShadowWithSubscribe(context, 404)
             }
-        } catch (e: Exception) {
-            Log.e("WebRTCScreen", "MQTT 연결 테스트 실패 또는 구독 실패", e)
-            Toast.makeText(context, "MQTT 연결 실패 또는 구독 실패", Toast.LENGTH_SHORT).show()
         }
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            if (role == ChannelRole.MASTER) {
-                try {
-                    mqttViewModel.disconnectMqttManager()
-                    Log.d("WebRTCScreen", "MQTT Manager Disconnected for MASTER role")
-                } catch (e: Exception) {
-                    Log.e("WebRTCScreen", "Failed to disconnect MQTT Manager", e)
+        if (role == ChannelRole.MASTER && mqttState) {
+            aiViewModel.detectEvent(
+                onResult = { result ->
+                    Log.d("WebRTCScreen", "AI Result: $result")
+                },
+                onPayloadReady = { payload ->
+                    try {
+                        mqttViewModel.publishAIResult(payload)
+                    } catch (e: Exception) {
+                        Log.e("WebRTCScreen", "Failed to publish AI event", e)
+                    }
                 }
-            }
+            )
+            mqttViewModel.startObservingData(context)
         }
     }
 
-    // 초기화는 한 번만 실행되도록 key를 사용
+    // 초기화 한 번만 실행을 위한 key 사용
     LaunchedEffect(channelName) {
         if (uiState !is WebRTCUiState.Success) {
             try {
@@ -173,10 +164,9 @@ fun WebRtcScreen(
         }
     }
 
-    // 뒤로가기 처리
+    // 뒤로 가기 처리
     BackHandler {
         Log.d("WebRTCScreen", "BackHandler 실행")
-
         viewModel.viewModelScope.launch {
             try {
                 viewModel.releasePeerConnection()
@@ -208,7 +198,7 @@ fun WebRtcScreen(
 //        }
 //    }
 
-
+    Log.d("WebRtcScreen", "channelName: $channelName, role: $role")
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -231,7 +221,10 @@ fun WebRtcScreen(
                             cleanup()
 
                             withContext(Dispatchers.Main) {
-                                navController.navigateUp()
+                                navController.navigate("monitoring/group") {
+                                    popUpTo(navController.graph.findStartDestination().id)
+                                    launchSingleTop = true
+                                }
                             }
                         } catch (e: Exception) {
                             Log.e("WebRTCScreen", "연결 해제 실패", e)
@@ -245,33 +238,17 @@ fun WebRtcScreen(
                     }
                 }
             ) {
-                Text("카메라 끄기")
+                Text("연결 종료")
             }
 
-            // MQTT 이벤트 발행 및 AI 분석 button
+            // MQTT 기기 상태 요청 테스트
             Button(
                 onClick = {
-                    // AI 분석 및 MQTT 이벤트 발행
-//                    viewModel.viewModelScope.launch {
-//                        aiViewModel.simulateAIProcessing(
-//                            onResult = { result ->
-//                                Log.d("WebRTCScreen", "AI Result: $result")
-//                            },
-//                            onPayloadReady = { payload ->
-//                                try {
-//                                    mqttViewModel.publishAIResult(payload) // MQTT 이벤트 발행
-//                                    Toast.makeText(context, "MQTT 이벤트 발행 완료", Toast.LENGTH_SHORT)
-//                                        .show()
-//                                } catch (e: Exception) {
-//                                    Log.e("WebRTCScreen", "MQTT 이벤트 발행 실패", e)
-//                                }
-//                            }
-//                        )
-//                    }
+
                 },
                 modifier = Modifier.padding(8.dp)
             ) {
-                Text("AI 이벤트")
+                Text("기기 정보 요청 발행")
             }
 
             IconButton(
@@ -292,6 +269,7 @@ fun WebRtcScreen(
             }
         }
         if (role == ChannelRole.MASTER) {
+            //ai
             LaunchedEffect(Unit) {
                 try {
                     viewModel.frameData
@@ -318,6 +296,8 @@ fun WebRtcScreen(
             ) {
                 if (isViewsInitialized) {
                     localView?.let { renderer ->
+                        //카메라 항상 켜짐
+                        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         AndroidView(
                             factory = {
                                 renderer.apply {

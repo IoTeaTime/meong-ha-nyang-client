@@ -1,11 +1,13 @@
 package com.example.mhnfe.di.module
 
 import com.example.mhnfe.data.remote.api.AuthApi
+import com.example.mhnfe.data.remote.api.DeviceApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.remote.api.QRApi
 import com.example.mhnfe.data.remote.api.UserApi
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -17,17 +19,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-//    @Provides
-//    @Singleton
-//    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
-//        return OkHttpClient.Builder()
-//            .addInterceptor(authInterceptor) // AuthInterceptor 추가
-//            .connectTimeout(30, TimeUnit.SECONDS)
-//            .readTimeout(30, TimeUnit.SECONDS)
-//            .writeTimeout(30, TimeUnit.SECONDS)
-//            .build()
-//    }
-//
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit {
@@ -53,6 +44,17 @@ object NetworkModule {
     @Singleton
     fun provideGroupApi(retrofit: Retrofit): GroupApi {
         return retrofit.create(GroupApi::class.java)  // Retrofit을 통해 GroupApi 생성
+    }
+    @Provides
+    @Singleton
+    fun provideQRApi(retrofit: Retrofit): QRApi {
+        return retrofit.create(QRApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeviceApi(retrofit: Retrofit): DeviceApi {
+        return retrofit.create(DeviceApi::class.java)
     }
 
 //    @Provides

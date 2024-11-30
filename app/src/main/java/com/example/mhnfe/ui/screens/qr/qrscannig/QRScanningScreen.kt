@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.screens.qr.qrscannig
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -31,9 +32,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.amazonaws.services.kinesisvideo.model.ChannelRole
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.SubTopBar
+import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray2
@@ -46,7 +50,8 @@ import java.util.EnumMap
 fun QRScanningScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    viewModel: QRScanningViewModel = viewModel()
+    userType: UserType,
+    viewModel: QRScanningViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val scanner = MultiFormatReader().apply {
@@ -54,15 +59,52 @@ fun QRScanningScreen(
         hints[DecodeHintType.POSSIBLE_FORMATS] = listOf(BarcodeFormat.QR_CODE)
         setHints(hints)
     }
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Navigation 효과
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is QRScanNavigationEvent.NavigateToCCTV -> {
+                    // 채널 정보를 저장
+                    navController.currentBackStackEntry?.savedStateHandle?.apply {
+                        set("channelName", event.channelName)
+                        set("role", ChannelRole.MASTER)
+                    }
+                    // Auth.Master로 이동
+                    navController.navigate(NavRoutes.Auth.Master.createRoute(channelName = event.channelName))
+                }
+                is QRScanNavigationEvent.NavigateToViewer -> {
+                    navController.navigate(NavRoutes.Main.createRoute(event.userType)) {
+                        popUpTo(NavRoutes.Auth.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // 에러 메시지 표시
+    if (uiState.error != null) {
+        LaunchedEffect(uiState.error) {
+            Toast.makeText(context, uiState.error, Toast.LENGTH_SHORT).show()
+        }
+    }
+    LaunchedEffect(userType) {
+        viewModel.setUserType(userType)
+    }
+
 
     var isScanning by remember { mutableStateOf(true) } // 스캔 상태 변수 추가
     Scaffold(
         topBar = {
             SubTopBar(
-                text = "QR 촬영",
-                onBack = {
-                    navController.popBackStack()
-                }
+                text = when(userType) {
+                    UserType.CCTV -> "CCTV QR 촬영"
+                    UserType.VIEWER -> "뷰어 QR 촬영"
+                    else -> "QR 촬영"
+                },
+                onBack = { navController.popBackStack() }
             )
         }
     ) {innerPadding ->
@@ -85,21 +127,22 @@ fun QRScanningScreen(
                         }
                         val imageAnalysis = ImageAnalysis.Builder().build().also {
                             it.setAnalyzer(ContextCompat.getMainExecutor(ctx)) { imageProxy ->
-                                if (isScanning) { // 스캔이 가능할 때만 실행
+                                if (isScanning) {
                                     val result = scanQRCode(imageProxy, scanner)
-                                    imageProxy.close()
                                     if (result != null) {
-                                        println("QR Code found: ${result.text}")
+                                        isScanning = false // 스캔 중지
                                         // QR 코드 인식 성공 시 ViewModel 호출
                                         viewModel.onQRCodeScanned(result.text)
-                                        // 화면 전환
-                                        //navController.navigate("")
-                                        isScanning = false // 스캔 중지
-                                    } else {
-                                        imageProxy.close()
+                                        // QR 스캔 성공 메시지 표시
+                                        Toast.makeText(
+                                            ctx,
+                                            "QR 코드가 인식되었습니다",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
+                                    imageProxy.close()
                                 } else {
-                                    imageProxy.close() // 스캔이 멈췄을 경우 이미지 프록시 닫기
+                                    imageProxy.close()
                                 }
                             }
                         }
@@ -182,16 +225,3 @@ private fun scanQRCode(imageProxy: ImageProxy, scanner: MultiFormatReader): Resu
         null // QR Code not found
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//private fun QRScanningScreenPreview() {
-//    val navController = rememberNavController() // Navigation Controller 미리보기용
-//    val viewModel = remember { QRScanningViewModel() } // ViewModel 미리보기용
-//
-//    QRScanningScreen(
-//        modifier = Modifier.fillMaxSize(),
-//        navController = navController,
-//        viewModel = viewModel
-//    )
-//}
