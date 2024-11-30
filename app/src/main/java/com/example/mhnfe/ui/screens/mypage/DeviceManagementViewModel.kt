@@ -5,9 +5,9 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.ApiResponse
-import com.example.mhnfe.data.remote.response.CctvInfo
 import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.ChangeCctvNicknameResponse
 import com.example.mhnfe.data.remote.response.DeleteDeviceResponse
