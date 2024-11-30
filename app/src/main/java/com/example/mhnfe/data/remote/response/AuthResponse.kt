@@ -59,3 +59,8 @@ data class FCMResponse(
 ) {
     val data: Any? = null
 }
+
+data class SendPasswordResponse(
+    val result: Result,
+    val body: Any? = null
+)
