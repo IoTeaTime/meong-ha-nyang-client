@@ -78,11 +78,11 @@ fun WebRtcScreen(
     val mqttState by mqttViewModel.isConnected.collectAsState()
     val window = (context as? Activity)?.window
 
-    LaunchedEffect(Unit)    {
+    LaunchedEffect(Unit) {
         // Todo. 그룹 ID 반환 로직 추가
         if (role == ChannelRole.MASTER && !mqttState) {
-            val result = mqttViewModel.initialize(context)
-            if(result) {
+            val result = mqttViewModel.initialize()
+            if (result) {
                 mqttViewModel.createShadowWithSubscribe(context, 404)
             }
         }
@@ -99,19 +99,7 @@ fun WebRtcScreen(
                     }
                 }
             )
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            if (role == ChannelRole.MASTER) {
-                try {
-                    mqttViewModel.disconnectMqttManager()
-                    Log.d("WebRTCScreen", "MQTT Manager Disconnected for MASTER role")
-                } catch (e: Exception) {
-                    Log.e("WebRTCScreen", "Failed to disconnect MQTT Manager", e)
-                }
-            }
+            mqttViewModel.startObservingData(context)
         }
     }
 
