@@ -54,8 +54,18 @@ fun GroupScreen(
         if (!mqttState) {
             val result = mqttViewModel.initialize()
             if(result) {
-                val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
-                mqttViewModel.viewerInitialSubscribe(context, thingList)
+                val cctvList = groupInfo?.cctv ?: emptyList()
+                if (!cctvList.isEmpty()) {
+                    cctvList.forEach {
+                        cctvItem->
+                        run {
+                            mqttViewModel.viewerInitialSubscribe(context, cctvItem.thingId)
+                            mqttViewModel.ShadowWithSubscribe(cctvItem.thingId)
+                        }
+
+                    }
+                    mqttViewModel.startObservingData(context)
+                }
             }
         }
 
@@ -66,7 +76,7 @@ fun GroupScreen(
                 "timestamp": ${System.currentTimeMillis() / 1000}
             }
             """.trimIndent()
-            mqttViewModel.getDeviceInfo(payload, 404)
+            mqttViewModel.getDeviceInfo(payload, 1)
         }
     }
     Scaffold(
