@@ -22,18 +22,6 @@ class TokenManager @Inject constructor(
         return refreshToken ?: throw IllegalStateException("Refresh token is not available")
     }
 
-    // 엑세스 토큰 갱신
-    suspend fun refreshAccessToken(): String {
-        val refreshToken = getRefreshToken() // 리프레시 토큰 가져오기
-        val response = withContext(Dispatchers.IO) {
-            userApi.refreshAccessToken(refreshToken)
-        }
-        val newAccessToken = userRepository.getNewAccessToken(response)
-        saveAccessToken(newAccessToken.newAccessToken)
-
-        return newAccessToken.newAccessToken
-    }
-
     // 엑세스 토큰 저장
     suspend fun saveAccessToken(token: String) {
         accessTokenDataStore.updateData { AccessToken(token) }

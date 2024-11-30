@@ -10,7 +10,7 @@ data class RefreshAccessTokenResponse(
 
 @Serializable
 data class RefreshedAccessToken(
-    val newAccessToken: String
+    val accessToken: String
 )
 
 data class LogoutResponse(
