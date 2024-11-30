@@ -41,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.LogoutPopUp
 import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.navigation.NavRoutes
@@ -56,6 +57,7 @@ fun ProfileScreen(
     nickname: String = "막내가짱이야",
     id: String = "nahaha",
     groupId: String = "IoTeatime",
+    userType: UserType,
     bottomNavController: NavController,
     mainNavController: NavController,
     profileViewModel: ProfileViewModel = hiltViewModel()
@@ -102,13 +104,16 @@ fun ProfileScreen(
                 modifier = modifier,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(35.dp, alignment = Alignment.CenterVertically)
-            ){
+            ) {
                 Row(
                     modifier = modifier
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(color = mainGray2, shape = RoundedCornerShape(12.dp)),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        16.dp,
+                        alignment = Alignment.CenterHorizontally
+                    ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
@@ -117,7 +122,10 @@ fun ProfileScreen(
                             .wrapContentHeight()
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(18.dp, alignment = Alignment.CenterHorizontally)
+                        horizontalArrangement = Arrangement.spacedBy(
+                            18.dp,
+                            alignment = Alignment.CenterHorizontally
+                        )
                     ) {
                         Image(
                             modifier = modifier.size(35.dp),
@@ -130,7 +138,10 @@ fun ProfileScreen(
                             modifier = modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight(),
-                            verticalArrangement = Arrangement.spacedBy(10.dp, alignment = Alignment.CenterVertically),
+                            verticalArrangement = Arrangement.spacedBy(
+                                10.dp,
+                                alignment = Alignment.CenterVertically
+                            ),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
@@ -163,7 +174,10 @@ fun ProfileScreen(
 
                             Row(
                                 modifier = modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(100.dp, alignment = Alignment.CenterHorizontally),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    100.dp,
+                                    alignment = Alignment.CenterHorizontally
+                                ),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -184,7 +198,10 @@ fun ProfileScreen(
                                 modifier = modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
-                                horizontalArrangement = Arrangement.spacedBy(71.dp, alignment = Alignment.CenterHorizontally),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    71.dp,
+                                    alignment = Alignment.CenterHorizontally
+                                ),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -216,7 +233,8 @@ fun ProfileScreen(
                     deletePopup(
                         onConfirmation = {
                             profileViewModel.quit()
-                            setDialogVisible1(false) },
+                            setDialogVisible1(false)
+                        },
                         onDismissRequest = { setDialogVisible1(false) },
                     )
                 }
@@ -237,7 +255,10 @@ fun ProfileScreen(
                         .wrapContentHeight()
                         .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
                         .clickable(onClick = { bottomNavController.navigate("myPage/change_password") }),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        16.dp,
+                        alignment = Alignment.CenterHorizontally
+                    ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
@@ -268,42 +289,44 @@ fun ProfileScreen(
                         }
                     }
                 }
+                if (userType == UserType.MASTER) {
 
-                Row(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
-                        .clickable(onClick = { bottomNavController.navigate("myPage/device_management") }),
-
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
                     Row(
                         modifier = modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            "기기 관리",
-                            style = Typography.bodyMedium
-                        )
+                            .background(color = mainGray2, shape = RoundedCornerShape(12.dp))
+                            .clickable(onClick = { bottomNavController.navigate("myPage/device_management") }),
 
-                        Box(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
                             modifier = modifier
-                                .size(22.dp),
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(
-                                modifier = modifier
-                                    .size(16.dp, 16.dp)
-                                    .align(Alignment.Center),
-                                painter = painterResource(id = R.drawable.navigate_after),
-                                contentDescription = null,
-                                tint = Color.Unspecified
+                            Text(
+                                "기기 관리",
+                                style = Typography.bodyMedium
                             )
+
+                            Box(
+                                modifier = modifier
+                                    .size(22.dp),
+                            ) {
+                                Icon(
+                                    modifier = modifier
+                                        .size(16.dp, 16.dp)
+                                        .align(Alignment.Center),
+                                    painter = painterResource(id = R.drawable.navigate_after),
+                                    contentDescription = null,
+                                    tint = Color.Unspecified
+                                )
+                            }
                         }
                     }
                 }
@@ -348,12 +371,12 @@ fun ProfileScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun ProfileScreenPreview() {
-    val navController = rememberNavController()
-    ProfileScreen(
-        bottomNavController = navController,
-        mainNavController = navController
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//private fun ProfileScreenPreview() {
+//    val navController = rememberNavController()
+//    ProfileScreen(
+//        bottomNavController = navController,
+//        mainNavController = navController
+//    )
+//}

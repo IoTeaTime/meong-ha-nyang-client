@@ -37,7 +37,7 @@ import com.example.mhnfe.ui.theme.mainBlack
 @Composable
 fun GroupScreen(
     modifier: Modifier = Modifier,
-    userType: UserType = UserType.MASTER,
+    userType: UserType,
     navController: NavController,
     mqttViewModel: MqttViewModel = hiltViewModel(),
     groupViewModel: GroupViewModel = hiltViewModel(),
