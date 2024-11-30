@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mhnfe.domain.ai.BoundingBoxUtils
+import com.example.mhnfe.domain.ai.DetectionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,28 +28,32 @@ class AiViewModel @Inject constructor() : ViewModel() {
 
     fun detectEvent(onResult: (String) -> Unit, onPayloadReady: (String) -> Unit) {
         viewModelScope.launch {
-            // input "detect" or "category"
-            val aiResult = "dog" // TODO. Replace with actual AI processing logic
-            val payload = """
+            try {
+                Log.d("DetectEvent", "detectEvent() 시작")
+
+                val trackingId = DetectionManager.getNextTrackingId()
+                val objectType = DetectionManager.getObjectType()
+                val coordinatesJson = BoundingBoxUtils.boundingBoxJson()
+
+                val payload = """
             {
-                "trackingId": 1,
+                "trackingId": $trackingId,
                 "timestamp": ${System.currentTimeMillis() / 1000}, 
-                "objectType": "$aiResult", 
-                "location": { 
-                    "x1": 30, 
-                    "y1": 0,
-                    "x2": 30, 
-                    "y2": 700,
-                    "x3": 1200,
-                    "y3": 700,
-                    "x4": 1200,
-                    "y4": 0
-                }
+                "objectType": "$objectType",
+                "coordinates": $coordinatesJson
             }
             """.trimIndent()
-            // Callback
-            onResult(aiResult)
-            onPayloadReady(payload)
+                // Callback
+                Log.d("DetectEvent", "onResult() 호출")
+                onResult(objectType)
+
+                Log.d("DetectEvent", "onPayloadReady() 호출")
+                onPayloadReady(payload)
+
+                Log.d("DetectEvent", "detectEvent() 완료")
+            } catch (e: Exception) {
+                Log.e("DetectEvent", "detectEvent() 중 오류 발생: ${e.message}", e)
+            }
         }
-    }
 }
+    }

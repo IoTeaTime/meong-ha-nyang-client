@@ -24,3 +24,13 @@ data class DeleteResponse(
 data class ChangePasswordResponse(
     val result: Result
 )
+data class ChangeNicknameOrGroupNameResponse(
+    val result: Result,
+    val body: ChangeNicknameOrGroupNameBody? = null
+)
+
+@Serializable
+data class ChangeNicknameOrGroupNameBody(
+    val nickname: String,
+    val groupName: String
+)

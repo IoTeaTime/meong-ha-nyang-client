@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.mypage
 
+import android.content.ContentValues.TAG
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.datastore.core.DataStore
@@ -10,6 +11,8 @@ import com.example.mhnfe.data.remote.api.UserApi
 import com.example.mhnfe.data.remote.request.ChangePasswordRequest
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.ChangeCctvNicknameResponse
+import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.LogoutResponse
@@ -23,7 +26,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import org.json.JSONObject
 import retrofit2.HttpException
+import retrofit2.Response
 import java.lang.Thread.State
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -46,6 +52,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _changeResponse = MutableStateFlow<ChangePasswordResponse?>(null)
     val changeResponse: StateFlow<ChangePasswordResponse?> = _changeResponse
+
+    private val _changeNicknameOrGroupNameResponse = MutableStateFlow<ChangeNicknameOrGroupNameResponse?>(null)
+    val changeNicknameOrGroupNameResponse: StateFlow<ChangeNicknameOrGroupNameResponse?> = _changeNicknameOrGroupNameResponse
 
     fun logout() {
         viewModelScope.launch {
@@ -126,5 +135,31 @@ class ProfileViewModel @Inject constructor(
 
         // SharedPreferences 초기화 (로그인 정보 삭제)
         sharedPreferences.edit().clear().apply()
+    }
+
+    fun changeNicknameGroupName(nickname: String, groupName: String) {
+        viewModelScope.launch {
+            try {
+                val token = accessTokenDataStore.data.map { it.accessToken }.first()
+                val response = withContext(Dispatchers.IO) {
+                    var processedNickname : String? = null
+                    var processedGroupName : String? = null
+
+                    if (!nickname.isBlank()){
+                        processedNickname = nickname
+                    }
+                    if (!groupName.isBlank()){
+                        processedGroupName = groupName
+                    }
+                    userRepository.changeNicknameOrGroupName(token,processedNickname,processedGroupName)
+                }
+                _changeNicknameOrGroupNameResponse.value = response
+
+            }catch (e: Exception) {
+                // 에러 처리
+                e.printStackTrace()
+            }
+
+        }
     }
 }
