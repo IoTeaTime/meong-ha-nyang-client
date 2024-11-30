@@ -1,11 +1,15 @@
 package com.example.mhnfe.ui.screens.auth.main
 
+import android.content.ContentValues.TAG
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,6 +26,7 @@ import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
+import kotlin.math.log
 
 
 @Composable
@@ -31,20 +36,36 @@ fun MainScreen(
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
     val context = LocalContext.current
-
+    val loginResponse by mainViewModel.loginResponse.collectAsState()
     // 자동 로그인 로직
-    LaunchedEffect(Unit) {
-        mainViewModel.autoLogin(
-            onSuccess = {
-                // 자동 로그인 성공 -> 다음 화면으로 이동
+    LaunchedEffect(loginResponse) {
+        mainViewModel.autoLogin()
+        if (loginResponse?.result?.code == 200) {
+            if(loginResponse?.body?.isGroupMember == true)
+            {
+                if(loginResponse?.body?.role== "ROLE_MASTER") {
+                    navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                        // Auth 플로우를 백스택에서 제거
+                        popUpTo(NavRoutes.Auth.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+                else{
+                    navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
+                        // Auth 플로우를 백스택에서 제거
+                        popUpTo(NavRoutes.Auth.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            }
+            else {
                 navController.navigate(NavRoutes.Auth.Select.route) {
                     popUpTo(NavRoutes.Auth.route) { inclusive = true }
                 }
-            },
-            onFailure = { e ->
-                Log.e("MainScreen", "자동 로그인 실패", e)
             }
-        )
+        }
     }
 //    viewModel.initializeWithContext(context)
     Column(
