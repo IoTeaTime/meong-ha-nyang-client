@@ -22,16 +22,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.R
 import com.example.mhnfe.ui.components.MainTextBox
+import com.example.mhnfe.ui.screens.auth.login.LoginViewModel
 
 @Composable
-fun EditPopup(
+fun SendPasswordPopUp(
     modifier: Modifier = Modifier,
     onConfirmation: () -> Unit,
     onDismissRequest: () -> Unit,
+    loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val focusManager = LocalFocusManager.current
     val (email, onEmailChange) = remember { mutableStateOf("") }
@@ -148,7 +151,10 @@ fun EditPopup(
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     TextButton(
-                        onClick = { onConfirmation() },
+                        onClick = {
+                            loginViewModel.sendPassword(email)
+                            onConfirmation()
+                                  },
                         shape = RoundedCornerShape(16.dp),
                         contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -168,14 +174,14 @@ fun EditPopup(
 
 @Preview(showBackground = true)
 @Composable
-private fun EditPopupPreview() {
+private fun SendPasswordPopUpPreview() {
     Column(
         modifier = Modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        EditPopup(onConfirmation = {},
+        SendPasswordPopUp(onConfirmation = {},
             onDismissRequest = {}
         )
     }
