@@ -77,6 +77,10 @@ fun SignUpScreen(
     var passwordErrorMessage by remember { mutableStateOf("") }
     var nicknameErrorMessage by remember { mutableStateOf("") }
 
+    // 인증 메일 관련 state
+    val sendEmailVerificationResponse by signUpViewModel.sendEmailVerificationResponse.collectAsState()
+    val checkEmailVerificationResponse by signUpViewModel.checkEmailVerificationResponse.collectAsState()
+
     fun isVerificationCodeValid(code: String): Boolean {
         return code != "111111"  // 111111이면 틀린 것으로 처리
     }
@@ -338,6 +342,7 @@ fun SignUpScreen(
                                                 errorMessage = null
                                                 currentStep++
                                                 Log.d("SignUpScreen", "이메일 중복 확인: $description")
+                                                signUpViewModel.sendEmailVerification(email)
                                             }
                                             400 -> {
                                                 emailErrorMessage = "이미 사용 중인 이메일입니다."
@@ -368,6 +373,9 @@ fun SignUpScreen(
                         onClick = {
                             if (validateCurrentStep()) {
                                 if (currentStep < 3) {
+                                    if (currentStep == 1) {
+                                        signUpViewModel.checkEmailVerification(email, verificationCode)
+                                    }
                                     currentStep++
                                 } else {
                                     // Call the Sign-Up API
