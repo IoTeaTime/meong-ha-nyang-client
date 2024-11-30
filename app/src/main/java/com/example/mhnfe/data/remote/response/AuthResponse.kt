@@ -16,6 +16,10 @@ data class CheckEmailResponse(
     val data: Any? = null
 }
 
+data class ApiResponse(
+    val result: Result
+)
+
 @Serializable
 data class Result(
     val code: Int,
