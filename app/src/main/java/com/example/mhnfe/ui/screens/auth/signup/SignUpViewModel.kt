@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.data.remote.response.SignUpResponse
 import com.example.mhnfe.data.remote.response.CheckEmailResponse
+import com.example.mhnfe.data.remote.response.CheckEmailVerificationResponse
 import com.example.mhnfe.data.remote.response.SendEmailVerificationResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +31,10 @@ class SignUpViewModel @Inject constructor(
 
     private val _sendEmailVerificationResponse = MutableStateFlow<SendEmailVerificationResponse?>(null)
     val sendEmailVerificationResponse: StateFlow<SendEmailVerificationResponse?> = _sendEmailVerificationResponse
+
+    private val _checkEmailVerificationResponse = MutableStateFlow<CheckEmailVerificationResponse?>(null)
+    val checkEmailVerificationResponse: StateFlow<CheckEmailVerificationResponse?> = _checkEmailVerificationResponse
+
 
     suspend fun checkEmailStatus(email: String): Pair<Int, String> {
 //        Log.d("SignUpScreen", "checkEmailDuplicate 호출, email=$email")
@@ -92,7 +97,22 @@ class SignUpViewModel @Inject constructor(
 
     fun checkEmailVerification(email: String, code: String) {
         viewModelScope.launch {
-
+            try {
+                val response = authRepository.checkEmailVerification(email, code)
+                if(response.result.code == 200)
+                {
+                    _checkEmailVerificationResponse.value = response
+                    _errorMessage.value = null
+                } else {
+                    _errorMessage.value = "인증 코드가 일치하지 않습니다."
+                }
+            } catch (e: HttpException) {
+                _sendEmailVerificationResponse.value = null
+                _errorMessage.value = e.message()
+            } catch (e: Exception) {
+                _sendEmailVerificationResponse.value = null
+                _errorMessage.value = "인증 메일 인증 중 오류가 발생했습니다."
+            }
         }
     }
 }
