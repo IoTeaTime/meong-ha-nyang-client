@@ -16,13 +16,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.datastore.core.DataStore
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
-import com.example.mhnfe.data.remote.request.LoginRequest
-import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
@@ -58,7 +56,24 @@ fun MainScreen(
                 }
             },
             onFailure = { e ->
-                Log.e("MainScreen", "자동 로그인 실패", e)
+                mainViewModel.fetchCctvId(
+                    onSuccess = { cctvInfo ->
+                        Log.d("MainScreen", "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}")
+                        val channelName = cctvInfo.body.kvsChannelName
+
+                        // SavedStateHandle에 채널 정보 저장
+                        navController.currentBackStackEntry?.savedStateHandle?.apply {
+                            set("channelName", channelName)
+                            set("role", ChannelRole.MASTER)
+                        }
+
+                        // Master 화면으로 이동
+                        navController.navigate(NavRoutes.Auth.Master.createRoute(channelName = channelName))
+                    },
+                    onFailure = { fetchError ->
+                        Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
+                    }
+                )
             }
         )
     }
@@ -106,7 +121,7 @@ fun MainScreen(
             MiddleButton(
                 text = "Cam 참여",
                 onClick = {
-                    navController.navigate(NavRoutes.Auth.QRScanner.route)
+                    navController.navigate(NavRoutes.Auth.QRScanner.createRoute(UserType.CCTV))
                 },
             )
 

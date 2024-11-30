@@ -23,7 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
-import com.example.mhnfe.data.remote.response.CctvInfo
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTopBar
@@ -31,6 +31,7 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
+
 
 
 @Composable
@@ -47,8 +48,8 @@ fun GroupScreen(
 
 
     LaunchedEffect(Unit) {
-        // todo 1. API 호출 -> Group Id, Thing Id List 반환
         groupViewModel.fetchGroupInfo()
+        // todo 1. API 호출 -> Group Id, Thing Id List 반환
         // 2. Thing Id를 Sub, Group Id로 Pub -> CCTV 기기에 정보 요청
         // 3. CCTV 기기는 자신의 Thing Id로 Pub
         if (!mqttState) {
@@ -165,10 +166,13 @@ fun GroupScreen(
     }
 }
 
-fun CctvInfo.toCCTV() = CCTV(
-    id = cctvId,
-    deviceName = cctvNickname,
-    thingId = thingId,
-    channelName = kvsChannelName,
-)
+fun CctvInfo.toCCTV(): CCTV {
+    return CCTV(
+        id = cctvId,
+        deviceName = cctvNickname,
+        thingId = thingId,
+        channelName = kvsChannelName
+    )
+}
+
 
