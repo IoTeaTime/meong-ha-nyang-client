@@ -23,7 +23,6 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val loginRequestDataStore: DataStore<LoginRequest>,
     private val qrRepository: QRRepository,
     private val groupIdDataStore: DataStore<GroupId>,
     private val loginRequestDataStore: DataStore<LoginRequest>
