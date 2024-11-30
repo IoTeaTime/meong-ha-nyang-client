@@ -36,36 +36,31 @@ fun MainScreen(
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
     val context = LocalContext.current
-    val loginResponse by mainViewModel.loginResponse.collectAsState()
     // 자동 로그인 로직
-    LaunchedEffect(loginResponse) {
-        mainViewModel.autoLogin()
-        if (loginResponse?.result?.code == 200) {
-            if(loginResponse?.body?.isGroupMember == true)
-            {
-                if(loginResponse?.body?.role== "ROLE_MASTER") {
-                    navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
-                        // Auth 플로우를 백스택에서 제거
-                        popUpTo(NavRoutes.Auth.route) {
-                            inclusive = true
+    LaunchedEffect(Unit) {
+        mainViewModel.autoLogin(
+            onSuccess = { role, groupId ->
+                // 자동 로그인 성공 -> 다음 화면으로 이동
+                if(groupId != null && groupId != 0L) {
+                    if(role.equals("ROLE_MASTER")) {
+                        navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
+                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
                         }
                     }
-                }
-                else{
-                    navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
-                        // Auth 플로우를 백스택에서 제거
-                        popUpTo(NavRoutes.Auth.route) {
-                            inclusive = true
-                        }
+                } else {
+                    navController.navigate(NavRoutes.Auth.Select.route) {
+                        popUpTo(NavRoutes.Auth.route) { inclusive = true }
                     }
                 }
+            },
+            onFailure = { e ->
+                Log.e("MainScreen", "자동 로그인 실패", e)
             }
-            else {
-                navController.navigate(NavRoutes.Auth.Select.route) {
-                    popUpTo(NavRoutes.Auth.route) { inclusive = true }
-                }
-            }
-        }
+        )
     }
 //    viewModel.initializeWithContext(context)
     Column(
