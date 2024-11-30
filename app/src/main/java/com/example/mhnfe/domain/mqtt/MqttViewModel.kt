@@ -1,5 +1,6 @@
 package com.example.mhnfe.domain.mqtt
 
+import DeviceUtils
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -204,7 +205,7 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    fun getDeviceInfo(payload: String, groupId: Int) {
+    fun getDeviceInfo(payload: String, groupId: Long) {
         val topic = "/mhn/command/device/info/groups/$groupId"
         publish(topic, payload)
     }
@@ -259,6 +260,24 @@ class MqttViewModel @Inject constructor(
     // 데이터 관찰 중지
     fun stopObservingData() {
         dataObserver = null // todo. mqtt 연결 해제될 때 같이 수정
+    }
+
+    fun testTopic(): Boolean {
+        var isSuccess = false // Variable to store the result of the subscription
+
+        subscribe("/mhn/connect/test/$thingId") { receivedTopic, message ->
+            // Check if the received message meets certain criteria
+            if (message == "Connection test") {
+                // If the message is the one we're expecting, mark as successful
+                isSuccess = true
+            }
+        }
+
+        // Publish a message to test the connection
+        publish("/mhn/connect/test/$thingId", "Connection test")
+
+        // Return the result (true if the expected message is received, otherwise false)
+        return isSuccess
     }
 
     private fun publish(topic: String, payload: String) {
