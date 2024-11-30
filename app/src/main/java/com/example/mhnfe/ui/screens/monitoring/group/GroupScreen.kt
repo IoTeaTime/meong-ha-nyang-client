@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
 import com.example.mhnfe.data.remote.response.CctvInfo
+import com.example.mhnfe.data.remote.response.GroupInfo
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTopBar
@@ -42,32 +43,32 @@ fun GroupScreen(
     groupViewModel: GroupViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    var connectionState: Boolean = false
     val groupInfo by groupViewModel.groupInfo.collectAsState()
-    val mqttState by mqttViewModel.isConnected.collectAsState()
-
 
     LaunchedEffect(Unit) {
-        // todo 1. API 호출 -> Group Id, Thing Id List 반환
-        groupViewModel.fetchGroupInfo()
-        // 2. Thing Id를 Sub, Group Id로 Pub -> CCTV 기기에 정보 요청
-        // 3. CCTV 기기는 자신의 Thing Id로 Pub
-        if (!mqttState) {
-            val result = mqttViewModel.initialize()
-            if(result) {
-                val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
-                mqttViewModel.viewerInitialSubscribe(context, thingList)
-            }
-        }
+        connectionState = mqttViewModel.testTopic()
+    }
 
-        if (mqttState) {
+    LaunchedEffect(connectionState) {
+
+        val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
+        mqttViewModel.viewerInitialSubscribe(context, thingList)
+        groupViewModel.fetchGroupInfo {
+            groupInfo: GroupInfo ->
+            val groupName = groupInfo.groupName
+            val groupId = groupInfo.groupId
             val payload = """
             {
-                "groupInfo": "$groupInfo?.groupName",
+                "groupInfo": "$groupName",
                 "timestamp": ${System.currentTimeMillis() / 1000}
             }
             """.trimIndent()
-            mqttViewModel.getDeviceInfo(payload, 404)
+            mqttViewModel.getDeviceInfo(payload, groupId)
         }
+
+
+
     }
     Scaffold(
         modifier = modifier.fillMaxSize(),
