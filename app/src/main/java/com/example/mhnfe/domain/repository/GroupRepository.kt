@@ -17,11 +17,8 @@ interface GroupRepository {
     suspend fun createGroup(): Result<Group>
     suspend fun generateCctvQR(): QRApiResponse
     suspend fun generateViewerQR(): QRApiResponse
-
     suspend fun getGroupMember(authToken: String): Response<GroupMemberResponse>
     suspend fun getGroupMemberList(groupId: Long, authToken: String): Response<GroupMemberInfoResponse>
-    suspend fun generateCctvQR(response: QRApiResponse): QRApiResponse
-    suspend fun generateViewerQR(response: QRApiResponse): QRApiResponse
     suspend fun getCctvList(groupId: Long, token: String): Response<CctvListResponse>
     suspend fun deleteGroupMember(groupId: Long, groupMemberId: Long, token: String): Response<ApiResponse>
 }
