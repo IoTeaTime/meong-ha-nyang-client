@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.ApiResponse
 import com.example.mhnfe.data.remote.response.CctvInfo
 import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.ChangeCctvNicknameResponse
@@ -23,8 +24,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import retrofit2.Response
@@ -128,6 +127,22 @@ class DeviceManagementViewModel @Inject constructor(
 
                 _errorMessage.value = errorBody.result.description
                 Log.e(TAG,"Error: " + _errorMessage.value)
+            }
+        }
+    }
+
+    fun deleteViewer(groupMemberId: Long) {
+        viewModelScope.launch {
+            val groupId = groupIdDataStore.data.map { it.groupId }.first()
+            val token = accessTokenDataStore.data.map { it.accessToken }.first()
+            val response: Response<ApiResponse> =
+                groupRepository.deleteGroupMember(groupId, groupMemberId, token)
+            if (!response.isSuccessful) {
+                val jsonObject = JSONObject(response.errorBody()!!.string())
+                val errorBody = Json.decodeFromString<DeleteDeviceResponse>(jsonObject.toString())
+
+                _errorMessage.value = errorBody.result.description
+                Log.e(TAG, "Error: " + _errorMessage.value)
             }
         }
     }

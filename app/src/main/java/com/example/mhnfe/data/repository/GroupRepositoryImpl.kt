@@ -1,6 +1,7 @@
 package com.example.mhnfe.data.repository
 
 import com.example.mhnfe.data.remote.api.GroupApi
+import com.example.mhnfe.data.remote.response.ApiResponse
 import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.Group
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
@@ -43,5 +44,13 @@ class GroupRepositoryImpl @Inject constructor(
 
     override suspend fun getCctvList(groupId: Long, token: String): Response<CctvListResponse> {
         return groupApi.getCctvList(groupId, token)
+    }
+
+    override suspend fun deleteGroupMember(
+        groupId: Long,
+        groupMemberId: Long,
+        token: String
+    ): Response<ApiResponse> {
+        return groupApi.deleteGroupMember(groupId, groupMemberId, token)
     }
 }

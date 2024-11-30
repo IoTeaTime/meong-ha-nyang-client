@@ -1,5 +1,6 @@
 package com.example.mhnfe.domain.repository
 
+import com.example.mhnfe.data.remote.response.ApiResponse
 import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.Group
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
@@ -16,4 +17,5 @@ interface GroupRepository {
     suspend fun generateCctvQR(response: QRApiResponse): QRApiResponse
     suspend fun generateViewerQR(response: QRApiResponse): QRApiResponse
     suspend fun getCctvList(groupId: Long, token: String): Response<CctvListResponse>
+    suspend fun deleteGroupMember(groupId: Long, groupMemberId: Long, token: String): Response<ApiResponse>
 }
