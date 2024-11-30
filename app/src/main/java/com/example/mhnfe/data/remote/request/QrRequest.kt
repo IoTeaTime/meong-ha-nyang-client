@@ -10,3 +10,10 @@ data class ViewerQRRequest(
     val groupId: Int,
     val thingId: String
 )
+
+data class CctvInfoResponseBody(
+    val cctvId: Int,
+    val cctvNickname: String,
+    val thingId: String,
+    val kvsChannelName: String
+)

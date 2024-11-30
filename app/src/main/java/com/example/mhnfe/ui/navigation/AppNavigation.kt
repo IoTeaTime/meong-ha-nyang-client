@@ -18,7 +18,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
-import com.example.mhnfe.SignalingChannelTest
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.screens.auth.login.LoginScreen
 import com.example.mhnfe.ui.screens.auth.main.MainScreen
@@ -33,6 +32,7 @@ import com.example.mhnfe.ui.screens.mypage.ProfileScreen
 import com.example.mhnfe.ui.screens.qr.qrgenerate.QRGenerateScreen
 import com.example.mhnfe.ui.screens.qr.qrscannig.QRScanningScreen
 import com.example.mhnfe.ui.screens.mypage.DeviceManagementScreen
+import com.example.mhnfe.ui.screens.report.ReportDetailScreen
 
 
 sealed class NavRoutes(val route: String) {
@@ -227,12 +227,6 @@ fun MainContent(
                 route = NavRoutes.Monitoring.route
             ) {
                 composable(NavRoutes.Monitoring.Group.route) {
-//                    entry ->
-//                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
-//                    SignalingChannelTest(
-//                        navController = bottomNavController,
-//                        kvsViewModel = kvsViewModel,
-//                    )
                     GroupScreen(
                         userType = userType,
                         navController = bottomNavController  // bottomNavController 전달
@@ -272,31 +266,6 @@ fun MainContent(
                         role = ChannelRole.VIEWER
                     )
                 }
-                //전 코드 확실해지면 나중에 지울게요
-//                composable(NavRoutes.Monitoring.Viewer.route) {
-////                    val parentEntry = remember(bottomNavController) {
-////                        bottomNavController.getBackStackEntry(NavRoutes.Report.ReportDetail.route)
-////                    }
-////                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel(
-////                        viewModelStoreOwner = parentEntry
-////                    )
-////
-////
-////                    val channelName = parentEntry.savedStateHandle.get<String>("channelName") ?: "demo-channel"
-////                    val role = ChannelRole.VIEWER  // Master route이므로 MASTER로 고정
-//                    val kvsSignalingViewModel: KVSSignalingViewModel = viewModel()
-//
-//                    // channelName을 현재 route의 arguments에서 가져오도록 수정
-//                    val channelName = it.arguments?.getString("channelName") ?: "demo-channel"
-//                    val role = ChannelRole.VIEWER
-//
-//                    WebRtcScreen(
-//                        navController = bottomNavController,
-//                        viewModel = kvsSignalingViewModel,
-//                        channelName = channelName,
-//                        role = role
-//                    )
-//                }
                 composable(
                     route = NavRoutes.Monitoring.DeviceInformation.route,
                     arguments = listOf(
@@ -332,13 +301,13 @@ fun MainContent(
                 route = NavRoutes.Report.route
             ) {
                 composable(NavRoutes.Report.ReportDetail.route) {
-                    entry ->
-                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
-                    SignalingChannelTest(
-                        navController = bottomNavController,
-                        kvsViewModel = kvsViewModel,
-                    )
-//                    ReportDetailScreen(navController = bottomNavController)
+//                    entry ->
+//                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
+//                    SignalingChannelTest(
+//                        navController = bottomNavController,
+//                        kvsViewModel = kvsViewModel,
+//                    )
+                    ReportDetailScreen(navController = bottomNavController)
                 }
                 //추후에 화면이 추가 될 수 있기 때문에 이렇게 따로 빼서 구현 추후 화면 추가가 없을 시 삭제
             }

@@ -6,8 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
+import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.repository.AuthRepository
+import com.example.mhnfe.domain.repository.QRRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -16,14 +20,15 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val loginRequestDataStore: DataStore<LoginRequest>,
-    private val cctvResponseDataStore: DataStore<CCTVResponseBody>
+    private val qrRepository: QRRepository,
 ) : ViewModel() {
+
+    private val _cctvInfo = MutableStateFlow<CctvInfoResponse?>(null)
+    val cctvInfo = _cctvInfo.asStateFlow()
     fun autoLogin(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        Log.d("MainViewModel", "Start AutoLogin")
-
         viewModelScope.launch {
             try {
                 val loginRequest = loginRequestDataStore.data.first() // 초기 값 읽기
@@ -53,12 +58,15 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // CCTV ID를 불러오는 메서드
-    fun fetchCctvId(onSuccess: (Int) -> Unit, onFailure: (Throwable) -> Unit) {
+    fun fetchCctvId(
+        onSuccess: (CctvInfoResponse) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
         viewModelScope.launch {
             try {
-                val cctvId = cctvResponseDataStore.data.first().cctvId
-                onSuccess(cctvId)
+                val cctvInfo = qrRepository.getCctvInfo()
+                _cctvInfo.value = cctvInfo
+                onSuccess(cctvInfo)
             } catch (e: Exception) {
                 onFailure(e)
             }

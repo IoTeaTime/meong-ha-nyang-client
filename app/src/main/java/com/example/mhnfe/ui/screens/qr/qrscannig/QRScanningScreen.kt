@@ -1,7 +1,6 @@
 package com.example.mhnfe.ui.screens.qr.qrscannig
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.camera.core.CameraSelector
@@ -34,7 +33,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.di.UserType
@@ -73,7 +71,6 @@ fun QRScanningScreen(
                         set("channelName", event.channelName)
                         set("role", ChannelRole.MASTER)
                     }
-                    Log.e("","테스트 ${event.channelName}")
                     // Auth.Master로 이동
                     navController.navigate(NavRoutes.Auth.Master.createRoute(channelName = event.channelName))
                 }
