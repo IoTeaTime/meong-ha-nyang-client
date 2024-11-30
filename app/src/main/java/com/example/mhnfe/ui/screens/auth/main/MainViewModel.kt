@@ -5,32 +5,33 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.request.LoginRequest
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.LoginResponse
 import com.example.mhnfe.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val groupIdDataStore: DataStore<GroupId>,
     private val loginRequestDataStore: DataStore<LoginRequest>
 ) : ViewModel() {
-
-    // 자동 로그인 결과 상태
-    private val _loginResponse = MutableStateFlow<LoginResponse?>(null)
-    val loginResponse: StateFlow<LoginResponse?> = _loginResponse
-
     fun autoLogin(
+        onSuccess: (String, Long) -> Unit,
+        onFailure: (Exception) -> Unit
     ) {
         Log.d("MainViewModel", "Start AutoLogin")
 
         viewModelScope.launch {
             try {
                 val loginRequest = loginRequestDataStore.data.first() // 초기 값 읽기
+                val groupId = groupIdDataStore.data.map { it.groupId }.first()
                 val savedId = loginRequest.email
                 val savedPassword = loginRequest.password
 
@@ -40,20 +41,20 @@ class MainViewModel @Inject constructor(
                     Log.d("MainViewModel", "AutoLogin data :$savedId $savedPassword")
                     if (response.result.code == 200) {
                         Log.d("MainViewModel", "AutoLogin Success!!")
-                        _loginResponse.value = response
+                        onSuccess(response.body.role, groupId)
                     } else {
-                        _loginResponse.value = null
                         Log.d("MainViewModel", "AutoLogin Failed: Invalid Credentials")
+                        onFailure(Exception("Invalid credentials"))
                     }
                 } else {
                     // 저장된 데이터가 없거나 비어 있는 경우
                     Log.d("MainViewModel", "AutoLogin Failed: No valid saved credentials")
+                    onFailure(Exception("No valid saved credentials"))
                 }
             } catch (e: Exception) {
                 Log.d("MainViewModel", "AutoLogin Failed...")
+                onFailure(e)
             }
         }
     }
-
-
 }
