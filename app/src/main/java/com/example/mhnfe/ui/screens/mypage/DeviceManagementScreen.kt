@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.mypage
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -41,7 +42,9 @@ fun DeviceManagementScreen(
                 deviceManagementViewModel.clearErrorMessage()
             }
         }
+    }
 
+    LaunchedEffect(Unit) {
         // 그룹 CCTV 정보 리스트 조회
         deviceManagementViewModel.getCctvList()
 
@@ -55,6 +58,13 @@ fun DeviceManagementScreen(
 
     var viewerDevices by remember {
         mutableStateOf(groupMemberInfoList)
+    }
+
+    LaunchedEffect(cctvList) {
+        cctvDevices = cctvList
+    }
+    LaunchedEffect(groupMemberInfoList) {
+        cctvDevices = cctvList
     }
 
     Scaffold(
@@ -86,11 +96,12 @@ fun DeviceManagementScreen(
                     device = device,
                     onDelete = {
                         deviceManagementViewModel.deleteDevice(device.cctvId)
-                        cctvDevices = cctvDevices!!.filter { it.cctvId != device.cctvId } },
+                        cctvDevices = cctvDevices!!.filter { it.cctvId != device.cctvId }
+                               },
                     onUpdate = { updatedDevice ->
+                        deviceManagementViewModel.changeCctvName(updatedDevice.cctvId, updatedDevice.cctvNickname)
                         cctvDevices = cctvDevices!!.map {
                             if (it.cctvId == updatedDevice.cctvId) {
-                                deviceManagementViewModel.changeCctvName(updatedDevice.cctvId, updatedDevice.cctvNickname)
                                 updatedDevice
                             } else it
                         }
