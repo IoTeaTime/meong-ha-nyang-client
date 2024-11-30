@@ -1,7 +1,7 @@
 package com.example.mhnfe.ui.screens.mypage
 
+import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,20 +19,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.data.remote.response.GroupMemberInfo
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.theme.Typography
-
-data class Device(
-    val id: String,
-    val name: String,
-    val type: DeviceType
-)
-
-enum class DeviceType {
-    CCTV,
-    VIEWER
-}
 
 @Composable
 fun DeviceManagementScreen(
@@ -42,6 +32,7 @@ fun DeviceManagementScreen(
 ) {
     val errorMessage by deviceManagementViewModel.errorMessage.collectAsState()
     val groupMemberInfoList by deviceManagementViewModel.groupMemberInfoList.collectAsState()
+    val cctvList by deviceManagementViewModel.cctvList.collectAsState()
 
     val context = LocalContext.current
     LaunchedEffect(errorMessage) {
@@ -51,20 +42,29 @@ fun DeviceManagementScreen(
                 deviceManagementViewModel.clearErrorMessage()
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        // 그룹 CCTV 정보 리스트 조회
+        deviceManagementViewModel.getCctvList()
 
         // 그룹 회원 정보 리스트 조회
         deviceManagementViewModel.getGroupMemberList()
     }
 
     var cctvDevices by remember {
-        mutableStateOf(listOf(
-            Device("1", "주방", DeviceType.CCTV),
-            Device("2", "거실", DeviceType.CCTV)
-        ))
+        mutableStateOf(cctvList)
     }
 
     var viewerDevices by remember {
         mutableStateOf(groupMemberInfoList)
+    }
+
+    LaunchedEffect(cctvList) {
+        cctvDevices = cctvList
+    }
+    LaunchedEffect(groupMemberInfoList) {
+        viewerDevices = groupMemberInfoList
     }
 
     Scaffold(
@@ -91,16 +91,16 @@ fun DeviceManagementScreen(
             )
 
             // CCTV Devices
-            cctvDevices.forEach { device ->
-                DeviceItem(
+            cctvDevices?.forEach { device ->
+                CctvDeviceItem(
                     device = device,
                     onDelete = {
-                        deviceManagementViewModel.deleteDevice(device.id.toLong())
-                        cctvDevices = cctvDevices.filter { it.id != device.id } },
+                        deviceManagementViewModel.deleteDevice(device.cctvId)
+                        cctvDevices = cctvDevices!!.filter { it.cctvId != device.cctvId } },
                     onUpdate = { updatedDevice ->
-                        cctvDevices = cctvDevices.map {
-                            if (it.id == updatedDevice.id) {
-                                deviceManagementViewModel.changeCctvName(updatedDevice.id.toLong(),updatedDevice.name)
+                        deviceManagementViewModel.changeCctvName(updatedDevice.cctvId, updatedDevice.cctvNickname)
+                        cctvDevices = cctvDevices!!.map {
+                            if (it.cctvId == updatedDevice.cctvId) {
                                 updatedDevice
                             } else it
                         }
@@ -117,10 +117,14 @@ fun DeviceManagementScreen(
             )
 
             // Viewer Devices
-            groupMemberInfoList?.forEach { device ->
+            viewerDevices?.forEach { device ->
                 ViewerDeviceItem(
                     device = device,
-                    onDelete = { viewerDevices = viewerDevices!!.filter { it.memberId != device.memberId } },
+                    onDelete = {
+                        deviceManagementViewModel.deleteViewer(device.groupMemberId)
+                        viewerDevices =
+                            viewerDevices!!.filter { it.memberId != device.memberId }
+                    },
                     onUpdate = { updatedDevice ->
                         viewerDevices = viewerDevices!!.map {
                             if (it.memberId == updatedDevice.memberId) updatedDevice else it
@@ -164,15 +168,6 @@ private fun ViewerDeviceItem(
                     text = device.nickname,
                     style = Typography.bodyMedium
                 )
-
-                Icon(
-                    painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "수정",
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { showEditDialog = true },
-                    tint = Color.Gray
-                )
             }
 
             Text (
@@ -196,11 +191,11 @@ private fun ViewerDeviceItem(
 }
 
 @Composable
-private fun DeviceItem(
+private fun CctvDeviceItem(
     modifier: Modifier = Modifier,
-    device: Device,
+    device: CctvInfo,
     onDelete: () -> Unit,
-    onUpdate: (Device) -> Unit
+    onUpdate: (CctvInfo) -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
 
@@ -223,7 +218,7 @@ private fun DeviceItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = device.name,
+                    text = device.cctvNickname,
                     style = Typography.bodyMedium
                 )
 
@@ -237,7 +232,7 @@ private fun DeviceItem(
                 )
             }
 
-            Text(
+            Text (
                 text = "기기삭제",
                 style = Typography.bodySmall.copy(color = Color.Gray),
                 modifier = modifier.clickable { onDelete() }
@@ -247,10 +242,10 @@ private fun DeviceItem(
 
     if (showEditDialog) {
         EditDeviceDialog(
-            initialName = device.name,
+            initialName = device.cctvNickname,
             onDismiss = { showEditDialog = false },
             onConfirm = { newName ->
-                onUpdate(device.copy(name = newName))
+                onUpdate(device.copy(cctvNickname = newName))
                 showEditDialog = false
             }
         )
