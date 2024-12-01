@@ -59,13 +59,12 @@ class MainViewModel @Inject constructor(
                         tokenManager.saveAccessToken(accessToken)
                     }
                     val userResponse = accessToken?.let { groupRepository.getGroupMember(it) }
-                    if (userResponse != null) {
-                        Log.d("MainViewModel", "AutoLogin data :${userResponse.code()}")
-                    }
+
                     if (userResponse != null) {
                         if (userResponse.code() == 200) {
-                            Log.d("MainViewModel", "AutoLogin Success!!")
                             userResponse.body()?.body?.let { onSuccess(it.role, groupId) }
+                        } else if (userResponse.code() == 404){
+                            onSuccess(null.toString(), 0L)
                         } else {
                             Log.d("MainViewModel", "AutoLogin Failed: Invalid Credentials")
                             onFailure(Exception("Invalid credentials"))
