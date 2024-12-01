@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.auth.login
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
@@ -24,7 +25,7 @@ class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
-    private val loginRequestDataStore: DataStore<LoginRequest>
+    private val sharedPreferences: SharedPreferences
 ) : ViewModel() {
 
     // 로그인 결과 상태
@@ -67,7 +68,9 @@ class LoginViewModel @Inject constructor(
 
                     // 자동 로그인 정보 저장 (isAutoLogin이 true일 경우)
                     if (isAutoLogin) {
-                        saveAutoLoginInfo(email, password)
+                        saveAutoLoginPreference(true)
+                    } else {
+                        saveAutoLoginPreference(false)
                     }
 
                     _loginResponse.value = response
@@ -164,11 +167,12 @@ class LoginViewModel @Inject constructor(
     }
 
     // ViewModel에 자동 로그인 정보 저장 메서드 추가
-    suspend fun saveAutoLoginInfo(id: String, password: String) {
-        // DataStore에 자동 로그인 정보 저장
-        loginRequestDataStore.updateData { currentLoginInfo ->
-            currentLoginInfo.copy(email = id, password = password)
+    private fun saveAutoLoginPreference(isAutoLogin: Boolean) {
+        // SharedPreferences에 자동 로그인 여부 저장
+        sharedPreferences.edit().apply {
+            putBoolean("AUTO_LOGIN", isAutoLogin)
+            commit()
         }
-        Log.d("LoginViewModel", "자동 로그인 정보 저장 완료: $id, $password")
+        Log.d("LoginViewModel", "자동 로그인 여부 저장 완료: $isAutoLogin")
     }
 }
