@@ -34,9 +34,14 @@ fun MainScreen(
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
     val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
+
     // 자동 로그인 로직
     LaunchedEffect(Unit) {
+        val isAutoLoginEnabled = sharedPreferences.getBoolean("AUTO_LOGIN", false)
+        Log.d("MainScreen", "isAutoLoginEnabled: $isAutoLoginEnabled")
         mainViewModel.autoLogin(
+            isAutoLoginEnabled = isAutoLoginEnabled,
             onSuccess = { role, groupId ->
                 // 자동 로그인 성공 -> 다음 화면으로 이동
                 if(groupId != null && groupId != 0L) {

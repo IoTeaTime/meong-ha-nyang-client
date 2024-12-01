@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.auth.main
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
@@ -26,28 +27,29 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     private val groupRepository: GroupRepository,
     private val qrRepository: QRRepository,
     private val groupIdDataStore: DataStore<GroupId>,
-    private val loginRequestDataStore: DataStore<LoginRequest>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
-    private val tokenManager: TokenManager,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     private val _cctvInfo = MutableStateFlow<CctvInfoResponse?>(null)
     val cctvInfo = _cctvInfo.asStateFlow()
     fun autoLogin(
+        isAutoLoginEnabled: Boolean,
         onSuccess: (String, Long) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         viewModelScope.launch {
             try {
+                if (!isAutoLoginEnabled) {
+                    throw Exception("Auto login is disabled")
+                }
+
                 val refreshToken = refreshTokenDataStore.data.map { it.refreshToken }.first()
-                Log.d("MainViewModel","Get New AccessToken : ${refreshToken}")
                 val response = userRepository.getNewAccessToken(refreshToken)
-                Log.d("MainViewModel","Get New AccessToken : ${response}")
                 val groupId = groupIdDataStore.data.map { it.groupId }.first()
 
                 if (response.isSuccessful) {
