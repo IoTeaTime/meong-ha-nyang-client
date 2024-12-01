@@ -39,7 +39,6 @@ fun MainScreen(
     // 자동 로그인 로직
     LaunchedEffect(Unit) {
         val isAutoLoginEnabled = sharedPreferences.getBoolean("AUTO_LOGIN", false)
-        Log.d("MainScreen", "isAutoLoginEnabled: $isAutoLoginEnabled")
         mainViewModel.autoLogin(
             isAutoLoginEnabled = isAutoLoginEnabled,
             onSuccess = { role, groupId ->
