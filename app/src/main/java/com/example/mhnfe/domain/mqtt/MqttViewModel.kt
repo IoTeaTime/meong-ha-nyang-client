@@ -262,22 +262,21 @@ class MqttViewModel @Inject constructor(
         dataObserver = null // todo. mqtt 연결 해제될 때 같이 수정
     }
 
-    fun testTopic(): Boolean {
-        var isSuccess = false // Variable to store the result of the subscription
-
-        subscribe("/mhn/connect/test/$thingId") { receivedTopic, message ->
-            // Check if the received message meets certain criteria
+    fun testSub(connectionRecieved: (Boolean, String) -> Unit) {
+        subscribe("/mhn/connect/test/$thingId") { _, message ->
             if (message == "Connection test") {
-                // If the message is the one we're expecting, mark as successful
-                isSuccess = true
+                val isSuccess = true
+                var status = ""
+                if (isSuccess){
+                    status = "Connected"
+                }
+                Log.d("GroupScreen", "Connection status: $status, Message: $message")
+                connectionRecieved(isSuccess, message)
             }
         }
-
-        // Publish a message to test the connection
-        publish("/mhn/connect/test/$thingId", "Connection test")
-
-        // Return the result (true if the expected message is received, otherwise false)
-        return isSuccess
+    }
+    fun testPub() {
+        publish("/mhn/connect/test/$thingId", "The connection is still active")
     }
 
     private fun publish(topic: String, payload: String) {

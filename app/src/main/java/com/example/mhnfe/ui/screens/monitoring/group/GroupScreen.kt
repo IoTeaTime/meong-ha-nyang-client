@@ -31,6 +31,7 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
+import kotlinx.coroutines.delay
 
 @Composable
 fun GroupScreen(
@@ -45,29 +46,30 @@ fun GroupScreen(
     val groupInfo by groupViewModel.groupInfo.collectAsState()
 
     LaunchedEffect(Unit) {
-        connectionState = mqttViewModel.testTopic()
-    }
+        mqttViewModel.testSub { receiveConnection, message ->
+            var status = ""
+            if(receiveConnection) {
+                status = "Connected"
+            }
 
-    LaunchedEffect(connectionState) {
-
-        val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
-        mqttViewModel.viewerInitialSubscribe(context, thingList)
-        groupViewModel.fetchGroupInfo {
-            groupInfo->
-            val groupName = groupInfo.groupName
-            val groupId = groupInfo.groupId
-            val payload = """
+            val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
+            mqttViewModel.viewerInitialSubscribe(context, thingList)
+            groupViewModel.fetchGroupInfo { groupInfo ->
+                val groupId = groupInfo.groupId
+                val payload = """
             {
-                "groupInfo": "$groupName",
+                "groupInfo": "$groupId",
                 "timestamp": ${System.currentTimeMillis() / 1000}
             }
             """.trimIndent()
-            mqttViewModel.getDeviceInfo(payload, groupId)
+                mqttViewModel.getDeviceInfo(payload, groupId)
+            }
         }
-
-
-
+        delay(1000)
+        mqttViewModel.testPub();
     }
+
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
