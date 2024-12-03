@@ -46,12 +46,7 @@ fun GroupScreen(
     val groupInfo by groupViewModel.groupInfo.collectAsState()
 
     LaunchedEffect(Unit) {
-        mqttViewModel.testSub { receiveConnection, message ->
-            var status = ""
-            if(receiveConnection) {
-                status = "Connected"
-            }
-
+        mqttViewModel.testSub { _ ->
             val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
             mqttViewModel.viewerInitialSubscribe(context, thingList)
             groupViewModel.fetchGroupInfo { groupInfo ->
@@ -65,7 +60,7 @@ fun GroupScreen(
                 mqttViewModel.getDeviceInfo(payload, groupId)
             }
         }
-        delay(1000)
+        delay(100)
         mqttViewModel.testPub();
     }
 
