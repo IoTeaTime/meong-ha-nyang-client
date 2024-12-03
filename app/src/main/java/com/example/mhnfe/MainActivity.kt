@@ -46,6 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.CountDownLatch
+import org.opencv.android.OpenCVLoader
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -84,6 +85,13 @@ class MainActivity : ComponentActivity() {
             }
             Log.d(TAG, "FCM 토큰 저장됨: $token")  // 토큰 저장 확인 로그 추가
         })
+
+        // OpenCV 초기화
+        if (!OpenCVLoader.initDebug()) {
+            Log.e("OpenCV", "OpenCV 초기화 실패")
+        } else {
+            Log.d("OpenCV", "OpenCV 초기화 성공")
+        }
 
         setContent {
             MhnFETheme {

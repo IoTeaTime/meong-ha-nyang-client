@@ -6,19 +6,43 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.domain.ai.BoundingBoxUtils
 import com.example.mhnfe.domain.ai.DetectionManager
+import com.example.mhnfe.domain.ai.opencv.BitmapToMatConverter
+import com.example.mhnfe.domain.ai.opencv.MotionDetector
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import org.opencv.core.Mat
+import org.opencv.core.Rect
 import javax.inject.Inject
 
 @HiltViewModel
 class AiViewModel @Inject constructor() : ViewModel() {
     private val tag = "AiViewModel"
+    private val motionDetector = MotionDetector()
+
     fun processFrame(bitmap: Bitmap?) {
         viewModelScope.launch {
             try {
                 bitmap?.let { bmp ->
-                    Log.e(tag, "Frame received: ${bmp.width}x${bmp.height}")
-                    // Bitmap AI 처리
+                    Log.d(tag, "Frame received: ${bmp.width}x${bmp.height}")
+
+                    // Bitmap을 Mat으로 변환
+                    val currentFrame: Mat = BitmapToMatConverter.BitToMat(bmp)
+
+                    // OpenCV로 움직임 감지
+                    val motionAreas: List<Rect> = motionDetector.detectMotion(currentFrame)
+
+                    // 감지된 움직임 영역을 로그에 출력
+                    if (motionAreas.isNotEmpty()) {
+                        Log.d(tag, "Motion detected in ${motionAreas.size} area(s)")
+                        for (area in motionAreas) {
+                            Log.d(tag, "Motion area: ${area.x}, ${area.y}, ${area.width}, ${area.height}")
+                        }
+                    } else {
+                        Log.d(tag, "No motion detected")
+                    }
+
+                    // 현재 프레임 객체 해제
+                    currentFrame.release()
                 }
             } catch (e: Exception) {
                 Log.e(tag, "Frame processing error", e)
@@ -55,5 +79,5 @@ class AiViewModel @Inject constructor() : ViewModel() {
                 Log.e("DetectEvent", "detectEvent() 중 오류 발생: ${e.message}", e)
             }
         }
-}
     }
+}
