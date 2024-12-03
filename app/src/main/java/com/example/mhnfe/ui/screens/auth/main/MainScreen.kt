@@ -1,21 +1,18 @@
 package com.example.mhnfe.ui.screens.auth.main
 
+import android.content.ContentValues.TAG
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,25 +22,25 @@ import androidx.navigation.compose.rememberNavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.di.UserType
-import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
+import kotlin.math.log
+
 
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    mqttViewModel: MqttViewModel = hiltViewModel(),
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
-    val groupId = ""
-
+    val context = LocalContext.current
+    // 자동 로그인 로직
     LaunchedEffect(Unit) {
-        mqttViewModel.initialize()
         mainViewModel.autoLogin(
             onSuccess = { role, groupId ->
-                if(groupId != 0L) {
-                    if(role == "ROLE_MASTER") {
+                // 자동 로그인 성공 -> 다음 화면으로 이동
+                if(groupId != null && groupId != 0L) {
+                    if(role.equals("ROLE_MASTER")) {
                         navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
                             popUpTo(NavRoutes.Auth.route) { inclusive = true }
                         }
@@ -56,11 +53,9 @@ fun MainScreen(
                     navController.navigate(NavRoutes.Auth.Select.route) {
                         popUpTo(NavRoutes.Auth.route) { inclusive = true }
                     }
-                    mqttViewModel.disconnectMqttManager()
                 }
             },
-            onFailure = {
-                mqttViewModel.disconnectMqttManager()
+            onFailure = { e ->
                 mainViewModel.fetchCctvId(
                     onSuccess = { cctvInfo ->
                         Log.d("MainScreen", "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}")
@@ -82,9 +77,7 @@ fun MainScreen(
             }
         )
     }
-    LaunchedEffect(groupId) {
-    }
-
+//    viewModel.initializeWithContext(context)
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -94,11 +87,11 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "명하냥 로고",
-            modifier = modifier.size(315.dp, 358.dp)
-        )
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "명하냥 로고",
+                modifier = modifier.size(315.dp, 358.dp)
+            )
 
         // 버튼 영역
         Column(
@@ -169,7 +162,10 @@ fun MainScreen(
 )
 @Composable
 fun StartScreenPreview() {
+
+
     MainScreen(
         navController = rememberNavController(),
     )
+
 }
