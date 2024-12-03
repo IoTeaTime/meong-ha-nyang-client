@@ -14,12 +14,13 @@ class TokenManager @Inject constructor(
     private val refreshTokenDataStore: DataStore<RefreshToken> // 리프레시 토큰 데이터 스토어 추가
 ) {
     // 리프레시 토큰으로 액세스 토큰 갱신
-    suspend fun getNewAccessToken(refreshToken: String): String {
+    private suspend fun getNewAccessToken(refreshToken: String): String {
         val response = userRepository.getNewAccessToken(refreshToken)
-        return if (response.result.code == 200) {
-            response.body.accessToken
+        if (response.result.code == 200) {
+            saveAccessToken(response.body.accessToken)
+            return response.body.accessToken
         } else {
-            ""
+            return ""
         }
     }
 
