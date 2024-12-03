@@ -1,6 +1,5 @@
 package com.example.mhnfe.di.module
 
-import com.example.mhnfe.data.remote.api.ApiService
 import com.example.mhnfe.data.remote.api.AuthApi
 import com.example.mhnfe.data.remote.api.DeviceApi
 import dagger.Module
@@ -10,16 +9,13 @@ import dagger.hilt.components.SingletonComponent
 import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.api.QRApi
 import com.example.mhnfe.data.remote.api.UserApi
-import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit {

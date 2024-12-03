@@ -45,6 +45,7 @@ data class Jwt(
     val accessToken: String,
     val refreshToken: String,
     val isGroupMember: Boolean,
+    val groupId: Long,
     val role: String
 )
 

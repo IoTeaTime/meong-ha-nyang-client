@@ -1,4 +1,4 @@
-package com.example.mhnfe.data.manager
+package com.example.mhnfe.data.token
 
 import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.api.UserApi

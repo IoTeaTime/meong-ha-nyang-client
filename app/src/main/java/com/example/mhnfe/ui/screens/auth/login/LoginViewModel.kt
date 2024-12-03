@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.FCMResponse
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.LoginResponse
 import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.data.remote.response.SendPasswordResponse
@@ -25,6 +26,7 @@ class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
+    private val groupIdDataStore: DataStore<GroupId>,
     private val sharedPreferences: SharedPreferences
 ) : ViewModel() {
 
@@ -61,10 +63,12 @@ class LoginViewModel @Inject constructor(
                 if (response.result.code == 200) {
                     // JWT 엑세스, 리프레시 토큰 저장
                     saveTokens(
-                        response.body.accessToken.toString(),
-                        response.body.refreshToken.toString()
+                        response.body.accessToken,
+                        response.body.refreshToken,
+                        response.body.groupId
                     )
-                    Log.d("LoginViewModel","response: " + response.body.accessToken)
+                    Log.d("LoginViewModel","AccessToken: " + response.body.accessToken)
+                    Log.d("LoginViewModel","RefreshToken: " + response.body.refreshToken)
 
                     // 자동 로그인 정보 저장 (isAutoLogin이 true일 경우)
                     if (isAutoLogin) {
@@ -93,8 +97,8 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    // 엑세스 토큰과 리프레시 토큰 저장
-    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+    // 엑세스 토큰과 리프레시 토큰, 그룹 아이디 저장
+    private suspend fun saveTokens(accessToken: String, refreshToken: String, groupId: Long) {
         // 엑세스 토큰 저장
         accessTokenDataStore.updateData { currentToken ->
             currentToken.copy(accessToken = accessToken)
@@ -102,6 +106,9 @@ class LoginViewModel @Inject constructor(
         // 리프레시 토큰 저장
         refreshTokenDataStore.updateData { currentToken ->
             currentToken.copy(refreshToken = refreshToken)
+        }
+        groupIdDataStore.updateData { currentGroupId ->
+            currentGroupId.copy(groupId = groupId)
         }
         Log.d("LoginViewModel", "엑세스 토큰 및 리프레시 토큰 저장 완료.")
     }

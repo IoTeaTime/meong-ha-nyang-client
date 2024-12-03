@@ -1,25 +1,19 @@
 package com.example.mhnfe.ui.screens.auth.main
 
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.manager.TokenManager
-import com.example.mhnfe.data.remote.request.LoginRequest
-import com.example.mhnfe.data.remote.response.CCTVResponseBody
+import com.example.mhnfe.data.token.TokenManager
 import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.remote.response.GroupId
-import com.example.mhnfe.data.remote.response.LoginResponse
 import com.example.mhnfe.data.remote.response.RefreshToken
-import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.domain.repository.GroupRepository
 import com.example.mhnfe.domain.repository.QRRepository
 import com.example.mhnfe.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -52,27 +46,23 @@ class MainViewModel @Inject constructor(
                 val response = userRepository.getNewAccessToken(refreshToken)
                 val groupId = groupIdDataStore.data.map { it.groupId }.first()
 
-                if (response.isSuccessful) {
+                if (response.result.code == 200) {
                     // 로그인 시도
-                    val accessToken = response.body()?.body?.accessToken
-                    if (accessToken != null) {
-                        tokenManager.saveAccessToken(accessToken)
-                    }
-                    val userResponse = accessToken?.let { groupRepository.getGroupMember(it) }
+                    val accessToken = response.body.accessToken
+                    tokenManager.saveAccessToken(accessToken)
+                    val userResponse = accessToken.let { groupRepository.getGroupMember(it) }
 
-                    if (userResponse != null) {
-                        if (userResponse.code() == 200) {
-                            userResponse.body()?.body?.let { onSuccess(it.role, groupId) }
-                        } else if (userResponse.code() == 404){
-                            onSuccess(null.toString(), 0L)
-                        } else {
-                            Log.d("MainViewModel", "AutoLogin Failed: Invalid Credentials")
-                            onFailure(Exception("Invalid credentials"))
-                        }
+                    if (userResponse.code() == 200) {
+                        userResponse.body()?.body?.let { onSuccess(it.role, groupId) }
+                    } else if (userResponse.code() == 404){
+                        onSuccess(null.toString(), 0L)
+                    } else {
+                        Log.d("MainViewModel", "AutoLogin Failed: Invalid Credentials")
+                        onFailure(Exception("Invalid credentials"))
                     }
                 } else {
                     // 저장된 데이터가 없거나 비어 있는 경우
-                    Log.d("API Error", "Error: ${response.code()}, Message: ${response.message()}")
+                    Log.d("API Error", "Error: ${response.result.code}, Message: ${response.result.message}")
                     Log.d("MainViewModel", "AutoLogin Failed: No valid saved credentials")
                     onFailure(Exception("No valid saved credentials"))
                 }

@@ -19,7 +19,7 @@ interface UserApi {
     @POST("/api/member/refresh-token")
     suspend fun refreshAccessToken(
         @Header("Authorization") refreshToken: String
-    ): Response<RefreshAccessTokenResponse>
+    ): RefreshAccessTokenResponse
 
     @POST("/api/member/sign-out")
     suspend fun logout(
