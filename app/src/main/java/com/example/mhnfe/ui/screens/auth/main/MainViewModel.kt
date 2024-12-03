@@ -53,7 +53,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 // 4. 실패 시 Refresh Token 으로 Access Token 재발급
-                else {
+                else if (response.body()?.result?.code == 401) {
                     try {
                         // TokenManager를 사용하여 리프레시 토큰으로 새로운 액세스 토큰을 갱신
                         val newAccessToken = tokenManager.refreshAccessToken()
@@ -72,6 +72,8 @@ class MainViewModel @Inject constructor(
                         Log.d("MainViewModel", "AutoLogin Failed: ${e.message}")
                         onFailure(e)
                     }
+                } else {
+                    onSuccess("", 0L)
                 }
             } catch (e: Exception) {
                 Log.d("MainViewModel", "AutoLogin Failed... ${e.message}")
