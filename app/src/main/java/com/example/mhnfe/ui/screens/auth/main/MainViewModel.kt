@@ -22,12 +22,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val userRepository: UserRepository,
     private val groupRepository: GroupRepository,
     private val qrRepository: QRRepository,
-    private val groupIdDataStore: DataStore<GroupId>,
     private val accessTokenDataStore: DataStore<AccessToken>,
-    private val refreshTokenDataStore: DataStore<RefreshToken>,
     private val tokenManager: TokenManager
 ) : ViewModel() {
 
