@@ -20,7 +20,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun getNewAccessToken(
         refreshToken: String
-    ): Response<RefreshAccessTokenResponse> {
+    ): RefreshAccessTokenResponse {
         return userApi.refreshAccessToken(refreshToken)
     }
 
@@ -41,6 +41,4 @@ class UserRepositoryImpl @Inject constructor(
         var request = ChangeNicknameOrGroupNameRequest(nickname,groupName)
         return userApi.changeNicknameOrGroupName(accessToken, request)
     }
-
-
 }

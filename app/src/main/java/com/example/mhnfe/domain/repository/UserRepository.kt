@@ -8,7 +8,7 @@ import com.example.mhnfe.data.remote.response.RefreshedAccessToken
 import retrofit2.Response
 
 interface UserRepository {
-    suspend fun getNewAccessToken(refreshToken: String): Response<RefreshAccessTokenResponse>
+    suspend fun getNewAccessToken(refreshToken: String): RefreshAccessTokenResponse
     suspend fun changePassword(accessToken: String, currentPassword: String, newPassword: String):
             ChangePasswordResponse
     suspend fun changeNicknameOrGroupName(accessToken: String, nickname: String?, groupName: String?):
