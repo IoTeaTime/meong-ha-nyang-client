@@ -16,6 +16,7 @@ import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.LogoutResponse
+import com.example.mhnfe.data.remote.response.ProfileResponse
 import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,6 +57,12 @@ class ProfileViewModel @Inject constructor(
 
     private val _changeNicknameOrGroupNameResponse = MutableStateFlow<ChangeNicknameOrGroupNameResponse?>(null)
     val changeNicknameOrGroupNameResponse: StateFlow<ChangeNicknameOrGroupNameResponse?> = _changeNicknameOrGroupNameResponse
+
+    private val _profileResponse = MutableStateFlow<ProfileResponse?>(null)
+    val profileResponse: StateFlow<ProfileResponse?> = _profileResponse
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
 
     fun logout() {
         viewModelScope.launch {
@@ -162,4 +170,28 @@ class ProfileViewModel @Inject constructor(
 
         }
     }
+
+    fun fetchMemberDetails(memberId: Int) {
+        viewModelScope.launch {
+            try {
+                val token = accessTokenDataStore.data.map { it.accessToken }.first()
+                Log.d("ProfileViewModel", "Fetched token: $token")
+//                if (token.isNullOrEmpty()) {
+//                    _error.value = "No access token found"
+//                    return@launch
+//                }
+                val response = withContext(Dispatchers.IO) {
+                    userRepository.getMemberDetails(token, memberId)
+                }
+                Log.d("ProfileViewModel", "Response received: $response")
+                _profileResponse.value = response
+//                val response = userRepository.getMemberDetails(token, memberId)
+//                _profileResponse.value = response
+            } catch (e: Exception) {
+                _error.value = e.localizedMessage
+                Log.e("ProfileViewModel", "Error fetching member details: ${e.localizedMessage}")
+            }
+        }
+    }
+
 }

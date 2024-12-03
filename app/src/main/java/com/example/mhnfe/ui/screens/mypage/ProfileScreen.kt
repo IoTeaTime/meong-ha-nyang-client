@@ -53,9 +53,6 @@ import deletePopup
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    nickname: String = "막내가짱이야",
-    id: String = "nahaha",
-    groupId: String = "IoTeatime",
     bottomNavController: NavController,
     mainNavController: NavController,
     profileViewModel: ProfileViewModel = hiltViewModel()
@@ -66,6 +63,21 @@ fun ProfileScreen(
 
     val logoutResponse by profileViewModel.logoutResponse.collectAsState()
     val quitResponse by profileViewModel.quitResponse.collectAsState()
+
+    val profileResponse by profileViewModel.profileResponse.collectAsState()
+    val error by profileViewModel.error.collectAsState()
+
+    Log.d("ProfileScreen", "profileResponse: $profileResponse")
+    val nickname = profileResponse?.body?.member?.nickname ?: "막내가짱이야1"
+    val id = profileResponse?.body?.member?.id?.toString() ?: "nahaha1"
+    val groupId = profileResponse?.body?.group?.groupName ?: "IoTeatime1"
+
+    LaunchedEffect(Unit) {
+        profileResponse?.body?.member?.id?.let { memberId ->
+            Log.d("ProfileScreen", "Fetching member details for memberId: $memberId")
+            profileViewModel.fetchMemberDetails(memberId)
+        }
+    }
 
     logoutResponse?.let {
         if (it.result.code == 200) {
@@ -98,6 +110,14 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ){
+            error?.let {
+                Text(
+                    text = it,
+                    style = Typography.bodyMedium,
+                    color = Color.Red
+                )
+            }
+
             Column (
                 modifier = modifier,
                 horizontalAlignment = Alignment.CenterHorizontally,

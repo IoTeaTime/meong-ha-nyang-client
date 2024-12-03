@@ -1,10 +1,12 @@
 package com.example.mhnfe.data.repository
 
+import android.util.Log
 import com.example.mhnfe.data.remote.api.UserApi
 import com.example.mhnfe.data.remote.request.ChangeNicknameOrGroupNameRequest
 import com.example.mhnfe.data.remote.request.ChangePasswordRequest
 import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
+import com.example.mhnfe.data.remote.response.ProfileResponse
 import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
 import com.example.mhnfe.data.remote.response.RefreshedAccessToken
 import com.example.mhnfe.domain.repository.UserRepository
@@ -41,5 +43,13 @@ class UserRepositoryImpl @Inject constructor(
         return userApi.changeNicknameOrGroupName(accessToken, request)
     }
 
-
+    override suspend fun getMemberDetails(
+        accessToken: String,
+        memberId: Int
+    ): ProfileResponse {
+//        val response = userApi.getMemberDetails(accessToken, memberId)
+//        Log.d("UserRepository", "Response from API: $response")
+//        return response
+        return userApi.getMemberDetails(accessToken, memberId)
+    }
 }
