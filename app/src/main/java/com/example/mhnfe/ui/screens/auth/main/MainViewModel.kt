@@ -4,7 +4,8 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.token.TokenManager
+import com.example.mhnfe.data.manager.TokenManager
+import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.RefreshToken
@@ -25,6 +26,7 @@ class MainViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
     private val qrRepository: QRRepository,
     private val groupIdDataStore: DataStore<GroupId>,
+    private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
     private val tokenManager: TokenManager
 ) : ViewModel() {
@@ -42,29 +44,37 @@ class MainViewModel @Inject constructor(
                     throw Exception("Auto login is disabled")
                 }
 
-                val refreshToken = refreshTokenDataStore.data.map { it.refreshToken }.first()
-                val response = userRepository.getNewAccessToken(refreshToken)
-                val groupId = groupIdDataStore.data.map { it.groupId }.first()
+                // 1. Access Token 가져오기
+                val accessToken = accessTokenDataStore.data.map { it.accessToken }.first()
 
-                if (response.result.code == 200) {
-                    // 로그인 시도
-                    val accessToken = response.body.accessToken
-                    tokenManager.saveAccessToken(accessToken)
-                    val userResponse = accessToken.let { groupRepository.getGroupMember(it) }
+                // 2. Access Token으로 그룹과 역할을 조회
+                val response = groupRepository.getGroupMember(accessToken)
 
-                    if (userResponse.code() == 200) {
-                        userResponse.body()?.body?.let { onSuccess(it.role, groupId) }
-                    } else if (userResponse.code() == 404){
-                        onSuccess(null.toString(), 0L)
-                    } else {
-                        Log.d("MainViewModel", "AutoLogin Failed: Invalid Credentials")
-                        onFailure(Exception("Invalid credentials"))
+                // 3. 성공 시 그룹 아이디와 역할을 리턴
+                if(response.isSuccessful){
+                    response.body()?.body?.let { onSuccess(it.role, it.groupId) }
+                }
+
+                // 4. 실패 시 Refresh Token 으로 Access Token 재발급
+                else {
+                    try {
+                        // TokenManager를 사용하여 리프레시 토큰으로 새로운 액세스 토큰을 갱신
+                        val newAccessToken = tokenManager.refreshAccessToken()
+
+                        // 새로 받은 액세스 토큰으로 다시 그룹 조회
+                        val newResponse = groupRepository.getGroupMember(newAccessToken)
+
+                        if (newResponse.isSuccessful) {
+                            newResponse.body()?.body?.let { onSuccess(it.role, it.groupId) }
+                        } else {
+                            Log.d("MainViewModel", "AutoLogin Failed: Invalid Credentials")
+                            onFailure(Exception("Invalid credentials"))
+                        }
+                    } catch (e: Exception) {
+                        // 새 액세스 토큰을 얻을 수 없을 경우
+                        Log.d("MainViewModel", "AutoLogin Failed: ${e.message}")
+                        onFailure(e)
                     }
-                } else {
-                    // 저장된 데이터가 없거나 비어 있는 경우
-                    Log.d("API Error", "Error: ${response.result.code}, Message: ${response.result.message}")
-                    Log.d("MainViewModel", "AutoLogin Failed: No valid saved credentials")
-                    onFailure(Exception("No valid saved credentials"))
                 }
             } catch (e: Exception) {
                 Log.d("MainViewModel", "AutoLogin Failed... ${e.message}")
