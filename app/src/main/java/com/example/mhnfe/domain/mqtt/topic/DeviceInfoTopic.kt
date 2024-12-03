@@ -4,11 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DeviceInfoTopic(
-    val batteryLevel: Int,
-    val availableMemory: Int,
-    val deviceModel: String,
-    val osVersion: String,
-    val appVersion: String,
-    val networkStatus: DeviceNetworkStatus,
-    val timestamp: Long
+    val state: State? = null,
+    val metadata: Metadata? = null,
+    val version: Int? = null,
+    val timestamp: Long? = null
 )

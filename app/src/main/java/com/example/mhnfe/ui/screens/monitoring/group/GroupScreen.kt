@@ -60,12 +60,12 @@ fun GroupScreen(
                         cctvItem->
                         run {
                             mqttViewModel.viewerInitialSubscribe(context, cctvItem.thingId)
-                            mqttViewModel.ShadowWithSubscribe(cctvItem.thingId)
+                            mqttViewModel.getObservingData(context, cctvItem.thingId)
                         }
 
                     }
-                    mqttViewModel.startObservingData(context)
                 }
+
             }
         }
 
@@ -77,6 +77,7 @@ fun GroupScreen(
             }
             """.trimIndent()
             mqttViewModel.getDeviceInfo(payload, 1)
+
         }
     }
     Scaffold(

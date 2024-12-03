@@ -119,17 +119,17 @@ class MqttViewModel @Inject constructor(
         Log.d(tag, "Subscribed to topics: ${topic}")
     }
 
-    fun ShadowWithSubscribe(thingId: String){
-        val shadowTopics = listOf(
-            "\$aws/things/${thingId}/shadow/get/accepted",
-            "\$aws/things/${thingId}/shadow/get/rejected"
-        )
-        shadowTopics.forEach { topic ->
-            subscribe(topic) { receivedTopic, message ->
-                handleShadowMessage(receivedTopic, message)
-            }
-        }
-    }
+//    fun ShadowWithSubscribe(thingId: String){
+//        val shadowTopics = listOf(
+//            "\$aws/things/${thingId}/shadow/get/accepted",
+//            "\$aws/things/${thingId}/shadow/get/rejected"
+//        )
+//        shadowTopics.forEach { topic ->
+//            subscribe(topic) { receivedTopic, message ->
+//                handleShadowMessage(receivedTopic, message)
+//            }
+//        }
+//    }
 
     fun createShadowWithSubscribe(context: Context, groupId: Int) {
         val shadowTopics = listOf(
@@ -158,7 +158,12 @@ class MqttViewModel @Inject constructor(
     private fun handleTopicMessage(receivedTopic: String, message: String, context: Context) {
         try {
             val jsonMessage = JSONObject(message)
-            var device : DeviceInfoTopic = Json.decodeFromString(message)
+
+            // ignoreUnknownKeys 옵션 활성화
+            val json = Json { ignoreUnknownKeys = true }
+
+            // JSON 메시지 디코딩
+            val device: DeviceInfoTopic = json.decodeFromString(message)
 
             when {
                 receivedTopic.contains("groups") -> {
@@ -274,6 +279,30 @@ class MqttViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    // 그룹페이지 업데이트
+    fun getObservingData(context: Context,thingId: String) {
+        dataObserver = DataObserver(context).apply {
+            startObserving()
+            CoroutineScope(Dispatchers.IO).launch {
+                getShadowWithPayload(context,thingId)
+            }
+        }
+    }
+
+    private fun getShadowWithPayload(context: Context, thingId: String) {
+        val topic = "\$aws/things/${thingId}/shadow/update/accepted"
+        Log.e(tag, "sub shadow get: \$aws/things/${thingId}/shadow/update/documents", )
+        try {
+            subscribe(topic,{ receivedTopic, message ->
+                Log.d(tag, "Message received on topic $receivedTopic: $message")
+                handleTopicMessage(receivedTopic, message, context)
+            })
+//            Log.d(tag, "Published Shadow get: $payload")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to publish shadow get: ${e.message}", e)
         }
     }
 
