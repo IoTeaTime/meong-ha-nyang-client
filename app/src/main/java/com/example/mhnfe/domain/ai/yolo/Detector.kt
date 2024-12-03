@@ -240,4 +240,3 @@ class Detector(
         private const val IOU_THRESHOLD = 0.5F
     }
 }
-q
