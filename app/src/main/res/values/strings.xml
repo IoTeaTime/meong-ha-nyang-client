@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">mhnFE</string>
+    <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
+    <!-- 로그용, 추후 삭제 필요 -->
+    <string name="msg_token_fmt" translatable="true">FCM registration Token: %s</string>
+    <!-- 로그용, 추후 삭제 필요 -->
+</resources>
