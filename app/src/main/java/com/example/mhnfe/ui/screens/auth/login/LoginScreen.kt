@@ -2,7 +2,6 @@ package com.example.mhnfe.ui.screens.auth.login
 
 import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
-import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -23,9 +22,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.ui.components.MainTextBox
@@ -34,7 +31,7 @@ import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
-import kotlinx.coroutines.launch
+import com.example.mhnfe.ui.components.SendPasswordPopUp
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
@@ -58,6 +55,8 @@ fun LoginScreen(
 
     // SharedPreferences를 사용해 사용자 정보를 저장
     val context = LocalContext.current
+
+    val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -141,6 +140,17 @@ fun LoginScreen(
                         )
                     }
                 }
+
+                if(dialogVisible) {
+                    SendPasswordPopUp(
+                        onConfirmation = {
+                            setDialogVisible(false)
+                        },
+                        onDismissRequest = {
+                            setDialogVisible(false)
+                        }
+                    )
+                }
             }
 
             // 하단부 버튼과 텍스트를 포함하는 Column
@@ -186,7 +196,7 @@ fun LoginScreen(
 
                             if(loginResponse?.body?.isGroupMember == true)
                             {
-                                if(loginResponse?.body?.role== "MASTER") {
+                                if(loginResponse?.body?.role== "ROLE_MASTER") {
                                     navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
                                         // Auth 플로우를 백스택에서 제거
                                         popUpTo(NavRoutes.Auth.route) {
@@ -217,23 +227,12 @@ fun LoginScreen(
                     text = "비밀번호를 잊어버리셨나요?",
                     textAlign = TextAlign.Center,
                     color = mainGray,
-                    modifier = Modifier
-                        .clickable { navController.navigate("forgot_password") }
+                    modifier = modifier
+                        .clickable {
+                            setDialogVisible(true)
+                        }
                 )
             }
         }
     }
-}
-
-@Preview(
-    name = "Login Screen",
-    showBackground = true,
-    showSystemUi = true,
-    device = "spec:width=411dp,height=891dp"
-)
-@Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        navController = rememberNavController()
-    )
 }

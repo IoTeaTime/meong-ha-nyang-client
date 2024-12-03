@@ -26,9 +26,9 @@ object BoundingBoxUtils {
         val y3 = boundingBox.bottom
         val x4 = boundingBox.left
         val y4 = boundingBox.bottom
-
+i
         // 좌표를 data class로 반환
-        return BoundingBoxCoordinates(x1, y1, x2, y2, x3, y3, x4, y4)
+        return BoundingBoxCoordinates(x1, y1, x2, y2, x3, y3, x4, y4)-=
     }
     */
     // 추후에 하드코딩 된 좌표 값 수정 해야함
@@ -63,7 +63,7 @@ object BoundingBoxUtils {
 
         Log.i(TAG, "BoundingBox 좌상단 (${coordinates.x1}, ${coordinates.y1}), 우상단(${coordinates.x2}, ${coordinates.y2}), 우하단(${coordinates.x3}, ${coordinates.y3}), 좌하단(${coordinates.x4}, ${coordinates.y4})")
     }
-    
+
     // Message 전달 함수
     fun boundingBoxMessage(): String {
         val coordinates = boundingBoxCoordinates()

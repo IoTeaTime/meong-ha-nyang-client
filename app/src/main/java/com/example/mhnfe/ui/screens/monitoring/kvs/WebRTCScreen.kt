@@ -1,7 +1,9 @@
 package com.example.mhnfe.ui.screens.monitoring.kvs
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.util.Log
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -58,10 +60,11 @@ import org.webrtc.Logging
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
     modifier: Modifier = Modifier,
-    viewModel: KVSSignalingViewModel,
+
     navController: NavController,
     channelName: String,
     role: ChannelRole,
+    viewModel: KVSSignalingViewModel,
     mqttViewModel: MqttViewModel = hiltViewModel(),
     aiViewModel: AiViewModel = hiltViewModel()
 ) {
@@ -73,12 +76,13 @@ fun WebRtcScreen(
     val connectionEvent by viewModel.connectionEvent.collectAsState()
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
     val mqttState by mqttViewModel.isConnected.collectAsState()
+    val window = (context as? Activity)?.window
 
-    LaunchedEffect(Unit)    {
+    LaunchedEffect(Unit) {
         // Todo. 그룹 ID 반환 로직 추가
         if (role == ChannelRole.MASTER && !mqttState) {
-            val result = mqttViewModel.initialize(context)
-            if(result) {
+            val result = mqttViewModel.initialize()
+            if (result) {
                 mqttViewModel.createShadowWithSubscribe(context, 404)
             }
         }
@@ -95,6 +99,7 @@ fun WebRtcScreen(
                     }
                 }
             )
+            mqttViewModel.startObservingData(context)
         }
     }
 
@@ -162,7 +167,6 @@ fun WebRtcScreen(
     // 뒤로 가기 처리
     BackHandler {
         Log.d("WebRTCScreen", "BackHandler 실행")
-
         viewModel.viewModelScope.launch {
             try {
                 viewModel.releasePeerConnection()
@@ -194,7 +198,7 @@ fun WebRtcScreen(
 //        }
 //    }
 
-
+    Log.d("WebRtcScreen", "channelName: $channelName, role: $role")
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -217,7 +221,10 @@ fun WebRtcScreen(
                             cleanup()
 
                             withContext(Dispatchers.Main) {
-                                navController.navigateUp()
+                                navController.navigate("monitoring/group") {
+                                    popUpTo(navController.graph.findStartDestination().id)
+                                    launchSingleTop = true
+                                }
                             }
                         } catch (e: Exception) {
                             Log.e("WebRTCScreen", "연결 해제 실패", e)
@@ -231,7 +238,7 @@ fun WebRtcScreen(
                     }
                 }
             ) {
-                Text("카메라 끄기")
+                Text("연결 종료")
             }
 
             // MQTT 기기 상태 요청 테스트
@@ -262,6 +269,7 @@ fun WebRtcScreen(
             }
         }
         if (role == ChannelRole.MASTER) {
+            //ai
             LaunchedEffect(Unit) {
                 try {
                     viewModel.frameData
@@ -288,6 +296,8 @@ fun WebRtcScreen(
             ) {
                 if (isViewsInitialized) {
                     localView?.let { renderer ->
+                        //카메라 항상 켜짐
+                        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         AndroidView(
                             factory = {
                                 renderer.apply {
