@@ -1,41 +1,39 @@
-package com.example.mhnfe.data.manager
+package com.example.mhnfe.data.token
 
 import androidx.datastore.core.DataStore
-import com.example.mhnfe.data.remote.api.UserApi
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.RefreshToken
-import com.example.mhnfe.domain.repository.UserRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.withContext
+import com.example.mhnfe.domain.repository.TokenRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class TokenManager @Inject constructor(
-    private val userApi: UserApi,
-    private val userRepository: UserRepository,
+    private val tokenRepository: TokenRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
-    private val refreshTokenDataStore: DataStore<RefreshToken>
+    private val refreshTokenDataStore: DataStore<RefreshToken> // 리프레시 토큰 데이터 스토어 추가
 ) {
-    // 리프레시 토큰 가져오기
-    suspend fun getRefreshToken(): String {
-        val refreshToken = refreshTokenDataStore.data.firstOrNull()?.refreshToken
-        return refreshToken ?: throw IllegalStateException("Refresh token is not available")
-    }
-
-    // 엑세스 토큰 갱신
-    suspend fun refreshAccessToken(): String {
-        val refreshToken = getRefreshToken() // 리프레시 토큰 가져오기
-        val response = withContext(Dispatchers.IO) {
-            userApi.refreshAccessToken(refreshToken)
+    // 리프레시 토큰으로 액세스 토큰 갱신
+    private suspend fun getNewAccessToken(refreshToken: String): String {
+        val response = tokenRepository.getNewAccessToken(refreshToken)
+        if (response.result.code == 200) {
+            saveAccessToken(response.body.accessToken)
+            return response.body.accessToken
+        } else {
+            throw Exception("Failed to refresh access token: ${response.result.message}")
         }
-        val newAccessToken = userRepository.getNewAccessToken(response)
-        saveAccessToken(newAccessToken.newAccessToken)
-
-        return newAccessToken.newAccessToken
     }
 
-    // 엑세스 토큰 저장
-    suspend fun saveAccessToken(token: String) {
-        accessTokenDataStore.updateData { AccessToken(token) }
+    // 액세스 토큰 저장
+    private suspend fun saveAccessToken(accessToken: String) {
+        accessTokenDataStore.updateData { currentToken ->
+            currentToken.copy(accessToken = accessToken)
+        }
+    }
+
+    // 리프레시 토큰으로 액세스 토큰을 재발급받고, 성공 시 액세스 토큰을 반환
+    suspend fun refreshAccessToken(): String {
+        val refreshToken = refreshTokenDataStore.data.map { it.refreshToken }.first()
+        return getNewAccessToken(refreshToken)
     }
 }

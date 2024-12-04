@@ -27,40 +27,6 @@ import com.example.mhnfe.data.remote.response.MemberId
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    // 로그인 직렬화
-    @Provides
-    @Singleton
-    fun provideLoginRequestSerializer(): Serializer<LoginRequest> {
-        return object : Serializer<LoginRequest> {
-            override val defaultValue: LoginRequest = LoginRequest("", "")
-
-            override suspend fun readFrom(input: InputStream): LoginRequest {
-                return try {
-                    Json.decodeFromString(LoginRequest.serializer(), input.readBytes().decodeToString())
-                } catch (e: Exception) {
-                    defaultValue
-                }
-            }
-
-            override suspend fun writeTo(t: LoginRequest, output: OutputStream) {
-                output.write(Json.encodeToString(LoginRequest.serializer(), t).encodeToByteArray())
-            }
-        }
-    }
-
-    // 로그인 데이터 제공
-    @Provides
-    @Singleton
-    fun provideLoginRequestDataStore(
-        @ApplicationContext context: Context,
-        serializer: Serializer<LoginRequest>
-    ): DataStore<LoginRequest> {
-        return DataStoreFactory.create(
-            serializer = serializer,
-            produceFile = { context.filesDir.resolve("login_request.pb") }
-        )
-    }
-
     // 엑세스 토큰 직렬화
     @Provides
     @Singleton
