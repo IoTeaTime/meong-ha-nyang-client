@@ -21,7 +21,6 @@ data class GroupMember(
     val groupId: Long,
     val role: String
 )
-// 그룹 가입 정보 응담
 
 // 그룹 회원 리스트 응답
 data class GroupMemberInfoResponse(
@@ -40,7 +39,6 @@ data class GroupMemberInfo(
     val thingId: String,
     val role: String
 )
-// 그룹 회원 리스트 응답
 
 // 그룹 cctv 리스트 응답
 data class CctvListResponse(
