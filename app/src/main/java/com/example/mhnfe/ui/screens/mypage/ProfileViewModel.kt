@@ -40,7 +40,6 @@ class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>, // 리프레시 토큰 데이터스토어
-    private val loginRequestDataStore: DataStore<LoginRequest>, // 로그인 요청 데이터스토어
     private val sharedPreferences: SharedPreferences // SharedPreferences
 ) : ViewModel() {
 
@@ -129,9 +128,6 @@ class ProfileViewModel @Inject constructor(
 
         // RefreshToken 초기화
         refreshTokenDataStore.updateData { RefreshToken("") }
-
-        // LoginRequest 초기화
-        loginRequestDataStore.updateData { LoginRequest("", "") }
 
         // SharedPreferences 초기화 (로그인 정보 삭제)
         sharedPreferences.edit().clear().apply()

@@ -1,21 +1,21 @@
-package com.example.mhnfe.data.manager
+package com.example.mhnfe.data.token
 
 import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.RefreshToken
-import com.example.mhnfe.domain.repository.UserRepository
+import com.example.mhnfe.domain.repository.TokenRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class TokenManager @Inject constructor(
-    private val userRepository: UserRepository,
+    private val tokenRepository: TokenRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken> // 리프레시 토큰 데이터 스토어 추가
 ) {
     // 리프레시 토큰으로 액세스 토큰 갱신
     private suspend fun getNewAccessToken(refreshToken: String): String {
-        val response = userRepository.getNewAccessToken(refreshToken)
+        val response = tokenRepository.getNewAccessToken(refreshToken)
         if (response.result.code == 200) {
             saveAccessToken(response.body.accessToken)
             return response.body.accessToken
@@ -25,7 +25,7 @@ class TokenManager @Inject constructor(
     }
 
     // 액세스 토큰 저장
-    suspend fun saveAccessToken(accessToken: String) {
+    private suspend fun saveAccessToken(accessToken: String) {
         accessTokenDataStore.updateData { currentToken ->
             currentToken.copy(accessToken = accessToken)
         }

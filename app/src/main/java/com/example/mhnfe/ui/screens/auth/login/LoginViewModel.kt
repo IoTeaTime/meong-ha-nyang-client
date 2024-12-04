@@ -5,11 +5,11 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.FCMResponse
 import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.LoginResponse
+import com.example.mhnfe.data.remote.response.MemberId
 import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.data.remote.response.SendPasswordResponse
 import com.example.mhnfe.data.repository.AuthRepository
@@ -27,6 +27,7 @@ class LoginViewModel @Inject constructor(
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
     private val groupIdDataStore: DataStore<GroupId>,
+    private val memberIdDataStore: DataStore<MemberId>,
     private val sharedPreferences: SharedPreferences
 ) : ViewModel() {
 
@@ -65,7 +66,8 @@ class LoginViewModel @Inject constructor(
                     saveTokens(
                         response.body.accessToken,
                         response.body.refreshToken,
-                        response.body.groupId
+                        response.body.groupId,
+                        response.body.memberId
                     )
                     Log.d("LoginViewModel","AccessToken: " + response.body.accessToken)
                     Log.d("LoginViewModel","RefreshToken: " + response.body.refreshToken)
@@ -98,7 +100,7 @@ class LoginViewModel @Inject constructor(
     }
 
     // 엑세스 토큰과 리프레시 토큰, 그룹 아이디 저장
-    private suspend fun saveTokens(accessToken: String, refreshToken: String, groupId: Long) {
+    private suspend fun saveTokens(accessToken: String, refreshToken: String, groupId: Long, memberId: Int) {
         // 엑세스 토큰 저장
         accessTokenDataStore.updateData { currentToken ->
             currentToken.copy(accessToken = accessToken)
@@ -110,6 +112,10 @@ class LoginViewModel @Inject constructor(
         groupIdDataStore.updateData { currentGroupId ->
             currentGroupId.copy(groupId = groupId)
         }
+        memberIdDataStore.updateData { currentMemberId ->
+            currentMemberId.copy(memberId = memberId)
+        }
+
         Log.d("LoginViewModel", "엑세스 토큰 및 리프레시 토큰 저장 완료.")
     }
 
