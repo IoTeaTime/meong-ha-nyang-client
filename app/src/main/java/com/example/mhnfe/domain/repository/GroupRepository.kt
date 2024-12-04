@@ -21,4 +21,5 @@ interface GroupRepository {
     suspend fun getGroupMemberList(groupId: Long, authToken: String): Response<GroupMemberInfoResponse>
     suspend fun getCctvList(groupId: Long, token: String): Response<CctvListResponse>
     suspend fun deleteGroupMember(groupId: Long, groupMemberId: Long, token: String): Response<ApiResponse>
+    suspend fun exitGroup(groupId: Long, token: String): Response<ApiResponse>
 }

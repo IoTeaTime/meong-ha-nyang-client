@@ -228,8 +228,7 @@ private fun CctvDeviceItem(
                 }
                 setShowEditDialog(false)
             },
-            isDialogVisible = false,
-            initialText = device.cctvNickname
+            isDialogVisible = false
         )
     }
 }

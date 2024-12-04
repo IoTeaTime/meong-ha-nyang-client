@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -42,7 +41,6 @@ import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainGray2
 import deletePopup
 
@@ -60,12 +58,21 @@ fun ProfileScreen(
     val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
     val (dialogVisible1, setDialogVisible1) = remember { mutableStateOf(false) }
     val (dialogVisible2, setDialogVisible2) = remember { mutableStateOf(false) }
+    val (dialogVisible3, setDialogVisible3) = remember { mutableStateOf(false) }
 
     val logoutResponse by profileViewModel.logoutResponse.collectAsState()
     val quitResponse by profileViewModel.quitResponse.collectAsState()
+    val exitGroupResponse by profileViewModel.exitGroupResponse.collectAsState()
 
     logoutResponse?.let {
         if (it.result.code == 200) {
+            mainNavController.navigate(NavRoutes.Auth.Main.route) {
+                popUpTo(NavRoutes.Main.route) { inclusive = true }
+            }
+        }
+    }
+    exitGroupResponse?.let {
+        if (it.isSuccessful) {
             mainNavController.navigate(NavRoutes.Auth.Main.route) {
                 popUpTo(NavRoutes.Main.route) { inclusive = true }
             }
@@ -98,7 +105,7 @@ fun ProfileScreen(
             Column (
                 modifier = modifier,
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(35.dp, alignment = Alignment.CenterVertically)
+                verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
             ) {
                 Row(
                     modifier = modifier
@@ -219,6 +226,14 @@ fun ProfileScreen(
                     text = "비밀번호 변경",
                     onClick = { bottomNavController.navigate("myPage/change_password") }
                 )
+                LongButton(
+                    text = "그룹 나가기",
+                    onClick = { setDialogVisible3(true) }
+                )
+                LongButton(
+                    text = "회원 탈퇴",
+                    onClick = { setDialogVisible1(true) }
+                )
                 if (userType == UserType.MASTER) {
                     LongButton(
                         text = "기기 관리",
@@ -226,41 +241,20 @@ fun ProfileScreen(
                     )
                 }
             }
-
-            Column (
-                modifier = modifier
-                    .wrapContentHeight()
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(35.dp, alignment = Alignment.CenterVertically)
+            TextButton(
+                onClick = {
+                    setDialogVisible2(true)
+                },
+                shape = RoundedCornerShape(16.dp),
+                contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, mainBlack)
             ){
-                TextButton(
-                    onClick = {
-                        setDialogVisible2(true)
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, mainBlack)
-                ){
-                    Text(
-                        "로그아웃",
-                        style = Typography.labelLarge,
-                        color = mainBlack
-                    )
-                }
-
-                TextButton(
-                    onClick = { setDialogVisible1(true) },
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(
-                        text = "회원탈퇴",
-                        style = Typography.bodyMedium,
-                        color = mainGray,
-                        textDecoration = TextDecoration.Underline
-                    )
-                }
+                Text(
+                    "로그아웃",
+                    style = Typography.labelLarge,
+                    color = mainBlack
+                )
             }
             if (dialogVisible) {
                 EditPopup(
@@ -285,7 +279,18 @@ fun ProfileScreen(
                         profileViewModel.logout()
                         setDialogVisible2(false)
                     },
+                    text = "로그아웃 하시겠습니까?",
                     onDismissRequest = { setDialogVisible2(false) }
+                )
+            }
+            if (dialogVisible3) {
+                LogoutPopUp(
+                    onConfirmation = {
+                        profileViewModel.exitGroup()
+                        setDialogVisible3(false)
+                    },
+                    text = "그룹을 나가시겠습니까?",
+                    onDismissRequest = { setDialogVisible3(false) }
                 )
             }
         }
