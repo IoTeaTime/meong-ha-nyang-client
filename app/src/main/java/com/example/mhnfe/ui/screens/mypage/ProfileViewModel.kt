@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.screens.mypage
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
