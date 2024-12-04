@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.auth.main
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,11 +38,14 @@ fun MainScreen(
     mqttViewModel: MqttViewModel = hiltViewModel(),
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 주입
 ) {
-    val groupId = ""
+    val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("login_prefs", Context.MODE_PRIVATE)
 
     LaunchedEffect(Unit) {
+        val isAutoLoginEnabled = sharedPreferences.getBoolean("AUTO_LOGIN", false)
         mqttViewModel.initialize()
         mainViewModel.autoLogin(
+            isAutoLoginEnabled = isAutoLoginEnabled,
             onSuccess = { role, groupId ->
                 if(groupId != 0L) {
                     if(role == "ROLE_MASTER") {
@@ -82,9 +87,7 @@ fun MainScreen(
             }
         )
     }
-    LaunchedEffect(groupId) {
-    }
-
+//    viewModel.initializeWithContext(context)
     Column(
         modifier = modifier
             .fillMaxSize()

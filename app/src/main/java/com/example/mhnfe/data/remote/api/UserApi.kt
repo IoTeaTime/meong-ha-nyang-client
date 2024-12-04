@@ -18,11 +18,6 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface UserApi {
-    @POST("/api/member/refresh-token")
-    fun refreshAccessToken(
-        @Header("Authorization") refreshToken: String
-    ): RefreshAccessTokenResponse
-
     @POST("/api/member/sign-out")
     suspend fun logout(
         @Header("Authorization") accessToken: String
