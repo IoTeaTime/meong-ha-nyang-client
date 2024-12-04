@@ -47,9 +47,6 @@ class UserRepositoryImpl @Inject constructor(
         accessToken: String,
         memberId: Int
     ): ProfileResponse {
-//        val response = userApi.getMemberDetails(accessToken, memberId)
-//        Log.d("UserRepository", "Response from API: $response")
-//        return response
         return userApi.getMemberDetails(accessToken, memberId)
     }
 }

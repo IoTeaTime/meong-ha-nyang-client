@@ -67,16 +67,8 @@ fun ProfileScreen(
     val profileResponse by profileViewModel.profileResponse.collectAsState()
     val error by profileViewModel.error.collectAsState()
 
-    Log.d("ProfileScreen", "profileResponse: $profileResponse")
-    val nickname = profileResponse?.body?.member?.nickname ?: "막내가짱이야1"
-    val id = profileResponse?.body?.member?.id?.toString() ?: "nahaha1"
-    val groupId = profileResponse?.body?.group?.groupName ?: "IoTeatime1"
-
     LaunchedEffect(Unit) {
-        profileResponse?.body?.member?.id?.let { memberId ->
-            Log.d("ProfileScreen", "Fetching member details for memberId: $memberId")
-            profileViewModel.fetchMemberDetails(memberId)
-        }
+        profileViewModel.fetchMemberDetails()
     }
 
     logoutResponse?.let {
@@ -160,12 +152,14 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    modifier = modifier,
-                                    text = nickname,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                profileResponse?.body?.member?.let {
+                                    Text(
+                                        modifier = modifier,
+                                        text = it.nickname,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                }
 
                                 IconButton(
                                     modifier = modifier
@@ -192,12 +186,14 @@ fun ProfileScreen(
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
-                                Text(
-                                    modifier = modifier,
-                                    text = id,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                profileResponse?.body?.member?.id?.toString()?.let {
+                                    Text(
+                                        modifier = modifier,
+                                        text = it,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                }
                             }
 
                             Row(
@@ -213,12 +209,14 @@ fun ProfileScreen(
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
-                                Text(
-                                    modifier = modifier,
-                                    text = groupId,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                profileResponse?.body?.group?.groupName?.let {
+                                    Text(
+                                        modifier = modifier,
+                                        text = it,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                }
                             }
                         }
                     }
