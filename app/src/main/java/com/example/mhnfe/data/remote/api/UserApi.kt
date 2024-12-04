@@ -16,11 +16,6 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 
 interface UserApi {
-    @POST("/api/member/refresh-token")
-    suspend fun refreshAccessToken(
-        @Header("Authorization") refreshToken: String
-    ): RefreshAccessTokenResponse
-
     @POST("/api/member/sign-out")
     suspend fun logout(
         @Header("Authorization") accessToken: String
