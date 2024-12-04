@@ -25,7 +25,7 @@ interface DeviceApi {
         @Body request: ChangeCctvNicknameRequest
     ): Response<ChangeCctvNicknameResponse>
 
-    @GET("/open-api/cctv/{cctvId}")
+    @GET("/api/cctv/{cctvId}")
     suspend fun getCctvInfo(
         @Header("Authorization") authToken: String,
         @Path("cctvId") cctvId: Long
