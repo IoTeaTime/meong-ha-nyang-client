@@ -60,8 +60,8 @@ class LoginViewModel @Inject constructor(
                 if (response.result.code == 200) {
                     // JWT 엑세스, 리프레시 토큰 저장
                     saveTokens(
-                        response.body.accessToken.toString(),
-                        response.body.refreshToken.toString()
+                        response.body.accessToken,
+                        response.body.refreshToken
                     )
                     Log.d("LoginViewModel","response: " + response.body.accessToken)
 
