@@ -7,12 +7,15 @@ import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
 import com.example.mhnfe.data.remote.response.LogoutResponse
+import com.example.mhnfe.data.remote.response.ProfileResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
+import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Path
 
 interface UserApi {
     @POST("/api/member/refresh-token")
@@ -41,4 +44,10 @@ interface UserApi {
         @Header("Authorization") accessToken: String,
         @Body request: ChangeNicknameOrGroupNameRequest
     ): ChangeNicknameOrGroupNameResponse
+
+    @GET("/api/member/{memberId}")
+    suspend fun getMemberDetails(
+        @Header("Authorization") accessToken: String,
+        @Path("memberId") memberId: Int
+    ): ProfileResponse
 }
