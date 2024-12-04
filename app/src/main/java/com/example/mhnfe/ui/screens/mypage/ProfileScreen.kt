@@ -53,7 +53,6 @@ fun ProfileScreen(
     userType: UserType,
     bottomNavController: NavController,
     mainNavController: NavController,
-    userType: UserType,
     profileViewModel: ProfileViewModel = hiltViewModel()
 ) {
     val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
