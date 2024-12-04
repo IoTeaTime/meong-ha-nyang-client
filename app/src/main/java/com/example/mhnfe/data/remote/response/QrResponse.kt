@@ -18,7 +18,8 @@ object EmptyBody
 
 @Serializable
 data class CCTVResponseBody(
-    val cctvId: Int
+    val cctvId: Int,
+    val accessToken: String
 )
 
 data class CctvInfoResponse(
