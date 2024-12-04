@@ -4,8 +4,8 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.token.TokenManager
 import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.domain.repository.GroupRepository
 import com.example.mhnfe.domain.repository.QRRepository
@@ -22,21 +22,18 @@ class MainViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
     private val qrRepository: QRRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
+    private val cctvResponseDataStore: DataStore<CCTVResponseBody>,
 //    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     private val _cctvInfo = MutableStateFlow<CctvInfoResponse?>(null)
     val cctvInfo = _cctvInfo.asStateFlow()
+
     fun autoLogin(
-        isAutoLoginEnabled: Boolean,
-        onSuccess: (String, Long) -> Unit,
-        onFailure: (Exception) -> Unit
+        onSuccess: (String, Long) -> Unit
     ) {
         viewModelScope.launch {
             try {
-                if (!isAutoLoginEnabled) {
-                    throw Exception("Auto login is disabled")
-                }
                 // 1. Access Token 가져오기
                 val accessToken = accessTokenDataStore.data.map { it.accessToken }.first()
 
@@ -51,10 +48,10 @@ class MainViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.d("MainViewModel", "AutoLogin Failed... ${e.message}")
-                onFailure(e)
             }
         }
     }
+
     fun fetchCctvId(
         onSuccess: (CctvInfoResponse) -> Unit,
         onFailure: (Exception) -> Unit
@@ -67,6 +64,15 @@ class MainViewModel @Inject constructor(
             } catch (e: Exception) {
                 onFailure(e)
             }
+        }
+    }
+
+    fun getCctvAccessToken(
+        onSuccess: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            val cctvAccessToken = cctvResponseDataStore.data.map { it.accessToken }.first()
+            onSuccess(cctvAccessToken)
         }
     }
 }
