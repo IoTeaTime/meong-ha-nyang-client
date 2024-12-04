@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -48,6 +50,7 @@ import deletePopup
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
+    userType: UserType,
     bottomNavController: NavController,
     mainNavController: NavController,
     userType: UserType,
@@ -125,10 +128,7 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(color = mainGray2, shape = RoundedCornerShape(12.dp)),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        16.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
@@ -157,23 +157,37 @@ fun ProfileScreen(
                                 10.dp,
                                 alignment = Alignment.CenterVertically
                             ),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.Start
                         ) {
                             Row(
                                 modifier = modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                profileResponse?.body?.member?.let {
+                                Row(
+                                    modifier = modifier.wrapContentWidth().wrapContentHeight(),
+                                    horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
                                         modifier = modifier,
-                                        text = it.nickname,
+                                        text = "닉네임",
                                         style = Typography.bodyMedium,
                                         color = mainBlack
                                     )
+                                    profileResponse?.body?.member?.let {
+                                        Text(
+                                            modifier = modifier,
+                                            text = it.nickname,
+                                            style = Typography.bodyMedium,
+                                            color = mainBlack
+                                        )
+                                    }
                                 }
+
+                                Spacer(modifier = modifier.weight(1f))
 
                                 IconButton(
                                     modifier = modifier
@@ -191,15 +205,12 @@ fun ProfileScreen(
 
                             Row(
                                 modifier = modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(
-                                    100.dp,
-                                    alignment = Alignment.CenterHorizontally
-                                ),
+                                horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     modifier = modifier,
-                                    text = "ID",
+                                    text = "아이디",
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
@@ -217,10 +228,7 @@ fun ProfileScreen(
                                 modifier = modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
-                                horizontalArrangement = Arrangement.spacedBy(
-                                    71.dp,
-                                    alignment = Alignment.CenterHorizontally
-                                ),
+                                horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
