@@ -8,7 +8,6 @@ import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.remote.response.GroupId
-import com.example.mhnfe.data.remote.response.LoginResponse
 import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.domain.repository.QRRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
