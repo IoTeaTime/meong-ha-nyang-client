@@ -60,7 +60,6 @@ import org.webrtc.Logging
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
     modifier: Modifier = Modifier,
-
     navController: NavController,
     channelName: String,
     role: ChannelRole,
@@ -83,7 +82,7 @@ fun WebRtcScreen(
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize()
             if (result) {
-                mqttViewModel.createShadowWithSubscribe(context, 404)
+                mqttViewModel.createShadowWithSubscribe(context, 1)
             }
         }
         if (role == ChannelRole.MASTER && mqttState) {

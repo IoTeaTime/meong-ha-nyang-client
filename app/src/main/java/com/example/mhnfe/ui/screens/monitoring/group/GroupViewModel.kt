@@ -1,11 +1,19 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
+import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.datastore.core.DataStore
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.data.remote.request.GroupInfo
+import com.example.mhnfe.data.remote.response.CctvList
 import com.example.mhnfe.data.remote.response.GroupId
+import com.example.mhnfe.domain.mqtt.MqttViewModel
+import com.example.mhnfe.domain.mqtt.topic.ReportedData
 import com.example.mhnfe.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class GroupViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
-    private val groupIdDataStore: DataStore<GroupId>
+    private val groupIdDataStore: DataStore<GroupId>,
 ) : ViewModel() {
     private val _groupInfo = MutableStateFlow<GroupInfo?>(null)
     val groupInfo = _groupInfo.asStateFlow()

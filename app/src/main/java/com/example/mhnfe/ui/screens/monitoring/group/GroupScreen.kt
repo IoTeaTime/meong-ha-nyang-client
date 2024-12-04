@@ -1,5 +1,6 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +29,7 @@ import com.example.mhnfe.data.model.CCTV
 import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
+import com.example.mhnfe.domain.mqtt.topic.ReportedData
 import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
@@ -36,7 +40,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun GroupScreen(
     modifier: Modifier = Modifier,
-    userType: UserType = UserType.MASTER,
+    userType: UserType,
     navController: NavController,
     mqttViewModel: MqttViewModel = hiltViewModel(),
     groupViewModel: GroupViewModel = hiltViewModel(),
@@ -45,15 +49,24 @@ fun GroupScreen(
     var connectionState: Boolean = false
     val groupInfo by groupViewModel.groupInfo.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit, groupInfo) {
         mqttViewModel.testSub { _ ->
-            val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
-            mqttViewModel.viewerInitialSubscribe(context, thingList)
             groupViewModel.fetchGroupInfo { groupInfo ->
+
+                //cctv 배터리 및 네트워크 mqtt 연결
+                val cctvList = groupInfo?.cctv ?: emptyList()
+                val thingList = cctvList.mapNotNull { it.thingId }
+
+                if (thingList.isNotEmpty()) {
+                    mqttViewModel.createTopicAndShadowWithSubscribe(context,thingList){ data->
+                        data
+                    }
+                }
+
                 val groupId = groupInfo.groupId
                 val payload = """
             {
-                "groupInfo": "$groupId",
+                "groupInfo": "$groupInfo?.groupName",
                 "timestamp": ${System.currentTimeMillis() / 1000}
             }
             """.trimIndent()

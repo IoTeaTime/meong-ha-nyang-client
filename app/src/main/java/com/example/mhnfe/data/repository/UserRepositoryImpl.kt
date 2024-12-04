@@ -5,6 +5,7 @@ import com.example.mhnfe.data.remote.request.ChangeNicknameOrGroupNameRequest
 import com.example.mhnfe.data.remote.request.ChangePasswordRequest
 import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
+import com.example.mhnfe.data.remote.response.ProfileResponse
 import com.example.mhnfe.domain.repository.UserRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,5 +30,12 @@ class UserRepositoryImpl @Inject constructor(
     ): ChangeNicknameOrGroupNameResponse {
         var request = ChangeNicknameOrGroupNameRequest(nickname,groupName)
         return userApi.changeNicknameOrGroupName(accessToken, request)
+    }
+
+    override suspend fun getMemberDetails(
+        accessToken: String,
+        memberId: Int
+    ): ProfileResponse {
+        return userApi.getMemberDetails(accessToken, memberId)
     }
 }
