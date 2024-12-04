@@ -20,7 +20,7 @@ class TokenManager @Inject constructor(
             saveAccessToken(response.body.accessToken)
             return response.body.accessToken
         } else {
-            return ""
+            throw Exception("Failed to refresh access token: ${response.result.message}")
         }
     }
 
