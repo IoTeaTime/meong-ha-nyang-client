@@ -19,7 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
-import com.example.mhnfe.data.remote.response.CctvInfo
+import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.data.remote.response.GroupMemberInfo
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.theme.Typography
@@ -64,7 +64,7 @@ fun DeviceManagementScreen(
         cctvDevices = cctvList
     }
     LaunchedEffect(groupMemberInfoList) {
-        cctvDevices = cctvList
+        viewerDevices = groupMemberInfoList
     }
 
     Scaffold(
@@ -96,8 +96,7 @@ fun DeviceManagementScreen(
                     device = device,
                     onDelete = {
                         deviceManagementViewModel.deleteDevice(device.cctvId)
-                        cctvDevices = cctvDevices!!.filter { it.cctvId != device.cctvId }
-                               },
+                        cctvDevices = cctvDevices!!.filter { it.cctvId != device.cctvId } },
                     onUpdate = { updatedDevice ->
                         deviceManagementViewModel.changeCctvName(updatedDevice.cctvId, updatedDevice.cctvNickname)
                         cctvDevices = cctvDevices!!.map {
@@ -118,10 +117,14 @@ fun DeviceManagementScreen(
             )
 
             // Viewer Devices
-            groupMemberInfoList?.forEach { device ->
+            viewerDevices?.forEach { device ->
                 ViewerDeviceItem(
                     device = device,
-                    onDelete = { viewerDevices = viewerDevices!!.filter { it.memberId != device.memberId } },
+                    onDelete = {
+                        deviceManagementViewModel.deleteViewer(device.groupMemberId)
+                        viewerDevices =
+                            viewerDevices!!.filter { it.memberId != device.memberId }
+                    },
                     onUpdate = { updatedDevice ->
                         viewerDevices = viewerDevices!!.map {
                             if (it.memberId == updatedDevice.memberId) updatedDevice else it
@@ -164,15 +167,6 @@ private fun ViewerDeviceItem(
                 Text(
                     text = device.nickname,
                     style = Typography.bodyMedium
-                )
-
-                Icon(
-                    painter = painterResource(id = R.drawable.edit),
-                    contentDescription = "수정",
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { showEditDialog = true },
-                    tint = Color.Gray
                 )
             }
 

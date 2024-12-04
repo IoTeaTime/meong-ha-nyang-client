@@ -1,5 +1,6 @@
 package com.example.mhnfe.domain.mqtt
 
+import DeviceUtils
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -7,6 +8,7 @@ import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos
 import com.example.mhnfe.domain.mqtt.shadow.delta.ShadowDeltaMsg
 import com.example.mhnfe.domain.mqtt.topic.DeviceInfoTopic
+import com.example.mhnfe.domain.mqtt.topic.ReportedData
 import com.example.mhnfe.utils.DataObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -108,15 +110,17 @@ class MqttViewModel @Inject constructor(
         Log.d(tag, "MQTT disconnected.")
     }
 
-    fun viewerInitialSubscribe(context: Context, thingId: String) {
-        val topic = "/mhn/command/device/info/things/$thingId"
-
-        subscribe(topic) { receivedTopic, message ->
-            Log.d(tag, "Message received on topic $receivedTopic: $message")
-            handleTopicMessage(receivedTopic, message, context)
+    fun viewerInitialSubscribe(context: Context, thingList: List<String>, data: (ReportedData?) -> Unit) {
+        val topics = thingList.map { "/mhn/command/device/info/things/$it" }.toMutableList()
+        topics.forEach { topic ->
+            subscribe(topic) { receivedTopic, message ->
+                Log.d(tag, "Message received on topic $receivedTopic: $message")
+                handleThingTopicMessage(receivedTopic, message, context){ reportedData->
+                    data(reportedData)
+                }
+            }
         }
-
-        Log.d(tag, "Subscribed to topics: ${topic}")
+        Log.d(tag, "Subscribed to topics: ${topics.joinToString(", ")}")
     }
 
 //    fun ShadowWithSubscribe(thingId: String){
@@ -155,15 +159,26 @@ class MqttViewModel @Inject constructor(
         Log.d(tag, "Shadow subscriptions and publication complete.")
     }
 
+    // group page cctv 배터리 및 네트워크 정보 subscribe
+    fun createTopicAndShadowWithSubscribe(context: Context, thingList: List<String>, data: (ReportedData?) -> Unit){
+        //topic
+        viewerInitialSubscribe(context,thingList){ reportedData->
+            data(reportedData)
+        }
+
+        //shadow
+        thingList.forEach { thingId ->
+            subscribeShadowWithPayload(thingId){ reportedData->
+                data(reportedData)
+            }
+        }
+
+        Log.d(tag, "Shadow subscriptions and publication complete.")
+    }
+
     private fun handleTopicMessage(receivedTopic: String, message: String, context: Context) {
         try {
             val jsonMessage = JSONObject(message)
-
-            // ignoreUnknownKeys 옵션 활성화
-            val json = Json { ignoreUnknownKeys = true }
-
-            // JSON 메시지 디코딩
-            val device: DeviceInfoTopic = json.decodeFromString(message)
 
             when {
                 receivedTopic.contains("groups") -> {
@@ -172,17 +187,56 @@ class MqttViewModel @Inject constructor(
                 }
 
                 receivedTopic.contains("things") -> {
-
                     Log.d(tag, "Thing message: $message")
                 }
 
                 else -> {
                     Log.w(tag, "Unhandled topic: $receivedTopic")
                 }
-
             }
         } catch (e: Exception) {
             Log.e(tag, "Failed to process topic message: ${e.message}", e)
+        }
+    }
+
+    private fun handleThingTopicMessage(receivedTopic: String, message: String, context: Context, data: (ReportedData?) -> Unit) {
+        try {
+            // ignoreUnknownKeys 옵션 활성화
+            val json = Json { ignoreUnknownKeys = true }
+
+            // JSON 메시지 디코딩
+            val reportedData: ReportedData = json.decodeFromString(message)
+
+            Log.d(tag, "Thing message: $message")
+
+            data(reportedData)
+
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to process topic message: ${e.message}", e)
+        }
+    }
+
+    //group screen shadow handler
+    private fun groupPageHandleShadowMessage(topic: String, message: String, data: (ReportedData?) -> Unit) {
+        try {
+            // ignoreUnknownKeys 옵션 활성화
+            val json = Json { ignoreUnknownKeys = true }
+
+            // JSON 메시지 디코딩
+            val device: DeviceInfoTopic = json.decodeFromString(message)
+            // JSON 파싱 시 ignoreUnknownKeys = true 설정
+            val reportedData: ReportedData? = device.state?.reported
+            when {
+                topic.contains("thingId") -> {
+                    Log.d(tag, "Accepted 메시지 수신: $message")
+                }
+                else -> {
+                    Log.w(tag, "Unhandled Shadow Topic: $topic")
+                }
+            }
+            data(reportedData)
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to process shadow message: ${e.message}", e)
         }
     }
 
@@ -228,7 +282,7 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    fun getDeviceInfo(payload: String, groupId: Int) {
+    fun getDeviceInfo(payload: String, groupId: Long) {
         val topic = "/mhn/command/device/info/groups/$groupId"
         publish(topic, payload)
     }
@@ -282,25 +336,17 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    // 그룹페이지 업데이트
-    fun getObservingData(context: Context,thingId: String) {
-        dataObserver = DataObserver(context).apply {
-            startObserving()
-            CoroutineScope(Dispatchers.IO).launch {
-                getShadowWithPayload(context,thingId)
-            }
-        }
-    }
-
-    private fun getShadowWithPayload(context: Context, thingId: String) {
+    //shadow
+    fun subscribeShadowWithPayload(thingId: String,data: (ReportedData?) -> Unit) {
         val topic = "\$aws/things/${thingId}/shadow/update/accepted"
-        Log.e(tag, "sub shadow get: \$aws/things/${thingId}/shadow/update/documents", )
+        Log.d(tag, "Subscribe shadow accepted: \$aws/things/${thingId}/shadow/update/accepted", )
         try {
             subscribe(topic,{ receivedTopic, message ->
                 Log.d(tag, "Message received on topic $receivedTopic: $message")
-                handleTopicMessage(receivedTopic, message, context)
+                groupPageHandleShadowMessage(receivedTopic, message) { reportedData->
+                    data(reportedData)
+                }
             })
-//            Log.d(tag, "Published Shadow get: $payload")
         } catch (e: Exception) {
             Log.e(tag, "Failed to publish shadow get: ${e.message}", e)
         }
@@ -309,6 +355,21 @@ class MqttViewModel @Inject constructor(
     // 데이터 관찰 중지
     fun stopObservingData() {
         dataObserver = null // todo. mqtt 연결 해제될 때 같이 수정
+    }
+
+    fun testSub(connectionReceived: (String) -> Unit) {
+        Log.d("GroupScreen", "Test Subscribe Success")
+        subscribe("/mhn/connect/test/$thingId") { _, message ->
+            val isSuccess = message == "The connection is still active"
+            val status = if (isSuccess) "Connected" else "Disconnected"
+
+            Log.d("GroupScreen", "Connection status: $status, Message: $message")
+            connectionReceived(message)
+        }
+    }
+
+    fun testPub() {
+        publish("/mhn/connect/test/$thingId", "The connection is still active")
     }
 
     private fun publish(topic: String, payload: String) {
