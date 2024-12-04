@@ -35,6 +35,12 @@ interface GroupApi {
         @Header("Authorization") authToken: String
     ): Response<GroupMemberInfoResponse>
 
+    @DELETE("/api/group/{groupId}/member")
+    suspend fun exitGroup(
+        @Path("groupId") groupId: Long,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse>
+
     @GET("/api/group/info-list")
     suspend fun getGroupInfo(
         @Header("Authorization") authToken: String
