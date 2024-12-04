@@ -16,11 +16,14 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         return runBlocking {
             val accessToken = accessTokenDataStore.data.map { it.accessToken }.first()
-            val request = if (accessToken.isNotEmpty()) {
+
+            // 헤더에 "Authorization" 키가 존재하는 경우에만 intercept 수행
+            val request = if (accessToken.isNotEmpty() && chain.request().headers["Authorization"] != null) {
                 chain.request().putTokenHeader(accessToken)
             } else {
                 chain.request()
             }
+
             chain.proceed(request)
         }
     }
