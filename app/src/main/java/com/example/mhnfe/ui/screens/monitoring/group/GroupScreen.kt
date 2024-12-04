@@ -31,8 +31,7 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-
-
+import kotlinx.coroutines.delay
 
 @Composable
 fun GroupScreen(
@@ -43,33 +42,29 @@ fun GroupScreen(
     groupViewModel: GroupViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    var connectionState: Boolean = false
     val groupInfo by groupViewModel.groupInfo.collectAsState()
-    val mqttState by mqttViewModel.isConnected.collectAsState()
-
 
     LaunchedEffect(Unit) {
-        groupViewModel.fetchGroupInfo()
-        // todo 1. API 호출 -> Group Id, Thing Id List 반환
-        // 2. Thing Id를 Sub, Group Id로 Pub -> CCTV 기기에 정보 요청
-        // 3. CCTV 기기는 자신의 Thing Id로 Pub
-        if (!mqttState) {
-            val result = mqttViewModel.initialize()
-            if(result) {
-                val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
-                mqttViewModel.viewerInitialSubscribe(context, thingList)
-            }
-        }
-
-        if (mqttState) {
-            val payload = """
+        mqttViewModel.testSub { _ ->
+            val thingList = listOf("53f6de0c846034b8", "fd72414d2c21c071")
+            mqttViewModel.viewerInitialSubscribe(context, thingList)
+            groupViewModel.fetchGroupInfo { groupInfo ->
+                val groupId = groupInfo.groupId
+                val payload = """
             {
-                "groupInfo": "$groupInfo?.groupName",
+                "groupInfo": "$groupId",
                 "timestamp": ${System.currentTimeMillis() / 1000}
             }
             """.trimIndent()
-            mqttViewModel.getDeviceInfo(payload, 404)
+                mqttViewModel.getDeviceInfo(payload, groupId)
+            }
         }
+        delay(100)
+        mqttViewModel.testPub();
     }
+
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {

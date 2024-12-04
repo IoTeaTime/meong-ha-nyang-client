@@ -28,11 +28,7 @@ class GroupViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
-    init {
-        fetchGroupInfo()
-    }
-
-    fun fetchGroupInfo() {
+    fun fetchGroupInfo(groupInfoCallback: (GroupInfo) -> Unit ) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -42,10 +38,10 @@ class GroupViewModel @Inject constructor(
                     Log.d("GroupViewModel", "응답 바디: ${response.body}")
                     Log.d("GroupViewModel", "응답 result: ${response.result}")
                     _groupInfo.value = response.body
-
                     groupIdDataStore.updateData { currentGroupId ->
                         currentGroupId.copy(groupId = response.body.groupId)
                     }
+                    groupInfoCallback(response.body)
                 },
                 onFailure = { e ->
                     when (e) {
