@@ -15,7 +15,7 @@ object DeviceUtils {
         val batteryLevel = getBatteryLevel(context)
         val kvsChannelActive = true
         val kvsChannelDeleteRequested = false
-        val networkStatus = getWifiInfo(context)
+        val networkStatus = getWifiInfo(context).toString()
 
         return """
         {
@@ -36,7 +36,7 @@ object DeviceUtils {
         val availableMemory = getAvailableMemory(context)
         val (deviceModel, osVersion) = getDeviceInfo()
         val appVersion = getAppVersion(context)
-        val networkStatus = getWifiInfo(context)
+        val networkStatus = getWifiInfo(context).toString()
         val timestamp = groupMessage.optLong("timestamp", System.currentTimeMillis() / 1000)
 
         return """
@@ -46,7 +46,7 @@ object DeviceUtils {
             "deviceModel": "$deviceModel",
             "osVersion": "$osVersion",
             "appVersion": "$appVersion",
-            "networkStatus": "$networkStatus",
+            "networkStatus": $networkStatus,
             "timestamp": $timestamp
         }
         """.trimIndent()

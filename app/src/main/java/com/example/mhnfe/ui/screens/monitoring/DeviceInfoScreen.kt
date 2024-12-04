@@ -56,7 +56,9 @@ fun DeviceInfoScreen(
 
     LaunchedEffect(Unit) {
         deviceViewModel.getCctvInfo(cctvId) { thingId ->
-            mqttViewModel.viewerInitialSubscribe(context, listOf(thingId))
+            mqttViewModel.viewerInitialSubscribe(context, listOf(thingId)){ reportedData->
+                reportedData
+            }
         }
     }
 
