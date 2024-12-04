@@ -1,8 +1,8 @@
 package com.example.mhnfe.data.repository
 
 import com.example.mhnfe.data.remote.api.DeviceApi
+import com.example.mhnfe.data.remote.request.CctvInfoResponse
 import com.example.mhnfe.data.remote.request.ChangeCctvNicknameRequest
-import com.example.mhnfe.data.remote.response.ChangeCctvDto
 import com.example.mhnfe.data.remote.response.ChangeCctvNicknameResponse
 import com.example.mhnfe.data.remote.response.DeleteDeviceResponse
 import com.example.mhnfe.domain.repository.DeviceRepository
@@ -19,7 +19,11 @@ class DeviceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun changeCctvName(authToken: String, cctvId: Long, cctvName: String): Response<ChangeCctvNicknameResponse> {
-        val request = ChangeCctvNicknameRequest(cctvId,cctvName);
-        return deviceApi.ChangeCctvName(authToken,request);
+        val request = ChangeCctvNicknameRequest(cctvId,cctvName)
+        return deviceApi.ChangeCctvName(authToken,request)
+    }
+
+    override suspend fun getCctvInfo(authToken: String, cctvId: Long): Response<CctvInfoResponse> {
+        return deviceApi.getCctvInfo(authToken, cctvId)
     }
 }

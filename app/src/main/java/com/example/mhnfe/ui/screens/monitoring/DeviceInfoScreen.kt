@@ -18,21 +18,22 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.R
-import com.example.mhnfe.data.model.sampleCCTVList
+import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.SubTopBar
+import com.example.mhnfe.ui.screens.monitoring.device.DeviceViewModel
 import com.example.mhnfe.ui.screens.monitoring.group.GroupViewModel
 import com.example.mhnfe.ui.screens.monitoring.group.toCCTV
 import com.example.mhnfe.ui.theme.Typography
@@ -44,11 +45,22 @@ fun DeviceInfoScreen(
     modifier: Modifier = Modifier,
     cctvId: Long,
     navController: NavController,
-    groupViewModel: GroupViewModel = hiltViewModel()
+    groupViewModel: GroupViewModel = hiltViewModel(),
+    mqttViewModel: MqttViewModel = hiltViewModel(),
+    deviceViewModel: DeviceViewModel = hiltViewModel()
 ) {
     val groupInfo by groupViewModel.groupInfo.collectAsState()
     val cctv = groupInfo?.cctv?.find { it.cctvId == cctvId }?.toCCTV()
-//    val cctv = sampleCCTVList.find { it.id == cctvId }
+
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        deviceViewModel.getCctvInfo(cctvId) { thingId ->
+            mqttViewModel.viewerInitialSubscribe(context, listOf(thingId)){ reportedData->
+                reportedData
+            }
+        }
+    }
 
     Scaffold(
         topBar = {

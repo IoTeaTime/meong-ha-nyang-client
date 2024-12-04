@@ -84,7 +84,7 @@ fun SelectScreen(
                 MiddleButton(
                     text = "참여 QR",
                     onClick = {
-                        navController.navigate(NavRoutes.Auth.QRScanner.route) {
+                        navController.navigate(NavRoutes.Auth.QRScanner.createRoute(UserType.VIEWER)) {
                             popUpTo(NavRoutes.Auth.Main.route) { inclusive = true }
                         }
                     },
@@ -100,7 +100,6 @@ fun SelectScreen(
                         containerColor = mainGray
                     ),
                     onClick = {
-                        Log.d("SelectScreen", "그룹 생성 버튼 클릭됨")
                         viewModel.createGroup()
                     },
                 ) {
