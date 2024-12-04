@@ -13,6 +13,7 @@ import com.example.mhnfe.domain.ai.DetectionManager
 import com.example.mhnfe.domain.ai.yolo.YoloDetector
 import com.example.mhnfe.domain.ai.opencv.BitmapToMatConverter
 import com.example.mhnfe.domain.ai.opencv.MotionDetector
+import com.example.mhnfe.domain.ai.yolo.HandleDetection
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
@@ -26,7 +27,7 @@ class AiViewModel @Inject constructor(
 ) : ViewModel() {
     private val tag = "AiViewModel"
     private val motionDetector = MotionDetector()
-
+    private val handleDetection = HandleDetection()
 
     // YOLO 감지 결과를 저장할 LiveData
     private val _detectionResults = MutableLiveData<List<BoundingBox>>()
@@ -41,7 +42,7 @@ class AiViewModel @Inject constructor(
 
                 // 감지된 YOLO 결과를 로그로 출력
                 Log.d(tag, "YOLO Detection complete: ${boundingBoxes.size} objects detected")
-                handleDetectionResults(boundingBoxes)
+                handleDetection.handleDetectionResults(boundingBoxes)
                 _detectionResults.postValue(boundingBoxes)
 
                 // 각 BoundingBox 정보를 상세 로그로 출력
@@ -68,17 +69,6 @@ class AiViewModel @Inject constructor(
             }
         }
     )
-
-    // 감지된 결과를 처리하는 함수
-    private fun handleDetectionResults(boundingBoxes: List<BoundingBox>) {
-        boundingBoxes.forEach { box ->
-            if (box.clsName == "dog" || box.clsName == "cat" || box.clsName == "person") {
-                Log.d(tag, "Detected ${box.clsName}")
-                // iot로 보내야하는 부분 추가 구현
-            }
-        }
-    }
-
 
     fun processFrame(bitmap: Bitmap?) {
         viewModelScope.launch {
