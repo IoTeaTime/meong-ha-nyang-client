@@ -1,21 +1,21 @@
 package com.example.mhnfe.ui.screens.mypage
 
-import android.content.ContentValues.TAG
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.api.UserApi
-import com.example.mhnfe.data.remote.request.ChangePasswordRequest
 import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
-import com.example.mhnfe.data.remote.response.ChangeCctvNicknameResponse
+import com.example.mhnfe.data.remote.response.ApiResponse
 import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.DeleteResponse
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.LogoutResponse
+import com.example.mhnfe.data.remote.response.MemberId
+import com.example.mhnfe.data.remote.response.ProfileResponse
 import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,24 +23,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import org.json.JSONObject
-import retrofit2.HttpException
 import retrofit2.Response
-import java.lang.Thread.State
 import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userApi: UserApi,
+    private val groupApi: GroupApi,
     private val userRepository: UserRepository,
+    private val groupIdDataStore: DataStore<GroupId>,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>, // 리프레시 토큰 데이터스토어
-    private val sharedPreferences: SharedPreferences // SharedPreferences
+    private val loginRequestDataStore: DataStore<LoginRequest>, // 로그인 요청 데이터스토어
+    private val sharedPreferences: SharedPreferences, // SharedPreferences
+    private val memberIdDataStore: DataStore<MemberId>
 ) : ViewModel() {
 
     private val _logoutResponse = MutableStateFlow<LogoutResponse?>(null)
@@ -54,6 +54,15 @@ class ProfileViewModel @Inject constructor(
 
     private val _changeNicknameOrGroupNameResponse = MutableStateFlow<ChangeNicknameOrGroupNameResponse?>(null)
     val changeNicknameOrGroupNameResponse: StateFlow<ChangeNicknameOrGroupNameResponse?> = _changeNicknameOrGroupNameResponse
+
+    private val _profileResponse = MutableStateFlow<ProfileResponse?>(null)
+    val profileResponse: StateFlow<ProfileResponse?> = _profileResponse
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
+    private val _exitGroupResponse = MutableStateFlow<Response<ApiResponse>?>(null)
+    val exitGroupResponse: StateFlow<Response<ApiResponse>?> = _exitGroupResponse
 
     fun logout() {
         viewModelScope.launch {
@@ -74,6 +83,32 @@ class ProfileViewModel @Inject constructor(
                 _logoutResponse.value = response
             } catch (e: Exception) {
                 // 에러 처리
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun exitGroup() {
+        viewModelScope.launch {
+            try {
+                // 액세스 토큰 가져오기
+                val token = accessTokenDataStore.data.map { it.accessToken }.first()
+
+                // 그룹 ID 가져오기
+                val groupId = groupIdDataStore.data.map { it.groupId }.first()
+
+                // 그룹 퇴장 API 호출
+                val response = withContext(Dispatchers.IO) {
+                    groupApi.exitGroup(groupId, token)
+                }
+
+                // 성공 시 그룹 ID 초기화
+                if (response.isSuccessful) {
+                    groupIdDataStore.updateData { GroupId(0) }
+                }
+                _exitGroupResponse.value = response
+
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
@@ -129,6 +164,9 @@ class ProfileViewModel @Inject constructor(
         // RefreshToken 초기화
         refreshTokenDataStore.updateData { RefreshToken("") }
 
+        // LoginRequest 초기화
+        loginRequestDataStore.updateData { LoginRequest("", "") }
+
         // SharedPreferences 초기화 (로그인 정보 삭제)
         sharedPreferences.edit().clear().apply()
     }
@@ -156,6 +194,35 @@ class ProfileViewModel @Inject constructor(
                 e.printStackTrace()
             }
 
+        }
+    }
+
+    fun fetchMemberDetails() {
+        viewModelScope.launch {
+            try {
+                val token = accessTokenDataStore.data.map { it.accessToken }.first()
+                val memberId = memberIdDataStore.data.map {it.memberId}.first()
+
+                if (token.isNullOrEmpty()) {
+                    _error.value = "No access token found"
+                    return@launch
+                }
+                val profileResponse: ProfileResponse = withContext(Dispatchers.IO) {
+                    userRepository.getMemberDetails(token, memberId)
+                }
+                Log.d("ProfileViewModel", "Response received: $profileResponse")
+
+                val profileBody = profileResponse.body
+                if (profileBody != null) {
+                    _profileResponse.value = profileResponse
+                } else {
+                    _error.value = "ProfileBody is null"
+                    Log.e("ProfileViewModel", "ProfileBody is null")
+                }
+            } catch (e: Exception) {
+                _error.value = e.localizedMessage
+                Log.e("ProfileViewModel", "Error fetching member details: ${e.localizedMessage}")
+            }
         }
     }
 }
