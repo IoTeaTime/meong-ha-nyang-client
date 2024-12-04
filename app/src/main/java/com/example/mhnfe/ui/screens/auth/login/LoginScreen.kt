@@ -6,12 +6,26 @@ import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -21,24 +35,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.mhnfe.R
 import com.example.mhnfe.di.UserType
+import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTextBox
-import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.components.MiddleButton
+import com.example.mhnfe.ui.components.SendPasswordPopUp
+import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
-import com.example.mhnfe.ui.components.SendPasswordPopUp
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    loginViewModel: LoginViewModel = hiltViewModel()
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    mqttViewModel: MqttViewModel = hiltViewModel()
 ) {
     val loginResponse by loginViewModel.loginResponse.collectAsState()
     val errorMessage by loginViewModel.errorMessage.collectAsState()
@@ -173,6 +189,7 @@ fun LoginScreen(
                 // 로그인 성공 시 화면 전환
                 LaunchedEffect(loginResponse) {
                     if (loginResponse?.result?.code == 200) {
+                        mqttViewModel.initialize()
                         loginViewModel.getAccessToken { accessToken ->
                             // FCM 토큰 전송
                             if (!accessToken.isNullOrEmpty()) {

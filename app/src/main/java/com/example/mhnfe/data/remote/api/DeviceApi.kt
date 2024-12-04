@@ -1,11 +1,13 @@
 package com.example.mhnfe.data.remote.api
 
+import com.example.mhnfe.data.remote.request.CctvInfoResponse
 import com.example.mhnfe.data.remote.request.ChangeCctvNicknameRequest
 import com.example.mhnfe.data.remote.response.ChangeCctvNicknameResponse
 import com.example.mhnfe.data.remote.response.DeleteDeviceResponse
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
 import retrofit2.http.PATCH
@@ -22,4 +24,10 @@ interface DeviceApi {
         @Header("Authorization") authToken: String,
         @Body request: ChangeCctvNicknameRequest
     ): Response<ChangeCctvNicknameResponse>
+
+    @GET("/open-api/cctv/{cctvId}")
+    suspend fun getCctvInfo(
+        @Header("Authorization") authToken: String,
+        @Path("cctvId") cctvId: Long
+    ): Response<CctvInfoResponse>
 }
