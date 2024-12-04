@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.screens.mypage
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,7 +39,6 @@ class ProfileViewModel @Inject constructor(
     private val groupIdDataStore: DataStore<GroupId>,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>, // 리프레시 토큰 데이터스토어
-    private val loginRequestDataStore: DataStore<LoginRequest>, // 로그인 요청 데이터스토어
     private val sharedPreferences: SharedPreferences, // SharedPreferences
     private val memberIdDataStore: DataStore<MemberId>
 ) : ViewModel() {
@@ -163,9 +163,6 @@ class ProfileViewModel @Inject constructor(
 
         // RefreshToken 초기화
         refreshTokenDataStore.updateData { RefreshToken("") }
-
-        // LoginRequest 초기화
-        loginRequestDataStore.updateData { LoginRequest("", "") }
 
         // SharedPreferences 초기화 (로그인 정보 삭제)
         sharedPreferences.edit().clear().apply()
