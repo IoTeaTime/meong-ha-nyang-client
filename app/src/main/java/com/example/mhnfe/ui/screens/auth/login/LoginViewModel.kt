@@ -8,6 +8,7 @@ import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.FCMResponse
 import com.example.mhnfe.data.remote.response.LoginResponse
+import com.example.mhnfe.data.remote.response.MemberId
 import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.data.remote.response.SendPasswordResponse
 import com.example.mhnfe.data.repository.AuthRepository
@@ -24,7 +25,8 @@ class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
-    private val loginRequestDataStore: DataStore<LoginRequest>
+    private val loginRequestDataStore: DataStore<LoginRequest>,
+    private val memberIdDataStore: DataStore<MemberId>
 ) : ViewModel() {
 
     // 로그인 결과 상태
@@ -61,7 +63,8 @@ class LoginViewModel @Inject constructor(
                     // JWT 엑세스, 리프레시 토큰 저장
                     saveTokens(
                         response.body.accessToken.toString(),
-                        response.body.refreshToken.toString()
+                        response.body.refreshToken.toString(),
+                        response.body.memberId
                     )
                     Log.d("LoginViewModel","response: " + response.body.accessToken)
 
@@ -91,7 +94,7 @@ class LoginViewModel @Inject constructor(
     }
 
     // 엑세스 토큰과 리프레시 토큰 저장
-    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+    suspend fun saveTokens(accessToken: String, refreshToken: String, memberId: Int) {
         // 엑세스 토큰 저장
         accessTokenDataStore.updateData { currentToken ->
             currentToken.copy(accessToken = accessToken)
@@ -99,6 +102,9 @@ class LoginViewModel @Inject constructor(
         // 리프레시 토큰 저장
         refreshTokenDataStore.updateData { currentToken ->
             currentToken.copy(refreshToken = refreshToken)
+        }
+        memberIdDataStore.updateData { currentMemberId ->
+            currentMemberId.copy(memberId = memberId)
         }
         Log.d("LoginViewModel", "엑세스 토큰 및 리프레시 토큰 저장 완료.")
     }

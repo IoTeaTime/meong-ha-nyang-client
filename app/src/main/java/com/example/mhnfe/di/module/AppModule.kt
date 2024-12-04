@@ -21,6 +21,7 @@ import javax.inject.Singleton
 import android.content.Context.MODE_PRIVATE
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.response.GroupId
+import com.example.mhnfe.data.remote.response.MemberId
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -226,6 +227,45 @@ object AppModule {
             override suspend fun writeTo(t: GroupId, output: OutputStream) {
                 output.write(Json.encodeToString(
                     GroupId.serializer(),
+                    t
+                ).encodeToByteArray())
+            }
+        }
+    }
+
+    // 맴버 ID 저장
+    @Provides
+    @Singleton
+    fun provideMemberIdDataStore(
+        @ApplicationContext context: Context,
+        serializer: Serializer<MemberId>
+    ): DataStore<MemberId> {
+        return DataStoreFactory.create(
+            serializer = serializer,
+            produceFile = { context.filesDir.resolve("member_id.pb") }
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMemberIdSerializer(): Serializer<MemberId> {
+        return object : Serializer<MemberId> {
+            override val defaultValue: MemberId = MemberId(0)
+
+            override suspend fun readFrom(input: InputStream): MemberId {
+                return try {
+                    Json.decodeFromString(
+                        MemberId.serializer(),
+                        input.readBytes().decodeToString()
+                    )
+                } catch (e: Exception) {
+                    defaultValue
+                }
+            }
+
+            override suspend fun writeTo(t: MemberId, output: OutputStream) {
+                output.write(Json.encodeToString(
+                    MemberId.serializer(),
                     t
                 ).encodeToByteArray())
             }

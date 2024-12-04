@@ -1,7 +1,6 @@
 package com.example.mhnfe.data.repository
 
 import android.util.Log
-import com.example.mhnfe.data.remote.api.ApiService
 import com.example.mhnfe.data.remote.api.AuthApi
 import com.example.mhnfe.data.remote.request.CheckEmailVerificationRequest
 import com.example.mhnfe.data.remote.request.EmailRequest

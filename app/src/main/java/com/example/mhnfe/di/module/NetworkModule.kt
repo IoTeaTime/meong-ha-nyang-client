@@ -1,6 +1,5 @@
 package com.example.mhnfe.di.module
 
-import com.example.mhnfe.data.remote.api.ApiService
 import com.example.mhnfe.data.remote.api.AuthApi
 import com.example.mhnfe.data.remote.api.DeviceApi
 import dagger.Module

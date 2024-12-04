@@ -47,10 +47,6 @@ import deletePopup
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    nickname: String = "막내가짱이야",
-    id: String = "nahaha",
-    groupId: String = "IoTeatime",
-    userType: UserType,
     bottomNavController: NavController,
     mainNavController: NavController,
     profileViewModel: ProfileViewModel = hiltViewModel()
@@ -63,6 +59,13 @@ fun ProfileScreen(
     val logoutResponse by profileViewModel.logoutResponse.collectAsState()
     val quitResponse by profileViewModel.quitResponse.collectAsState()
     val exitGroupResponse by profileViewModel.exitGroupResponse.collectAsState()
+
+    val profileResponse by profileViewModel.profileResponse.collectAsState()
+    val error by profileViewModel.error.collectAsState()
+
+    LaunchedEffect(Unit) {
+        profileViewModel.fetchMemberDetails()
+    }
 
     logoutResponse?.let {
         if (it.result.code == 200) {
@@ -102,6 +105,14 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ){
+            error?.let {
+                Text(
+                    text = it,
+                    style = Typography.bodyMedium,
+                    color = Color.Red
+                )
+            }
+
             Column (
                 modifier = modifier,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -153,12 +164,14 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    modifier = modifier,
-                                    text = nickname,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                profileResponse?.body?.member?.let {
+                                    Text(
+                                        modifier = modifier,
+                                        text = it.nickname,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                }
 
                                 IconButton(
                                     modifier = modifier
@@ -188,12 +201,14 @@ fun ProfileScreen(
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
-                                Text(
-                                    modifier = modifier,
-                                    text = id,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                profileResponse?.body?.member?.id?.toString()?.let {
+                                    Text(
+                                        modifier = modifier,
+                                        text = it,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                }
                             }
 
                             Row(
@@ -212,12 +227,14 @@ fun ProfileScreen(
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
-                                Text(
-                                    modifier = modifier,
-                                    text = groupId,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                profileResponse?.body?.group?.groupName?.let {
+                                    Text(
+                                        modifier = modifier,
+                                        text = it,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                }
                             }
                         }
                     }

@@ -49,6 +49,11 @@ data class Jwt(
 )
 
 @Serializable
+data class MemberId(
+    val memberId: Int
+)
+
+@Serializable
 data class AccessToken(
     val accessToken: String
 )
