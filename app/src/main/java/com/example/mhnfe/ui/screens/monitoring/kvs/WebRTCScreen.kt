@@ -2,13 +2,19 @@ package com.example.mhnfe.ui.screens.monitoring.kvs
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
+import android.os.Build
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +27,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -36,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,6 +72,7 @@ import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
@@ -83,6 +93,7 @@ fun WebRtcScreen(
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
     val mqttState by mqttViewModel.isConnected.collectAsState()
     val window = (context as? Activity)?.window
+    val isRecording = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         // Todo. 그룹 ID 반환 로직 추가
@@ -335,22 +346,46 @@ fun WebRtcScreen(
                         modifier = modifier
                             .padding(20.dp)
                             .align(Alignment.BottomCenter)
+                            .wrapContentHeight()
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Role: ${(uiState as WebRTCUiState.Success).role}",
-                            style = MaterialTheme.typography.bodyMedium
+                        Spacer(
+                            modifier = Modifier.size(50.dp)
                         )
+                        if (role == ChannelRole.VIEWER) {
+                            Box(
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .background(
+                                        color = Color.White,
+                                        shape = CircleShape
+                                    )
+                                    .clickable {
+                                        viewModel.captureScreen(context)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "캡처",
+                                    color = Color.Black,
+                                    style = Typography.bodySmall
+                                )
+                            }
+                        }else {
+                            // MASTER인 경우 빈 공간
+                            Spacer(
+                                modifier = Modifier.size(100.dp)
+                            )
+                        }
+
                         //카메라 전환
                         IconButton(
                             modifier = modifier
                                 .size(50.dp),
                             onClick = {
-                                if (role == ChannelRole.MASTER) {
-                                    viewModel.switchCamera(context)
-                                }
+                                viewModel.switchCamera(context)
                             }
                         ) {
                             Icon(
