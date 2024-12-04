@@ -1,17 +1,30 @@
 package com.example.mhnfe.ui.screens.monitoring.kvs
 
 
+import android.app.Activity
+import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.ImageFormat
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.YuvImage
+import android.media.MediaRecorder
+import android.os.Build
+import android.os.Environment
+import android.os.Handler
+import android.os.Looper
+import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
+import android.view.PixelCopy
+import android.view.SurfaceView
+import android.view.View
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -48,8 +61,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.webrtc.ApplicationContextProvider.getApplicationContext
 import org.webrtc.Camera1Enumerator
@@ -73,6 +88,7 @@ import org.webrtc.VideoFrame
 import org.webrtc.VideoSource
 import org.webrtc.VideoTrack
 import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.net.URI
 import java.nio.ByteBuffer
 import java.util.Date
@@ -80,8 +96,10 @@ import java.util.LinkedList
 import java.util.Optional
 import java.util.Queue
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
 
 
 enum class ConnectionEvent {
@@ -1020,11 +1038,9 @@ class KVSSignalingViewModel : ViewModel() {
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to initialize video components", e)
                     }
+                    // 로컬 트랙이 있으면 렌더러에 연결
+                    localVideoTrack?.addSink(localRenderer)
                 }
-
-                // 로컬 트랙이 있으면 렌더러에 연결
-                localVideoTrack?.addSink(localRenderer)
-
                 Log.d(TAG, "initWsConnection ${role.name}")
                 initWsConnection(role.name)
             } catch (e: Exception) {
@@ -1536,7 +1552,94 @@ class KVSSignalingViewModel : ViewModel() {
             }
         }
     }
+    fun captureScreen(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {  // IO 디스패처로 변경
+            try {
+                // UI 관련 작업
+                val metrics = withContext(Dispatchers.Main) {
+                    context.resources.displayMetrics
+                }
 
+                val width = metrics.widthPixels
+                val height = metrics.heightPixels
+
+                // remoteView 가져오기
+                val surfaceView = withContext(Dispatchers.Main) {
+                    _remoteView.value
+                }
+
+                if (surfaceView == null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "캡처할 화면이 없습니다", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+
+                // 비트맵 생성
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+                // PixelCopy
+                val copyResult = withContext(Dispatchers.Main) {
+                    suspendCancellableCoroutine { continuation ->
+                        try {
+                            PixelCopy.request(
+                                surfaceView,
+                                bitmap,
+                                { result ->
+                                    continuation.resume(result == PixelCopy.SUCCESS)
+                                },
+                                Handler(Looper.getMainLooper())
+                            )
+                        } catch (e: Exception) {
+                            continuation.resume(false)
+                        }
+                    }
+                }
+
+                if (!copyResult) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "화면 캡처에 실패했습니다", Toast.LENGTH_SHORT).show()
+                    }
+                    bitmap.recycle()
+                    return@launch
+                }
+
+                // 갤러리 저장
+                val filename = "CCTV_${System.currentTimeMillis()}.jpg"
+                var fos: OutputStream? = null
+
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+                }
+
+                val resolver = context.contentResolver
+                val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+                try {
+                    uri?.let {
+                        fos = resolver.openOutputStream(it)
+                        fos?.let { outputStream ->
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                        }
+                    }
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "화면이 갤러리에 저장되었습니다", Toast.LENGTH_SHORT).show()
+                    }
+                } finally {
+                    fos?.close()
+                    bitmap.recycle()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "캡처 실패: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
 }
 
