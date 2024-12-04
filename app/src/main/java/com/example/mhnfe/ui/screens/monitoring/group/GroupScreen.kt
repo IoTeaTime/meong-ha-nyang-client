@@ -36,7 +36,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun GroupScreen(
     modifier: Modifier = Modifier,
-    userType: UserType = UserType.MASTER,
+    userType: UserType,
     navController: NavController,
     mqttViewModel: MqttViewModel = hiltViewModel(),
     groupViewModel: GroupViewModel = hiltViewModel(),

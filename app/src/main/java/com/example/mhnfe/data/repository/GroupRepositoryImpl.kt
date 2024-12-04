@@ -7,6 +7,7 @@ import com.example.mhnfe.data.remote.response.ApiResponse
 import com.example.mhnfe.data.remote.response.CctvListResponse
 import com.example.mhnfe.data.remote.response.CreateGroupRequest
 import com.example.mhnfe.data.remote.response.Group
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.GroupInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberResponse
@@ -97,5 +98,12 @@ class GroupRepositoryImpl @Inject constructor(
         token: String
     ): Response<ApiResponse> {
         return groupApi.deleteGroupMember(groupId, groupMemberId, token)
+    }
+
+    override  suspend fun exitGroup(
+        groupId: Long,
+        token: String
+    ): Response<ApiResponse>{
+        return groupApi.exitGroup(groupId, token)
     }
 }

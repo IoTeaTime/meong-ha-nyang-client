@@ -25,6 +25,7 @@ import com.example.mhnfe.R
 @Composable
 fun LogoutPopUp(
     modifier: Modifier = Modifier,
+    text:String,
     onConfirmation: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
@@ -71,12 +72,11 @@ fun LogoutPopUp(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "로그아웃 하시겠습니까?",
+                        text = text,
                         color = mainBlack,
                         style = Typography.bodyMedium
                     )
                 }
-
                 Row(
                     modifier = modifier
                         .fillMaxWidth()
@@ -113,6 +113,7 @@ private fun EditPopupPreview() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         LogoutPopUp(onConfirmation = {},
+            text = "로그아웃 하시겠습니까?",
             onDismissRequest = {}
         )
     }
