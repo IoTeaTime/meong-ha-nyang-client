@@ -60,7 +60,6 @@ import org.webrtc.Logging
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
     modifier: Modifier = Modifier,
-
     navController: NavController,
     channelName: String,
     role: ChannelRole,

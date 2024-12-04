@@ -318,6 +318,7 @@ fun MainContent(
             ) {
                 composable(NavRoutes.MyPage.Profile.route) {
                     ProfileScreen(
+                        userType = userType,
                         bottomNavController= bottomNavController,
                         mainNavController = mainNavController
                     )
