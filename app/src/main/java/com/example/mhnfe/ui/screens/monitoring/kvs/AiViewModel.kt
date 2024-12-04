@@ -38,8 +38,10 @@ class AiViewModel @Inject constructor(
         labelPath = "labels.txt",
         detectorListener = object : YoloDetector.DetectorListener {
             override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {
+
                 // 감지된 YOLO 결과를 로그로 출력
                 Log.d(tag, "YOLO Detection complete: ${boundingBoxes.size} objects detected")
+                handleDetectionResults(boundingBoxes)
                 _detectionResults.postValue(boundingBoxes)
 
                 // 각 BoundingBox 정보를 상세 로그로 출력
@@ -66,6 +68,16 @@ class AiViewModel @Inject constructor(
             }
         }
     )
+
+    // 감지된 결과를 처리하는 함수
+    private fun handleDetectionResults(boundingBoxes: List<BoundingBox>) {
+        boundingBoxes.forEach { box ->
+            if (box.clsName == "dog" || box.clsName == "cat" || box.clsName == "person") {
+                Log.d(tag, "Detected ${box.clsName}")
+                // iot로 보내야하는 부분 추가 구현
+            }
+        }
+    }
 
 
     fun processFrame(bitmap: Bitmap?) {
