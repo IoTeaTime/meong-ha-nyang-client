@@ -11,7 +11,7 @@ import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 
-class Detector(
+class YoloDetector(
     private val context: Context,
     private val modelPath: String,
     private val labelPath: String,

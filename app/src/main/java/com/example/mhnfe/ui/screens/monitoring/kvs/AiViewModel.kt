@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.domain.ai.yolo.BoundingBox
 import com.example.mhnfe.domain.ai.BoundingBoxUtils
 import com.example.mhnfe.domain.ai.DetectionManager
-import com.example.mhnfe.domain.ai.yolo.Detector
+import com.example.mhnfe.domain.ai.yolo.YoloDetector
 import com.example.mhnfe.domain.ai.opencv.BitmapToMatConverter
 import com.example.mhnfe.domain.ai.opencv.MotionDetector
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,11 +32,11 @@ class AiViewModel @Inject constructor(
     private val _detectionResults = MutableLiveData<List<BoundingBox>>()
     val detectionResults: LiveData<List<BoundingBox>> get() = _detectionResults
 
-    private val detector = Detector(
+    private val yoloDetector = YoloDetector(
         context = context,
         modelPath = "model.tflite",
         labelPath = "labels.txt",
-        detectorListener = object : Detector.DetectorListener {
+        detectorListener = object : YoloDetector.DetectorListener {
             override fun onDetect(boundingBoxes: List<BoundingBox>, inferenceTime: Long) {
                 // 감지된 YOLO 결과를 로그로 출력
                 Log.d(tag, "YOLO Detection complete: ${boundingBoxes.size} objects detected")
