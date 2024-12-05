@@ -819,7 +819,7 @@ class KVSSignalingViewModel : ViewModel() {
     val frameData = _frameData.asStateFlow()
 
     private var lastFrameTime = 0L
-    private val frameInterval = 200L // 1초 간격
+    private val frameInterval = 1000L // 1초 간격
 
 
     private fun convertI420ToBitmap(buffer: VideoFrame.I420Buffer) {
@@ -1017,13 +1017,15 @@ class KVSSignalingViewModel : ViewModel() {
                             peerConnectionFactory?.createVideoTrack("local_track", videoSource)!!
                         localVideoTrack?.setEnabled(true)
                         localVideoTrack?.addSink(localRenderer)
+
+                        // 로컬 트랙이 있으면 렌더러에 연결
+                        localVideoTrack?.addSink(localRenderer)
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to initialize video components", e)
                     }
                 }
 
-                // 로컬 트랙이 있으면 렌더러에 연결
-                localVideoTrack?.addSink(localRenderer)
+
 
                 Log.d(TAG, "initWsConnection ${role.name}")
                 initWsConnection(role.name)
@@ -1494,9 +1496,13 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
     private var isBackCamera = false
+    private val _isCameraSwitching = MutableStateFlow(false)
+    val isCameraSwitching: StateFlow<Boolean> = _isCameraSwitching
+
 
     fun switchCamera(context: Context) {
         viewModelScope.launch {
+            _isCameraSwitching.value = true
             try {
                 (videoCapturer as? CameraVideoCapturer)?.let { capturer ->
                     val enumerator = Camera1Enumerator(false)
@@ -1533,6 +1539,8 @@ class KVSSignalingViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("Camera", "카메라 전환 중 에러 발생", e)
+            } finally {
+                _isCameraSwitching.value = false
             }
         }
     }
