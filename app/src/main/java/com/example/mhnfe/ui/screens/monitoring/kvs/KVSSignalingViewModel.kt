@@ -1,19 +1,16 @@
 package com.example.mhnfe.ui.screens.monitoring.kvs
 
 
-import android.app.Activity
 import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.graphics.ImageFormat
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.YuvImage
-import android.media.MediaRecorder
-import android.os.Build
+import android.media.AudioManager
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
@@ -21,10 +18,7 @@ import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import android.view.PixelCopy
-import android.view.SurfaceView
-import android.view.View
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -53,20 +47,20 @@ import com.example.mhnfe.data.signaling.SignalingListener
 import com.example.mhnfe.data.signaling.model.Event
 import com.example.mhnfe.data.signaling.model.Message
 import com.example.mhnfe.data.signaling.okhttp.SignalingServiceWebSocketClient
-import com.example.mhnfe.utils.AwsV4Signer
-import com.example.mhnfe.utils.Constants
 import com.example.mhnfe.domain.webrtc.KinesisVideoPeerConnection
 import com.example.mhnfe.domain.webrtc.KinesisVideoSdpObserver
+import com.example.mhnfe.utils.AwsV4Signer
+import com.example.mhnfe.utils.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.webrtc.ApplicationContextProvider.getApplicationContext
+import org.webrtc.AudioTrack
 import org.webrtc.Camera1Enumerator
 import org.webrtc.CameraEnumerator
 import org.webrtc.CameraVideoCapturer
@@ -87,16 +81,15 @@ import org.webrtc.VideoCapturer
 import org.webrtc.VideoFrame
 import org.webrtc.VideoSource
 import org.webrtc.VideoTrack
+import org.webrtc.audio.JavaAudioDeviceModule
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.net.URI
-import java.nio.ByteBuffer
 import java.util.Date
 import java.util.LinkedList
 import java.util.Optional
 import java.util.Queue
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
@@ -125,7 +118,7 @@ data class WebRtcConfig(
     val mWssEndpoint: String,
     val isMaster: Boolean,
     val isFrontCamera: Boolean,
-    val isAudioEnabled: Boolean
+    val isAudioEnabled: Boolean = true
 )
 
 
@@ -212,15 +205,11 @@ class KVSSignalingViewModel : ViewModel() {
     private var mRegion: String = "ap-northeast-2" // 리전
     private var gotException: Boolean = false  // 예외 발생 여부
     private var recipientClientId: String? = null  // 수신자 클라이언트 ID
-    private var mNotificationId: Int = 0
 
     // Peer Connection 관련
     private val masterLocalPeer = mutableMapOf<String, PeerConnection>()  // 마스터의 로컬 피어 맵
     private var peerConnectionFactory: PeerConnectionFactory? = null  // 피어 커넥션 팩토리
 
-    // 미디어 관련
-    private var isAudioEnabled: Boolean = true  // 오디오 활성화 여부
-    private var isFrontCamera: Boolean = true
     private var mClientId = UUID.randomUUID().toString()
 
 
@@ -231,6 +220,14 @@ class KVSSignalingViewModel : ViewModel() {
 
     private val _remoteVideoTrack = MutableStateFlow<VideoTrack?>(null)
     val remoteVideoTrack = _remoteVideoTrack.asStateFlow()
+
+    private val _localAudioTrack = MutableStateFlow<AudioTrack?>(null)
+    val localAudioTrack = _localAudioTrack.asStateFlow()
+
+    private var audioManager: AudioManager? = null
+
+
+
 
 
 
@@ -351,7 +348,6 @@ class KVSSignalingViewModel : ViewModel() {
                 // ICE 서버 정보를 분리하여 리스트로 저장
                 val userNames = ArrayList<String>()
                 val passwords = ArrayList<String>()
-                val ttls = ArrayList<Int>()
                 val urisList = ArrayList<String>()
 
                 getIceServerConfigResult.iceServerList.forEach { iceServer ->
@@ -411,8 +407,6 @@ class KVSSignalingViewModel : ViewModel() {
 
 
 
-
-
     private fun initializeWebRTC(
         isMaster: Boolean,
         userNames: List<String>,
@@ -424,8 +418,6 @@ class KVSSignalingViewModel : ViewModel() {
 
         // Initialize WebRTC
         Log.d("initializeWebRTC", "initializeWebRTC Start")
-
-        Log.d("initializeWebRTC", "PeerConnectionFactory End")
 
 
         val videoDecoderFactory = DefaultVideoDecoderFactory(rootEglBase)
@@ -441,6 +433,10 @@ class KVSSignalingViewModel : ViewModel() {
             peerConnectionFactory = PeerConnectionFactory.builder()
                 .setVideoDecoderFactory(videoDecoderFactory)
                 .setVideoEncoderFactory(videoEncoderFactory)
+                //뷰어에서 음성전송 받기
+                .setAudioDeviceModule(
+                    JavaAudioDeviceModule.builder(getApplicationContext())
+                    .createAudioDeviceModule())
                 .createPeerConnectionFactory()
 
         } catch(e: Exception) {
@@ -492,12 +488,38 @@ class KVSSignalingViewModel : ViewModel() {
         Log.d("initializeWebRTC", "localVideoTrack.initialize End")
         setupPeerConnection(userNames, passwords, urisList)
 
-        // Start capturing
-        videoCapturer?.startCapture(1280, 720, 30)
-        localVideoTrack?.setEnabled(true)
-        Log.e("initCamera", "create video startCapture")
-
         videoSource = peerConnectionFactory?.createVideoSource(false)!!
+
+        // 오디오 관련 코드 추가
+        try {
+            // AudioManager 초기화 및 설정
+            audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            // 오디오 제약조건 설정
+            val audioConstraints = MediaConstraints()
+
+            // 오디오 소스 생성
+            val audioSource = peerConnectionFactory?.createAudioSource(audioConstraints)
+            // 오디오 트랙 생성
+            if (audioSource != null) {
+                val audioTrack = peerConnectionFactory?.createAudioTrack("AudioTrack", audioSource)
+                audioTrack?.setEnabled(true)
+                _localAudioTrack.value = audioTrack
+                Log.d(TAG, "Audio track created successfully")
+            }
+
+            // 오디오 설정
+            audioManager?.apply {
+                try {
+                    mode = AudioManager.MODE_IN_COMMUNICATION
+                    isSpeakerphoneOn = true
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to configure AudioManager", e)
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Audio initialization failed", e)
+        }
 
         // Start capturing
         videoCapturer?.startCapture(1280, 720, 30)
@@ -711,7 +733,7 @@ class KVSSignalingViewModel : ViewModel() {
                                 "Received SDP offer for client ID: $recipientClientId. Creating answer"
                             )
 
-                            createSdpAnswer(recipientClientId!!)
+                            createSdpAnswer(recipientClientId!!, isMaster)
 
                             if (isMaster && webrtcEndpoint != null) {
                                 viewModelScope.launch(Dispatchers.Main) {
@@ -815,7 +837,7 @@ class KVSSignalingViewModel : ViewModel() {
                             "Signaling service is connected: Sending offer as viewer to remote peer"
                         )
                         Log.d("signalingListener::", "viewer createSdpOffer start")
-                        createSdpOffer()
+                        createSdpOffer(getMaster)
                     }
                 } else {
                     Log.e(TAG, "Error in connecting to signaling service")
@@ -983,7 +1005,7 @@ class KVSSignalingViewModel : ViewModel() {
                 _remoteView.value = remoteRenderer
                 _isViewsInitialized.value = true
 
-                //AI 연결을 위한 프레임 처리
+                //AI 연결 + 오디오 트랙을 위한 프레임 처리
                 if (role == ChannelRole.MASTER) {  // MASTER 역할 체크 추가
                     try {
                         videoSource = peerConnectionFactory?.createVideoSource(false)!!
@@ -1028,11 +1050,9 @@ class KVSSignalingViewModel : ViewModel() {
 
                         // 초기화
                         videoCapturer.initialize(surfaceTextureHelper, context, observer)
-
                         videoCapturer.startCapture(1280, 720, 30)
 
-                        localVideoTrack =
-                            peerConnectionFactory?.createVideoTrack("local_track", videoSource)!!
+                        localVideoTrack = peerConnectionFactory?.createVideoTrack("local_track", videoSource)!!
                         localVideoTrack?.setEnabled(true)
                         localVideoTrack?.addSink(localRenderer)
                     } catch (e: Exception) {
@@ -1124,7 +1144,7 @@ class KVSSignalingViewModel : ViewModel() {
                     }
                 }, 0, 10, TimeUnit.SECONDS)
 
-                addStreamToLocalPeer(masterConnection)
+                addStreamToLocalPeer(masterConnection, isMaster)
             }
         } else {
             localPeer = peerConnectionFactory?.createPeerConnection(
@@ -1180,7 +1200,7 @@ class KVSSignalingViewModel : ViewModel() {
                     }
                 }, 0, 10, TimeUnit.SECONDS)
 
-                addStreamToLocalPeer(peer)
+                addStreamToLocalPeer(peer, isMaster)
             }
         }
 
@@ -1239,10 +1259,16 @@ class KVSSignalingViewModel : ViewModel() {
         }
     }
 
-    private fun createSdpAnswer(clientId: String) {
+    private fun createSdpAnswer(clientId: String, isMaster: Boolean) {
         val sdpMediaConstraints = MediaConstraints().apply {
+            if (isMaster) {
+                // 마스터는 오디오를 보내기만 함
+                mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "false"))
+            } else {
+                // 뷰어는 오디오를 받기만 함
+                mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
+            }
             mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
-            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
         }
         Log.d("signalingListener::", "viewer createSdpAnswer createLocalPeerConnection")
         Log.d(TAG, "createSdpAnswer received: clientId=$clientId")
@@ -1348,7 +1374,7 @@ class KVSSignalingViewModel : ViewModel() {
         }
     }
 
-    private fun addStreamToLocalPeer(inputPeer: PeerConnection) {
+    private fun addStreamToLocalPeer(inputPeer: PeerConnection,  isMaster : Boolean) {
         peerConnectionFactory?.let { factory ->
             val stream = factory.createLocalMediaStream("KvsLocalMediaStream")
 
@@ -1363,6 +1389,31 @@ class KVSSignalingViewModel : ViewModel() {
                     // UI 업데이트를 위한 상태 업데이트
                     _localVideoTrackState.value = firstVideoTrack
                 }
+                if (isMaster) {
+                    // 오디오 트랙 추가
+                    try {
+
+                        val audioConstraints = MediaConstraints().apply {
+                            mandatory.add(MediaConstraints.KeyValuePair("echoCancellation", "true"))
+                            mandatory.add(MediaConstraints.KeyValuePair("noiseSuppression", "true"))
+                            mandatory.add(MediaConstraints.KeyValuePair("autoGainControl", "true"))
+                        }
+                        val audioSource = peerConnectionFactory?.createAudioSource(audioConstraints)
+                        val audioTrack =
+                            peerConnectionFactory?.createAudioTrack("audio_track", audioSource)
+
+                        audioTrack?.let { track ->
+                            track.setEnabled(true)
+                            val audioSender = inputPeer.addTrack(track)
+                            Log.d(
+                                TAG,
+                                "Audio track added to peer connection: ${audioSender != null}"
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to add audio track", e)
+                    }
+                }
             }
         }
     }
@@ -1373,10 +1424,21 @@ class KVSSignalingViewModel : ViewModel() {
                 val remoteVideoTrack = stream.videoTracks.firstOrNull()
                 val remoteAudioTrack = stream.audioTracks.firstOrNull()
 
-                remoteAudioTrack?.let { audioTrack ->
-                    audioTrack.setEnabled(true)
-                    Log.d(TAG, "remoteAudioTrack received: State=${audioTrack.state().name}")
+                remoteAudioTrack?.let {AudioTrack ->
+                    remoteAudioTrack.setEnabled(true)
+                    audioManager?.setMode(AudioManager.MODE_IN_COMMUNICATION)
+                    audioManager?.setSpeakerphoneOn(true)
+
                 }
+                Log.d(TAG, "Remote stream received: ${stream.id}")
+                Log.d(TAG, "Audio tracks count: ${stream.audioTracks?.size}")
+                Log.d(TAG, "Video tracks count: ${stream.videoTracks?.size}")
+                // 오디오 트랙 로깅 추가
+                stream.audioTracks?.forEach { audioTrack ->
+                    Log.d(TAG, "Remote audio track found: ${audioTrack.id()}, enabled: ${audioTrack.enabled()}")
+                    audioTrack.setEnabled(true)
+                } ?: Log.e(TAG, "No audio tracks in remote stream")
+
 
                 remoteVideoTrack?.let { videoTrack ->
                     Log.d(TAG, "remoteVideoTrackId=${videoTrack.id()} videoTrackState=${videoTrack.state()}")
@@ -1424,10 +1486,16 @@ class KVSSignalingViewModel : ViewModel() {
             )
         )
     }
-    private fun createSdpOffer() {
+    private fun createSdpOffer(isMaster: Boolean) {
         val sdpMediaConstraints = MediaConstraints().apply {
+            if (isMaster) {
+                // 마스터는 오디오를 보내기만 함
+                mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "false"))
+            } else {
+                // 뷰어는 오디오를 받기만 함
+                mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
+            }
             mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
-            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
         }
         Log.d("signalingListener::", "viewer createSdpOffer createLocalPeerConnection")
         // 로컬 피어가 없으면 생성
@@ -1553,7 +1621,7 @@ class KVSSignalingViewModel : ViewModel() {
         }
     }
     fun captureScreen(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {  // IO 디스패처로 변경
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 // UI 관련 작업
                 val metrics = withContext(Dispatchers.Main) {
