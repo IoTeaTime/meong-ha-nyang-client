@@ -26,34 +26,21 @@ class AiViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun detectEvent(onResult: (String) -> Unit, onPayloadReady: (String) -> Unit) {
+    fun detectEvent(onResult: (Int, String, String)  -> Unit) {
         viewModelScope.launch {
             try {
                 Log.d("DetectEvent", "detectEvent() 시작")
 
+                // 여기에 그냥 AI 넣으셔도 됩니다
                 val trackingId = DetectionManager.getNextTrackingId()
                 val objectType = DetectionManager.getObjectType()
                 val coordinatesJson = BoundingBoxUtils.boundingBoxJson()
 
-                val payload = """
-            {
-                "trackingId": $trackingId,
-                "timestamp": ${System.currentTimeMillis() / 1000}, 
-                "objectType": "$objectType",
-                "coordinates": $coordinatesJson
-            }
-            """.trimIndent()
-                // Callback
-                Log.d("DetectEvent", "onResult() 호출")
-                onResult(objectType)
+                onResult(trackingId, objectType, coordinatesJson)
 
-                Log.d("DetectEvent", "onPayloadReady() 호출")
-                onPayloadReady(payload)
-
-                Log.d("DetectEvent", "detectEvent() 완료")
             } catch (e: Exception) {
                 Log.e("DetectEvent", "detectEvent() 중 오류 발생: ${e.message}", e)
             }
         }
-}
     }
+}
