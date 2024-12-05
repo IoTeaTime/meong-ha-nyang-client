@@ -60,6 +60,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
+import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
@@ -228,13 +229,26 @@ fun WebRtcScreen(
         ) {
             when (uiState) {
                 is WebRTCUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = modifier
-                            .width(64.dp)
-                            .align(Alignment.Center),
-                        color = mainGray,
-                        trackColor = mainBlack
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            modifier.fillMaxSize().background(color = Color.White),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(
+                                20.dp,
+                                alignment = Alignment.CenterVertically
+                            )
+                        ) {
+                            RunningDogLoadingAnimation()
+                            Text(
+                                text = "화면 연결중...",
+                                style = Typography.labelLarge,
+                                color = mainBlack
+                            )
+                        }
+                    }
                 }
 
                 is WebRTCUiState.Success -> {
