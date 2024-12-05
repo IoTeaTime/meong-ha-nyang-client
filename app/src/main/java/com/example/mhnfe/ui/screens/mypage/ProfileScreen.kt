@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -21,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,9 +50,6 @@ import deletePopup
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    nickname: String = "막내가짱이야",
-    id: String = "nahaha",
-    groupId: String = "IoTeatime",
     userType: UserType,
     bottomNavController: NavController,
     mainNavController: NavController,
@@ -63,6 +63,13 @@ fun ProfileScreen(
     val logoutResponse by profileViewModel.logoutResponse.collectAsState()
     val quitResponse by profileViewModel.quitResponse.collectAsState()
     val exitGroupResponse by profileViewModel.exitGroupResponse.collectAsState()
+
+    val profileResponse by profileViewModel.profileResponse.collectAsState()
+    val error by profileViewModel.error.collectAsState()
+
+    LaunchedEffect(Unit) {
+        profileViewModel.fetchMemberDetails()
+    }
 
     logoutResponse?.let {
         if (it.result.code == 200) {
@@ -102,6 +109,14 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ){
+            error?.let {
+                Text(
+                    text = it,
+                    style = Typography.bodyMedium,
+                    color = Color.Red
+                )
+            }
+
             Column (
                 modifier = modifier,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -112,10 +127,7 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(color = mainGray2, shape = RoundedCornerShape(12.dp)),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        16.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
@@ -144,21 +156,37 @@ fun ProfileScreen(
                                 10.dp,
                                 alignment = Alignment.CenterVertically
                             ),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.Start
                         ) {
                             Row(
                                 modifier = modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                                horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    modifier = modifier,
-                                    text = nickname,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                Row(
+                                    modifier = modifier.wrapContentWidth().wrapContentHeight(),
+                                    horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        modifier = modifier,
+                                        text = "닉네임",
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                    profileResponse?.body?.member?.let {
+                                        Text(
+                                            modifier = modifier,
+                                            text = it.nickname,
+                                            style = Typography.bodyMedium,
+                                            color = mainBlack
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = modifier.weight(1f))
 
                                 IconButton(
                                     modifier = modifier
@@ -176,34 +204,30 @@ fun ProfileScreen(
 
                             Row(
                                 modifier = modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(
-                                    100.dp,
-                                    alignment = Alignment.CenterHorizontally
-                                ),
+                                horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     modifier = modifier,
-                                    text = "ID",
+                                    text = "아이디",
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
-                                Text(
-                                    modifier = modifier,
-                                    text = id,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                profileResponse?.body?.member?.id?.toString()?.let {
+                                    Text(
+                                        modifier = modifier,
+                                        text = it,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                }
                             }
 
                             Row(
                                 modifier = modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
-                                horizontalArrangement = Arrangement.spacedBy(
-                                    71.dp,
-                                    alignment = Alignment.CenterHorizontally
-                                ),
+                                horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
@@ -212,12 +236,14 @@ fun ProfileScreen(
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
-                                Text(
-                                    modifier = modifier,
-                                    text = groupId,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
+                                profileResponse?.body?.group?.groupName?.let {
+                                    Text(
+                                        modifier = modifier,
+                                        text = it,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                }
                             }
                         }
                     }

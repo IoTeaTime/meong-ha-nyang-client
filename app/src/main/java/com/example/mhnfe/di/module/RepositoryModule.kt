@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.api.DeviceApi
 import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.api.QRApi
+import com.example.mhnfe.data.remote.api.TokenApi
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.api.UserApi
@@ -15,9 +16,11 @@ import dagger.hilt.components.SingletonComponent
 import com.example.mhnfe.domain.repository.GroupRepository
 import com.example.mhnfe.data.repository.GroupRepositoryImpl
 import com.example.mhnfe.data.repository.QRRepositoryImpl
+import com.example.mhnfe.data.repository.TokenRepositoryImpl
 import com.example.mhnfe.domain.repository.QRRepository
 import com.example.mhnfe.data.repository.UserRepositoryImpl
 import com.example.mhnfe.domain.repository.DeviceRepository
+import com.example.mhnfe.domain.repository.TokenRepository
 import com.example.mhnfe.domain.repository.UserRepository
 import javax.inject.Singleton
 
@@ -54,5 +57,11 @@ object RepositoryModule {
     @Singleton
     fun provideDeviceRepository(deviceApi: DeviceApi): DeviceRepository {
         return DeviceRepositoryImpl(deviceApi)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTokenRepository(tokenApi: TokenApi) : TokenRepository {
+        return TokenRepositoryImpl(tokenApi)
     }
 }
