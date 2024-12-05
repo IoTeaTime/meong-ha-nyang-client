@@ -5,10 +5,8 @@ import com.example.mhnfe.data.remote.request.ChangeNicknameOrGroupNameRequest
 import com.example.mhnfe.data.remote.request.ChangePasswordRequest
 import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
-import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
-import com.example.mhnfe.data.remote.response.RefreshedAccessToken
+import com.example.mhnfe.data.remote.response.ProfileResponse
 import com.example.mhnfe.domain.repository.UserRepository
-import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,13 +14,6 @@ import javax.inject.Singleton
 class UserRepositoryImpl @Inject constructor(
     private val userApi: UserApi
 ) : UserRepository{
-
-    override suspend fun getNewAccessToken(
-        response: RefreshAccessTokenResponse
-    ): RefreshedAccessToken {
-        return response.body
-    }
-
     override suspend fun changePassword(
         accessToken: String,
         currentPassword: String,
@@ -41,5 +32,10 @@ class UserRepositoryImpl @Inject constructor(
         return userApi.changeNicknameOrGroupName(accessToken, request)
     }
 
-
+    override suspend fun getMemberDetails(
+        accessToken: String,
+        memberId: Int
+    ): ProfileResponse {
+        return userApi.getMemberDetails(accessToken, memberId)
+    }
 }

@@ -10,7 +10,7 @@ data class RefreshAccessTokenResponse(
 
 @Serializable
 data class RefreshedAccessToken(
-    val newAccessToken: String
+    val accessToken: String
 )
 
 data class LogoutResponse(
@@ -32,5 +32,28 @@ data class ChangeNicknameOrGroupNameResponse(
 @Serializable
 data class ChangeNicknameOrGroupNameBody(
     val nickname: String,
+    val groupName: String
+)
+
+
+data class ProfileResponse(
+    val result: Result,
+    val body: ProfileBody?
+)
+
+data class ProfileBody(
+    val member: MemberInfo,
+    val group: GropInfo
+)
+
+data class MemberInfo(
+    val id: Int,
+    val email: String,
+    val profileImgUrl: String,
+    val nickname: String
+)
+
+data class GropInfo(
+    val id: Int,
     val groupName: String
 )

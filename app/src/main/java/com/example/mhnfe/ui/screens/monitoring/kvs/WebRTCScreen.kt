@@ -100,7 +100,7 @@ fun WebRtcScreen(
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize()
             if (result) {
-                mqttViewModel.createShadowWithSubscribe(context, 404)
+                mqttViewModel.createShadowWithSubscribe(context, 1)
             }
         }
         if (role == ChannelRole.MASTER && mqttState) {
