@@ -66,7 +66,7 @@ fun GroupScreen(
                 val groupId = groupInfo.groupId
                 val payload = """
             {
-                "groupInfo": "$groupInfo?.groupName",
+                "groupInfo": "$groupId",
                 "timestamp": ${System.currentTimeMillis() / 1000}
             }
             """.trimIndent()

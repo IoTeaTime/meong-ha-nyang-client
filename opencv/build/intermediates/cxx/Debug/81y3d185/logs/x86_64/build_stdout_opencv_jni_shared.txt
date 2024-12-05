@@ -1,0 +1,2 @@
+ninja: Entering directory `C:\finalProject\meong-ha-nyang-client-develop\opencv\.cxx\Debug\81y3d185\x86_64'
+ninja: no work to do.
