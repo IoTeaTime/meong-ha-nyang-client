@@ -73,7 +73,7 @@ import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
