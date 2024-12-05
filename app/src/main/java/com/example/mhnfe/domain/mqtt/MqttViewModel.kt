@@ -123,6 +123,7 @@ class MqttViewModel @Inject constructor(
         Log.d(tag, "Subscribed to topics: ${topics.joinToString(", ")}")
     }
 
+
 //    fun ShadowWithSubscribe(thingId: String){
 //        val shadowTopics = listOf(
 //            "\$aws/things/${thingId}/shadow/get/accepted",
@@ -160,21 +161,24 @@ class MqttViewModel @Inject constructor(
     }
 
     // group page cctv 배터리 및 네트워크 정보 subscribe
-    fun createTopicAndShadowWithSubscribe(context: Context, thingList: List<String>, data: (ReportedData?) -> Unit){
+    fun createTopicAndShadowWithSubscribe(context: Context, thingId: String, data: (ReportedData?) -> Unit){
         //topic
-        viewerInitialSubscribe(context,thingList){ reportedData->
-            data(reportedData)
-        }
-
-        //shadow
-        thingList.forEach { thingId ->
-            subscribeShadowWithPayload(thingId){ reportedData->
+        val topic = "/mhn/command/device/info/things/$thingId"
+        subscribe(topic) { receivedTopic, message ->
+            Log.d(tag, "Message received on topic $receivedTopic: $message")
+            handleThingTopicMessage(receivedTopic, message, context){ reportedData->
                 data(reportedData)
             }
         }
 
+        //shadow
+        subscribeShadowWithPayload(thingId){ reportedData->
+            data(reportedData)
+        }
+
         Log.d(tag, "Shadow subscriptions and publication complete.")
     }
+
 
     private fun handleTopicMessage(receivedTopic: String, message: String, context: Context) {
         try {

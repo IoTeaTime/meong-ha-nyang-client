@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavController
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.data.model.CCTV
@@ -35,7 +37,12 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 @Composable
 fun GroupScreen(
@@ -45,23 +52,11 @@ fun GroupScreen(
     mqttViewModel: MqttViewModel = hiltViewModel(),
     groupViewModel: GroupViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
-    var connectionState: Boolean = false
     val groupInfo by groupViewModel.groupInfo.collectAsState()
 
-    LaunchedEffect(Unit, groupInfo) {
+    LaunchedEffect(Unit) {
         mqttViewModel.testSub { _ ->
             groupViewModel.fetchGroupInfo { groupInfo ->
-
-                //cctv 배터리 및 네트워크 mqtt 연결
-                val cctvList = groupInfo?.cctv ?: emptyList()
-                val thingList = cctvList.mapNotNull { it.thingId }
-
-                if (thingList.isNotEmpty()) {
-                    mqttViewModel.createTopicAndShadowWithSubscribe(context,thingList){ data->
-                        data
-                    }
-                }
 
                 val groupId = groupInfo.groupId
                 val payload = """
@@ -167,6 +162,7 @@ fun GroupScreen(
                                 )
                             }
                         )
+
                     }
                 }
             }
