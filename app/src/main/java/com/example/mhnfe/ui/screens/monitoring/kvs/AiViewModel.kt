@@ -40,9 +40,6 @@ class AiViewModel @Inject constructor(
                     // 감지된 움직임 영역을 로그에 출력
                     if (motionAreas.isNotEmpty()) {
                         Log.d(tag, "Motion detected in ${motionAreas.size} area(s)")
-                        for (area in motionAreas) {
-                            Log.d(tag, "Motion area: ${area.x}, ${area.y}, ${area.width}, ${area.height}")
-                        }
                         // Yolo 실행
                         yoloDetectionManager.detect(bmp)
                     } else {

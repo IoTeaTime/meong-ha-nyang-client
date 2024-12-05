@@ -77,6 +77,7 @@ fun WebRtcScreen(
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
     val mqttState by mqttViewModel.isConnected.collectAsState()
     val window = (context as? Activity)?.window
+    val isCameraSwitching by viewModel.isCameraSwitching.collectAsState()
 
     LaunchedEffect(Unit) {
         // Todo. 그룹 ID 반환 로직 추가
@@ -274,11 +275,15 @@ fun WebRtcScreen(
                 try {
                     viewModel.frameData
                         .onEach { bitmap ->
-                            bitmap?.let {
-                                withContext(Dispatchers.Default) {
-                                    aiViewModel.processFrame(it)
+                            if (!isCameraSwitching) {
+                                bitmap?.let {
+                                    withContext(Dispatchers.Default) {
+                                            aiViewModel.processFrame(it)
                                 }
-                            } ?: Log.d("WebRtcScreen", "Received null bitmap")
+                                } ?: Log.d("WebRtcScreen", "Received null bitmap")
+                            } else {
+                                Log.d("WebRtcScreen", "Skipping frame processing due to camera switching")
+                            }
                         }
                         .catch { e ->
                             Log.e("WebRtcScreen", "Error collecting frames", e)
