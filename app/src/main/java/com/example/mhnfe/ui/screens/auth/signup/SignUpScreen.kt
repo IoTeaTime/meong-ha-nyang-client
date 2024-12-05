@@ -394,13 +394,21 @@ fun SignUpScreen(
                                                 Log.d("SignUpScreen", "인증 코드 일치: $description")
                                             }
                                             401 -> {
-                                                emailErrorMessage = description
-                                                isEmailError = true
-                                                errorMessage = emailErrorMessage
-                                                Log.e("SignUpScreen", "인증 코드 불일치 : $description")
+                                                verificationErrorMessage = "인증번호가 일치하지 않습니다."
+                                                isVerificationError = true
+                                                errorMessage = verificationErrorMessage
+                                                Log.e(
+                                                    "SignUpScreen",
+                                                    "인증 코드 불일치: code=$code, description=$description, email=$email, enteredCode=$verificationCode"
+                                                )
+//                                                emailErrorMessage = "인증번호가 일치하지 않습니다."
+//                                                isVerificationError = true
+//                                                isEmailError = true
+//                                                errorMessage = emailErrorMessage
+//                                                Log.e("SignUpScreen", "인증 코드 불일치 : $description")
                                             }
                                             else -> {
-                                                emailErrorMessage = "오류 발생: $description"
+                                                emailErrorMessage = "인증번호가 일치하지 않습니다."
                                                 isEmailError = true
                                                 errorMessage = emailErrorMessage
                                                 Log.e("SignUpScreen", "예상치 못한 오류: code=$code, description=$description")
