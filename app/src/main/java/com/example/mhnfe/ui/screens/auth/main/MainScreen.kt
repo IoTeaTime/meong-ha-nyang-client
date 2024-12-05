@@ -43,49 +43,55 @@ fun MainScreen(
 
     LaunchedEffect(Unit) {
         val isAutoLoginEnabled = sharedPreferences.getBoolean("AUTO_LOGIN", false)
-        mqttViewModel.initialize()
-        mainViewModel.autoLogin(
-            isAutoLoginEnabled = isAutoLoginEnabled,
-            onSuccess = { role, groupId ->
-                if(groupId != 0L) {
-                    if(role == "ROLE_MASTER") {
-                        navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
-                            popUpTo(NavRoutes.Auth.route) { inclusive = true }
+        if(isAutoLoginEnabled) {
+            mqttViewModel.initialize()
+            mainViewModel.autoLogin(
+                onSuccess = { role, groupId ->
+                    if (groupId != 0L) {
+                        if (role == "ROLE_MASTER") {
+                            navController.navigate(NavRoutes.Main.createRoute(UserType.MASTER)) {
+                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
+                                popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                            }
                         }
                     } else {
-                        navController.navigate(NavRoutes.Main.createRoute(UserType.VIEWER)) {
+                        navController.navigate(NavRoutes.Auth.Select.route) {
                             popUpTo(NavRoutes.Auth.route) { inclusive = true }
                         }
+                        mqttViewModel.disconnectMqttManager()
                     }
-                } else {
-                    navController.navigate(NavRoutes.Auth.Select.route) {
-                        popUpTo(NavRoutes.Auth.route) { inclusive = true }
-                    }
-                    mqttViewModel.disconnectMqttManager()
-                }
-            },
-            onFailure = {
-                mqttViewModel.disconnectMqttManager()
-                mainViewModel.fetchCctvId(
-                    onSuccess = { cctvInfo ->
-                        Log.d("MainScreen", "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}")
-                        val channelName = cctvInfo.body.kvsChannelName
+                })
+        } else {
+            // CCTV도 AccessToken이 있어야 함
+            mainViewModel.getCctvAccessToken { cctvAccessToken ->
+                if(cctvAccessToken != "") {
+                    mainViewModel.fetchCctvId(
+                        onSuccess = { cctvInfo ->
+                            Log.d(
+                                "MainScreen",
+                                "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}"
+                            )
+                            val channelName = cctvInfo.body.kvsChannelName
 
-                        // SavedStateHandle에 채널 정보 저장
-                        navController.currentBackStackEntry?.savedStateHandle?.apply {
-                            set("channelName", channelName)
-                            set("role", ChannelRole.MASTER)
+                            // SavedStateHandle에 채널 정보 저장
+                            navController.currentBackStackEntry?.savedStateHandle?.apply {
+                                set("channelName", channelName)
+                                set("role", ChannelRole.MASTER)
+                            }
+
+                            // Master 화면으로 이동
+                            navController.navigate(NavRoutes.Auth.Master.createRoute(channelName = channelName))
+                        },
+                        onFailure = { fetchError ->
+                            Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
                         }
-
-                        // Master 화면으로 이동
-                        navController.navigate(NavRoutes.Auth.Master.createRoute(channelName = channelName))
-                    },
-                    onFailure = { fetchError ->
-                        Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
-                    }
-                )
+                    )
+                }
             }
-        )
+        }
     }
 //    viewModel.initializeWithContext(context)
     Column(

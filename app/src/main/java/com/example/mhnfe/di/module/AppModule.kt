@@ -125,7 +125,7 @@ object AppModule {
     @Singleton
     fun provideCctvResponseSerializer(): Serializer<CCTVResponseBody> {
         return object : Serializer<CCTVResponseBody> {
-            override val defaultValue: CCTVResponseBody = CCTVResponseBody(0)
+            override val defaultValue: CCTVResponseBody = CCTVResponseBody(0, "")
 
             override suspend fun readFrom(input: InputStream): CCTVResponseBody {
                 return try {

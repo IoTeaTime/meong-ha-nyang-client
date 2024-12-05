@@ -43,7 +43,7 @@ class QRRepositoryImpl @Inject constructor(
 
         // CCTV ID 저장
         cctvResponseDataStore.updateData {
-            CCTVResponseBody(response.body.cctvId)
+            CCTVResponseBody(response.body.cctvId, response.body.accessToken)
         }
 
         Log.d("QRRepository", "CCTV QR 응답: $response")
@@ -68,8 +68,9 @@ class QRRepositoryImpl @Inject constructor(
     }
     override suspend fun getCctvInfo(): CctvInfoResponse{
         val cctvId = cctvResponseDataStore.data.map { it.cctvId }.first()
+        val cctvAccessToken = cctvResponseDataStore.data.map { it.accessToken }.first()
         return withContext(Dispatchers.IO) {
-            qrApi.cctvIdInfo(cctvId)
+            qrApi.cctvIdInfo(cctvAccessToken, cctvId)
         }
     }
 }
