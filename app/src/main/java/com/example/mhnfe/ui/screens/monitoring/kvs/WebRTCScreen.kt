@@ -368,7 +368,7 @@ fun WebRtcScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "캡처",
+                                    text = "",
                                     color = Color.Black,
                                     style = Typography.bodySmall
                                 )
