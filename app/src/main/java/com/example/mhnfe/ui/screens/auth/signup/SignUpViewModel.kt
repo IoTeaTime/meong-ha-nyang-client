@@ -82,7 +82,7 @@ class SignUpViewModel @Inject constructor(
             // HTTP exception handling
             val statusCode = e.code()
             val errorMessage = e.message ?: "알 수 없는 오류"
-            Log.e("SignUpScreen", "sendEmailVerification: HTTP 예외 발생 - 코드: $statusCode, 메시지: $errorMessage", e)
+            Log.e("SignUpViewModel", "sendEmailVerification: HTTP 예외 발생 - 코드: $statusCode, 메시지: $errorMessage", e)
 
             Pair(statusCode, "HTTP 오류 발생: $errorMessage")
         }
@@ -103,7 +103,7 @@ class SignUpViewModel @Inject constructor(
             // HTTP exception handling
             val statusCode = e.code()
             val errorMessage = e.message ?: "알 수 없는 오류"
-            Log.e("SignUpScreen", "checkEmailVerification: HTTP 예외 발생 - 코드: $statusCode, 메시지: $errorMessage", e)
+            Log.e("SignUpViewModel", "checkEmailVerification: HTTP 예외 발생 - 코드: $statusCode, 메시지: $errorMessage", e)
 
             Pair(statusCode, "HTTP 오류 발생: $errorMessage")
         }
