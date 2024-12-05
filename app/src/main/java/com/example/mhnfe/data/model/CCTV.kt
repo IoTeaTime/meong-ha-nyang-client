@@ -18,11 +18,11 @@ data class CCTV(
     val thingId: String,
     val channelName: String,
     //mqtt에서 받아올 것들
-    val model: String = "Flip5",
-    val os: String = "Android 10",
-    val appVersion: String = "Android 10",
-    val networkStatus: String = "양호",
-    val batteryStatus: Int = 100
+    var model: String = "Flip5",
+    var os: String = "Android 10",
+    var appVersion: String = "Android 10",
+    var networkStatus: String = "양호",
+    var batteryStatus: Int = 100
 )
 
 

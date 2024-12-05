@@ -115,7 +115,7 @@ class MqttViewModel @Inject constructor(
         topics.forEach { topic ->
             subscribe(topic) { receivedTopic, message ->
                 Log.d(tag, "Message received on topic $receivedTopic: $message")
-                handleThingTopicMessage(receivedTopic, message, context){ reportedData->
+                handleThingTopicMessage(receivedTopic, message, context) { reportedData->
                     data(reportedData)
                 }
             }
