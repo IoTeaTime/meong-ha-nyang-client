@@ -77,10 +77,6 @@ fun SignUpScreen(
     var passwordErrorMessage by remember { mutableStateOf("") }
     var nicknameErrorMessage by remember { mutableStateOf("") }
 
-    // 인증 메일 관련 state
-    val sendEmailVerificationResponse by signUpViewModel.sendEmailVerificationResponse.collectAsState()
-    val checkEmailVerificationResponse by signUpViewModel.checkEmailVerificationResponse.collectAsState()
-
     fun isVerificationCodeValid(code: String): Boolean {
         return code != "111111"  // 111111이면 틀린 것으로 처리
     }
@@ -340,9 +336,22 @@ fun SignUpScreen(
                                                 emailErrorMessage = ""
                                                 isEmailError = false
                                                 errorMessage = null
-                                                currentStep++
                                                 Log.d("SignUpScreen", "이메일 중복 확인: $description")
-                                                signUpViewModel.sendEmailVerification(email)
+                                                val (newCode, newDescription) = signUpViewModel.sendEmailVerification(email)
+
+                                                when (newCode) {
+                                                    200 -> {
+                                                        emailErrorMessage = ""
+                                                        isEmailError = false
+                                                        errorMessage = null
+                                                        currentStep++
+                                                    }
+                                                    500 -> {
+                                                        emailErrorMessage = "올바른 이메일이 아닙니다."
+                                                        isEmailError = true
+                                                        errorMessage = emailErrorMessage
+                                                    }
+                                                }
                                             }
                                             400 -> {
                                                 emailErrorMessage = "이미 사용 중인 이메일입니다."
@@ -367,15 +376,54 @@ fun SignUpScreen(
                             }
                         }
                     )
-                } else {
+                } else if (currentStep == 1) {
+                    MiddleButton(
+                        text = "확인",
+                        onClick = {
+                            scope.launch {
+                                if (validateCurrentStep()) {
+                                    try {
+                                        val (code, description) = signUpViewModel.checkEmailVerification(email, verificationCode)
+
+                                        when (code) {
+                                            200 -> {
+                                                emailErrorMessage = ""
+                                                isEmailError = false
+                                                errorMessage = null
+                                                currentStep++
+                                                Log.d("SignUpScreen", "인증 코드 일치: $description")
+                                            }
+                                            401 -> {
+                                                emailErrorMessage = description
+                                                isEmailError = true
+                                                errorMessage = emailErrorMessage
+                                                Log.e("SignUpScreen", "인증 코드 불일치 : $description")
+                                            }
+                                            else -> {
+                                                emailErrorMessage = "오류 발생: $description"
+                                                isEmailError = true
+                                                errorMessage = emailErrorMessage
+                                                Log.e("SignUpScreen", "예상치 못한 오류: code=$code, description=$description")
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("SignUpScreen", "API 호출 중 오류 발생: $e")
+                                        emailErrorMessage = "인증 코드 인증 중 문제가 발생했습니다."
+                                        isEmailError = true
+                                        errorMessage = emailErrorMessage
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
+
+                else {
                     MiddleButton(
                         text = if (currentStep == 3) "완료" else "다음",
                         onClick = {
                             if (validateCurrentStep()) {
                                 if (currentStep < 3) {
-                                    if (currentStep == 1) {
-                                        signUpViewModel.checkEmailVerification(email, verificationCode)
-                                    }
                                     currentStep++
                                 } else {
                                     // Call the Sign-Up API
