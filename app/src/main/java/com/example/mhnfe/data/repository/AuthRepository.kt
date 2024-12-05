@@ -1,7 +1,6 @@
 package com.example.mhnfe.data.repository
 
 import android.util.Log
-import com.example.mhnfe.data.remote.api.ApiService
 import com.example.mhnfe.data.remote.api.AuthApi
 import com.example.mhnfe.data.remote.request.CheckEmailVerificationRequest
 import com.example.mhnfe.data.remote.request.EmailRequest
@@ -75,6 +74,7 @@ class AuthRepository @Inject constructor(
         val request = LoginRequest(email, password)
         return authApi.login(request)
     }
+
 
     suspend fun refreshFcmToken(jwtToken: String, fcmToken: String): FCMResponse {
         val request = RefreshFcmTokenRequest(fcmToken)

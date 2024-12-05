@@ -12,7 +12,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface QRApi {
-    @POST("/open-api/cctv")
+    @POST("/api/cctv-device")
     suspend fun generateCctvQR(
         //데이터를 서버에 전송하기 위해서 씀
         @Body request: CctvQRRequest
@@ -24,8 +24,9 @@ interface QRApi {
         @Body request: ViewerQRRequest
     ): ViewerQRResponse
 
-    @GET("open-api/cctv/{cctvId}")
+    @GET("/api/cctv-device/{cctvId}")
     suspend fun cctvIdInfo(
+        @Header("Authorization") token: String,
         @Path("cctvId")cctvId: Int
     ): CctvInfoResponse
 }

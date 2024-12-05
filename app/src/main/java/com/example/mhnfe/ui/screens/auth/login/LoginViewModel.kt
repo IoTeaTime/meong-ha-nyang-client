@@ -1,13 +1,15 @@
 package com.example.mhnfe.ui.screens.auth.login
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.FCMResponse
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.LoginResponse
+import com.example.mhnfe.data.remote.response.MemberId
 import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.data.remote.response.SendPasswordResponse
 import com.example.mhnfe.data.repository.AuthRepository
@@ -24,7 +26,9 @@ class LoginViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
-    private val loginRequestDataStore: DataStore<LoginRequest>
+    private val groupIdDataStore: DataStore<GroupId>,
+    private val memberIdDataStore: DataStore<MemberId>,
+    private val sharedPreferences: SharedPreferences
 ) : ViewModel() {
 
     // 로그인 결과 상태
@@ -60,14 +64,19 @@ class LoginViewModel @Inject constructor(
                 if (response.result.code == 200) {
                     // JWT 엑세스, 리프레시 토큰 저장
                     saveTokens(
-                        response.body.accessToken.toString(),
-                        response.body.refreshToken.toString()
+                        response.body.accessToken,
+                        response.body.refreshToken,
+                        response.body.groupId,
+                        response.body.memberId
                     )
-                    Log.d("LoginViewModel","response: " + response.body.accessToken)
+                    Log.d("LoginViewModel","AccessToken: " + response.body.accessToken)
+                    Log.d("LoginViewModel","RefreshToken: " + response.body.refreshToken)
 
                     // 자동 로그인 정보 저장 (isAutoLogin이 true일 경우)
                     if (isAutoLogin) {
-                        saveAutoLoginInfo(email, password)
+                        saveAutoLoginPreference(true)
+                    } else {
+                        saveAutoLoginPreference(false)
                     }
 
                     _loginResponse.value = response
@@ -90,8 +99,8 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    // 엑세스 토큰과 리프레시 토큰 저장
-    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+    // 엑세스 토큰과 리프레시 토큰, 그룹 아이디 저장
+    private suspend fun saveTokens(accessToken: String, refreshToken: String, groupId: Long, memberId: Int) {
         // 엑세스 토큰 저장
         accessTokenDataStore.updateData { currentToken ->
             currentToken.copy(accessToken = accessToken)
@@ -100,6 +109,13 @@ class LoginViewModel @Inject constructor(
         refreshTokenDataStore.updateData { currentToken ->
             currentToken.copy(refreshToken = refreshToken)
         }
+        groupIdDataStore.updateData { currentGroupId ->
+            currentGroupId.copy(groupId = groupId)
+        }
+        memberIdDataStore.updateData { currentMemberId ->
+            currentMemberId.copy(memberId = memberId)
+        }
+
         Log.d("LoginViewModel", "엑세스 토큰 및 리프레시 토큰 저장 완료.")
     }
 
@@ -164,11 +180,12 @@ class LoginViewModel @Inject constructor(
     }
 
     // ViewModel에 자동 로그인 정보 저장 메서드 추가
-    suspend fun saveAutoLoginInfo(id: String, password: String) {
-        // DataStore에 자동 로그인 정보 저장
-        loginRequestDataStore.updateData { currentLoginInfo ->
-            currentLoginInfo.copy(email = id, password = password)
+    private fun saveAutoLoginPreference(isAutoLogin: Boolean) {
+        // SharedPreferences에 자동 로그인 여부 저장
+        sharedPreferences.edit().apply {
+            putBoolean("AUTO_LOGIN", isAutoLogin)
+            commit()
         }
-        Log.d("LoginViewModel", "자동 로그인 정보 저장 완료: $id, $password")
+        Log.d("LoginViewModel", "자동 로그인 여부 저장 완료: $isAutoLogin")
     }
 }

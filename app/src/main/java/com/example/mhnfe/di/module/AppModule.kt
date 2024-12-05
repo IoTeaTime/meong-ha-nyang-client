@@ -21,44 +21,11 @@ import javax.inject.Singleton
 import android.content.Context.MODE_PRIVATE
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.response.GroupId
+import com.example.mhnfe.data.remote.response.MemberId
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
-    // 로그인 직렬화
-    @Provides
-    @Singleton
-    fun provideLoginRequestSerializer(): Serializer<LoginRequest> {
-        return object : Serializer<LoginRequest> {
-            override val defaultValue: LoginRequest = LoginRequest("", "")
-
-            override suspend fun readFrom(input: InputStream): LoginRequest {
-                return try {
-                    Json.decodeFromString(LoginRequest.serializer(), input.readBytes().decodeToString())
-                } catch (e: Exception) {
-                    defaultValue
-                }
-            }
-
-            override suspend fun writeTo(t: LoginRequest, output: OutputStream) {
-                output.write(Json.encodeToString(LoginRequest.serializer(), t).encodeToByteArray())
-            }
-        }
-    }
-
-    // 로그인 데이터 제공
-    @Provides
-    @Singleton
-    fun provideLoginRequestDataStore(
-        @ApplicationContext context: Context,
-        serializer: Serializer<LoginRequest>
-    ): DataStore<LoginRequest> {
-        return DataStoreFactory.create(
-            serializer = serializer,
-            produceFile = { context.filesDir.resolve("login_request.pb") }
-        )
-    }
 
     // 엑세스 토큰 직렬화
     @Provides
@@ -158,7 +125,7 @@ object AppModule {
     @Singleton
     fun provideCctvResponseSerializer(): Serializer<CCTVResponseBody> {
         return object : Serializer<CCTVResponseBody> {
-            override val defaultValue: CCTVResponseBody = CCTVResponseBody(0)
+            override val defaultValue: CCTVResponseBody = CCTVResponseBody(0, "")
 
             override suspend fun readFrom(input: InputStream): CCTVResponseBody {
                 return try {
@@ -226,6 +193,45 @@ object AppModule {
             override suspend fun writeTo(t: GroupId, output: OutputStream) {
                 output.write(Json.encodeToString(
                     GroupId.serializer(),
+                    t
+                ).encodeToByteArray())
+            }
+        }
+    }
+
+    // 맴버 ID 저장
+    @Provides
+    @Singleton
+    fun provideMemberIdDataStore(
+        @ApplicationContext context: Context,
+        serializer: Serializer<MemberId>
+    ): DataStore<MemberId> {
+        return DataStoreFactory.create(
+            serializer = serializer,
+            produceFile = { context.filesDir.resolve("member_id.pb") }
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMemberIdSerializer(): Serializer<MemberId> {
+        return object : Serializer<MemberId> {
+            override val defaultValue: MemberId = MemberId(0)
+
+            override suspend fun readFrom(input: InputStream): MemberId {
+                return try {
+                    Json.decodeFromString(
+                        MemberId.serializer(),
+                        input.readBytes().decodeToString()
+                    )
+                } catch (e: Exception) {
+                    defaultValue
+                }
+            }
+
+            override suspend fun writeTo(t: MemberId, output: OutputStream) {
+                output.write(Json.encodeToString(
+                    MemberId.serializer(),
                     t
                 ).encodeToByteArray())
             }

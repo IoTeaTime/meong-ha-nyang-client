@@ -1,10 +1,9 @@
 package com.example.mhnfe.ui.screens.mypage
 
-import android.util.Log
+import EditPopup
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +13,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -125,11 +123,6 @@ fun DeviceManagementScreen(
                         viewerDevices =
                             viewerDevices!!.filter { it.memberId != device.memberId }
                     },
-                    onUpdate = { updatedDevice ->
-                        viewerDevices = viewerDevices!!.map {
-                            if (it.memberId == updatedDevice.memberId) updatedDevice else it
-                        }
-                    }
                 )
                 Spacer(modifier = modifier.height(8.dp))
             }
@@ -142,10 +135,7 @@ private fun ViewerDeviceItem(
     modifier: Modifier = Modifier,
     device: GroupMemberInfo,
     onDelete: () -> Unit,
-    onUpdate: (GroupMemberInfo) -> Unit
 ) {
-    var showEditDialog by remember { mutableStateOf(false) }
-
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -171,22 +161,11 @@ private fun ViewerDeviceItem(
             }
 
             Text (
-                text = "기기삭제",
+                text = "참여자 삭제",
                 style = Typography.bodySmall.copy(color = Color.Gray),
                 modifier = modifier.clickable { onDelete() }
             )
         }
-    }
-
-    if (showEditDialog) {
-        EditDeviceDialog(
-            initialName = device.nickname,
-            onDismiss = { showEditDialog = false },
-            onConfirm = { newName ->
-                onUpdate(device.copy(nickname = newName))
-                showEditDialog = false
-            }
-        )
     }
 }
 
@@ -197,7 +176,7 @@ private fun CctvDeviceItem(
     onDelete: () -> Unit,
     onUpdate: (CctvInfo) -> Unit
 ) {
-    var showEditDialog by remember { mutableStateOf(false) }
+    val (showEditDialog, setShowEditDialog) = remember { mutableStateOf(false) }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -227,7 +206,7 @@ private fun CctvDeviceItem(
                     contentDescription = "수정",
                     modifier = Modifier
                         .size(16.dp)
-                        .clickable { showEditDialog = true },
+                        .clickable { setShowEditDialog(true) },
                     tint = Color.Gray
                 )
             }
@@ -241,63 +220,16 @@ private fun CctvDeviceItem(
     }
 
     if (showEditDialog) {
-        EditDeviceDialog(
-            initialName = device.cctvNickname,
-            onDismiss = { showEditDialog = false },
-            onConfirm = { newName ->
-                onUpdate(device.copy(cctvNickname = newName))
-                showEditDialog = false
-            }
-        )
-    }
-}
-
-@Composable
-private fun EditDeviceDialog(
-    modifier: Modifier = Modifier,
-    initialName: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var deviceName by remember { mutableStateOf(initialName) }
-
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "기기 이름 수정",
-                    style = Typography.titleMedium
-                )
-
-                TextField(
-                    value = deviceName,
-                    onValueChange = { deviceName = it },
-                    modifier = modifier.fillMaxWidth(),
-                    label = { Text("기기 이름") },
-                    singleLine = true
-                )
-
-                Row(
-                    modifier = modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("취소")
-                    }
-                    TextButton(onClick = { onConfirm(deviceName) }) {
-                        Text("확인")
-                    }
+        EditPopup(
+            onDismissRequest = { setShowEditDialog(false) },
+            onConfirmation = { newName ->
+                if (newName != null) {
+                    onUpdate(device.copy(cctvNickname = newName))
                 }
-            }
-        }
+                setShowEditDialog(false)
+            },
+            isDialogVisible = false
+        )
     }
 }
 

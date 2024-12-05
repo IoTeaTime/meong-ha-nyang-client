@@ -35,7 +35,6 @@ import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.screens.monitoring.device.DeviceViewModel
 import com.example.mhnfe.ui.screens.monitoring.group.GroupViewModel
-import com.example.mhnfe.ui.screens.monitoring.group.toCCTV
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray2
@@ -50,13 +49,16 @@ fun DeviceInfoScreen(
     deviceViewModel: DeviceViewModel = hiltViewModel()
 ) {
     val groupInfo by groupViewModel.groupInfo.collectAsState()
-    val cctv = groupInfo?.cctv?.find { it.cctvId == cctvId }?.toCCTV()
+    val cctv by deviceViewModel.cctv.collectAsState()
 
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        deviceViewModel.getCctvInfo(cctvId) { thingId ->
-            mqttViewModel.viewerInitialSubscribe(context, listOf(thingId))
+        deviceViewModel.getCctvInfo(cctvId) { cctvInfo ->
+            mqttViewModel.viewerInitialSubscribe(context, listOf(cctvInfo.thingId)) { reportedData->
+                cctv?.networkStatus = reportedData?.networkStatus.toString()
+                cctv?.batteryStatus = reportedData?.batteryLevel!!
+            }
         }
     }
 
@@ -74,13 +76,35 @@ fun DeviceInfoScreen(
                 verticalArrangement = Arrangement.Top
             ) {
                 Column(
-                    modifier = modifier.fillMaxWidth().wrapContentHeight().padding(vertical = 45.dp, horizontal = 34.dp),
+                    modifier = modifier.fillMaxWidth().wrapContentHeight()
+                        .padding(vertical = 45.dp, horizontal = 34.dp),
                     horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(40.dp , alignment = Alignment.CenterVertically)
+                    verticalArrangement = Arrangement.spacedBy(
+                        40.dp,
+                        alignment = Alignment.CenterVertically
+                    )
                 ) {
-                    DeviceInfoCard(title = "기기 정보", label1 = "기기명", label2 = "기종", value1 = cctv.deviceName, value2 = cctv.model)
-                    DeviceInfoCard(title = "버전 관리", label1 = "OS", label2 = "앱 버전", value1 = cctv.os, value2 = cctv.appVersion)
-                    DeviceInfoCard(title = "연결 상태", label1 = "배터리", label2 = "네트워크 상태", value1 = cctv.batteryStatus.toString(), value2 = cctv.networkStatus)
+                    DeviceInfoCard(
+                        title = "기기 정보",
+                        label1 = "기기명",
+                        label2 = "기종",
+                        value1 = cctv!!.deviceName,
+                        value2 = cctv!!.model
+                    )
+                    DeviceInfoCard(
+                        title = "버전 관리",
+                        label1 = "OS",
+                        label2 = "앱 버전",
+                        value1 = cctv!!.os,
+                        value2 = cctv!!.appVersion
+                    )
+                    DeviceInfoCard(
+                        title = "연결 상태",
+                        label1 = "배터리",
+                        label2 = "네트워크 상태",
+                        value1 = cctv!!.batteryStatus.toString(),
+                        value2 = cctv!!.networkStatus
+                    )
                     Box(
                         modifier = modifier.fillMaxWidth(),
                         contentAlignment = Alignment.CenterEnd
