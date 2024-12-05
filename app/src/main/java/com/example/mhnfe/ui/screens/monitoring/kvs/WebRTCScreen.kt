@@ -293,15 +293,13 @@ fun WebRtcScreen(
                             .align(Alignment.TopCenter)
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .padding(8.dp),
+                            .padding(18.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Button(
-                            shape = RoundedCornerShape(16.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            border = BorderStroke(1.dp, mainBlack),
+                        IconButton(
+                            modifier = modifier
+                                .size(42.dp),
                             onClick = {
                                 viewModel.viewModelScope.launch {
                                     try {
@@ -326,9 +324,11 @@ fun WebRtcScreen(
                                 }
                             }
                         ) {
-                            Text(
-                                "연결 종료",
-                                color = mainBlack
+                            Icon(
+                                modifier = Modifier.size(35.dp),
+                                painter = painterResource(id = R.drawable.exit),
+                                contentDescription = null,
+                                tint = Color.Unspecified
                             )
                         }
 
@@ -368,7 +368,7 @@ fun WebRtcScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "캡처",
+                                    text = "",
                                     color = Color.Black,
                                     style = Typography.bodySmall
                                 )
@@ -390,7 +390,7 @@ fun WebRtcScreen(
                         ) {
                             Icon(
                                 modifier = modifier.size(41.dp),
-                                painter = painterResource(id = R.drawable.switch_camera),
+                                painter = painterResource(id = R.drawable.switch_refresh),
                                 contentDescription = null,
                                 tint = Color.Unspecified
                             )
