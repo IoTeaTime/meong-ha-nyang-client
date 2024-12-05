@@ -981,6 +981,7 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
 
+    private var isUsingFrontCamera = true
 
     fun initializeSurfaceViews(context: Context, eglBaseContext: EglBase.Context, role: ChannelRole) {
         viewModelScope.launch(Dispatchers.Main) {
@@ -998,7 +999,7 @@ class KVSSignalingViewModel : ViewModel() {
                 val remoteRenderer = SurfaceViewRenderer(context).apply {
                     init(eglBaseContext, null)
                     setEnableHardwareScaler(true)
-                    setMirror(false)
+                    setMirror(true)
                 }
 
                 _localView.value = localRenderer
@@ -1444,6 +1445,7 @@ class KVSSignalingViewModel : ViewModel() {
                     Log.d(TAG, "remoteVideoTrackId=${videoTrack.id()} videoTrackState=${videoTrack.state()}")
                     _remoteView.value?.let { renderer ->
                         try {
+                            renderer.setMirror(isUsingFrontCamera)
                             videoTrack.addSink(renderer)
                         } catch (e: Exception) {
                             Log.e(TAG, "Error adding sink to remote video track", e)
@@ -1600,6 +1602,9 @@ class KVSSignalingViewModel : ViewModel() {
                         capturer.switchCamera(object : CameraVideoCapturer.CameraSwitchHandler {
                             override fun onCameraSwitchDone(isFrontCamera: Boolean) {
                                 isBackCamera = !isFrontCamera
+                                isUsingFrontCamera = isFrontCamera
+                                _localView.value?.setMirror(true)
+                                _remoteView.value?.setMirror(isFrontCamera)
                                 Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
                             }
 
