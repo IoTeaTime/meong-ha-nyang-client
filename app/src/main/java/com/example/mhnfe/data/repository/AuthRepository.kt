@@ -75,6 +75,7 @@ class AuthRepository @Inject constructor(
         return authApi.login(request)
     }
 
+
     suspend fun refreshFcmToken(jwtToken: String, fcmToken: String): FCMResponse {
         val request = RefreshFcmTokenRequest(fcmToken)
         return authApi.refreshFcmToken(jwtToken, request)
