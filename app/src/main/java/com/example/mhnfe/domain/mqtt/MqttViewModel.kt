@@ -287,11 +287,6 @@ class MqttViewModel @Inject constructor(
         publish(topic, payload)
     }
 
-    fun publishAIResult(payload: String) {
-        val topic = "/mhn/event/detect/things/$thingId"
-        publish(topic, payload)
-    }
-
     private fun updateShadow() {
         publish("\$aws/things/${thingId}/shadow/update", DeviceUtils.getShadowPayload(appContext))
     }
@@ -336,17 +331,31 @@ class MqttViewModel @Inject constructor(
         }
     }
 
+    fun eventTopic(trackingId: Int, objectType: String, coordinatesJson: String){
+        val payload =
+            """
+                {
+                    "trackingId": $trackingId,
+                    "timestamp": ${System.currentTimeMillis() / 1000}, 
+                    "objectType": "$objectType",
+                    "coordinates": $coordinatesJson
+               }
+            """.trimIndent()
+
+        publish("/mhn/event/detect/things/$thingId", payload)
+    }
+
     //shadow
     fun subscribeShadowWithPayload(thingId: String,data: (ReportedData?) -> Unit) {
         val topic = "\$aws/things/${thingId}/shadow/update/accepted"
         Log.d(tag, "Subscribe shadow accepted: \$aws/things/${thingId}/shadow/update/accepted", )
         try {
-            subscribe(topic,{ receivedTopic, message ->
+            subscribe(topic) { receivedTopic, message ->
                 Log.d(tag, "Message received on topic $receivedTopic: $message")
-                groupPageHandleShadowMessage(receivedTopic, message) { reportedData->
+                groupPageHandleShadowMessage(receivedTopic, message) { reportedData ->
                     data(reportedData)
                 }
-            })
+            }
         } catch (e: Exception) {
             Log.e(tag, "Failed to publish shadow get: ${e.message}", e)
         }
@@ -375,7 +384,7 @@ class MqttViewModel @Inject constructor(
     private fun publish(topic: String, payload: String) {
         try {
             awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
-            Log.d(tag, "Published to topic $topic: $payload")
+            Log.d(tag, "Published to topic $topic")
         } catch (e: Exception) {
             Log.e(tag, "Failed to publish message: ${e.message}", e)
         }
