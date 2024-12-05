@@ -60,7 +60,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
-import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
@@ -73,7 +72,7 @@ import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
 
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
@@ -229,26 +228,13 @@ fun WebRtcScreen(
         ) {
             when (uiState) {
                 is WebRTCUiState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            modifier.fillMaxSize().background(color = Color.White),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(
-                                20.dp,
-                                alignment = Alignment.CenterVertically
-                            )
-                        ) {
-                            RunningDogLoadingAnimation()
-                            Text(
-                                text = "화면 연결중...",
-                                style = Typography.labelLarge,
-                                color = mainBlack
-                            )
-                        }
-                    }
+                    CircularProgressIndicator(
+                        modifier = modifier
+                            .width(64.dp)
+                            .align(Alignment.Center),
+                        color = mainGray,
+                        trackColor = mainBlack
+                    )
                 }
 
                 is WebRTCUiState.Success -> {
@@ -307,15 +293,13 @@ fun WebRtcScreen(
                             .align(Alignment.TopCenter)
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .padding(8.dp),
+                            .padding(18.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Button(
-                            shape = RoundedCornerShape(16.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 30.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            border = BorderStroke(1.dp, mainBlack),
+                        IconButton(
+                            modifier = modifier
+                                .size(42.dp),
                             onClick = {
                                 viewModel.viewModelScope.launch {
                                     try {
@@ -340,9 +324,11 @@ fun WebRtcScreen(
                                 }
                             }
                         ) {
-                            Text(
-                                "연결 종료",
-                                color = mainBlack
+                            Icon(
+                                modifier = Modifier.size(35.dp),
+                                painter = painterResource(id = R.drawable.exit),
+                                contentDescription = null,
+                                tint = Color.Unspecified
                             )
                         }
 
@@ -382,7 +368,7 @@ fun WebRtcScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "캡처",
+                                    text = "",
                                     color = Color.Black,
                                     style = Typography.bodySmall
                                 )
@@ -404,7 +390,7 @@ fun WebRtcScreen(
                         ) {
                             Icon(
                                 modifier = modifier.size(41.dp),
-                                painter = painterResource(id = R.drawable.switch_camera),
+                                painter = painterResource(id = R.drawable.switch_refresh),
                                 contentDescription = null,
                                 tint = Color.Unspecified
                             )
