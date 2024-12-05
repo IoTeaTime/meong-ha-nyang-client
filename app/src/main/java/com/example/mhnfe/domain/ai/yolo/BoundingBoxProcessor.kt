@@ -1,18 +1,32 @@
 package com.example.mhnfe.domain.ai.yolo
 
+import android.util.Log
+
+data class BoundingBox(
+    val x1: Float,
+    val y1: Float,
+    val x2: Float,
+    val y2: Float,
+    val w: Float,   // 너비
+    val h: Float,   // 높이
+    val cnf: Float,   // confidence
+    val idxNum: Int,   // 탐지된 번호
+    val objectName: String
+)
 
 object BoundingBoxProcessor {
 
     // 상수 선언
     private const val CONFIDENCE_THRESHOLD = 0.3F
     private const val IOU_THRESHOLD = 0.5F
+    private const val TAG = "BoundingBoxProcessor"
 
     fun bestBoxes(
         array: FloatArray,
         labels: List<String>,
         numElements: Int,
         numChannel: Int
-    ): List<BoundingBox>? {
+    ): List<BoundingBox> {
         val boundingBoxes = mutableListOf<BoundingBox>()
 
         for (c in 0 until numElements) {
@@ -47,16 +61,26 @@ object BoundingBoxProcessor {
                 boundingBoxes.add(
                     BoundingBox(
                         x1 = x1, y1 = y1, x2 = x2, y2 = y2,
-                        cx = cx, cy = cy, w = w, h = h,
-                        cnf = maxConf, cls = maxIdx, clsName = clsName
+                        w = w, h = h,
+                        cnf = maxConf, idxNum = maxIdx, objectName = clsName
                     )
                 )
             }
         }
 
-        if (boundingBoxes.isEmpty()) return null
+        // Non-Maximum Suppression (NMS) 적용
+        val selectedBoxes = applyNMS(boundingBoxes)
 
-        return applyNMS(boundingBoxes)
+        // 필터링
+        val filteredBoxes = selectedBoxes.filter {
+            it.objectName in listOf("dog", "cat", "person")
+        }
+
+        filteredBoxes.forEach { box ->
+            Log.d(TAG, "Detected ${box.objectName} with confidence: ${box.cnf}")
+        }
+
+        return filteredBoxes
     }
 
     private fun applyNMS(boxes: List<BoundingBox>): MutableList<BoundingBox> {

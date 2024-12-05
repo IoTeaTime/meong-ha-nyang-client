@@ -6,11 +6,13 @@ class HandleDetection {
 
     private val TAG = "HandleDetection"
 
-    fun handleDetectionResults(boundingBoxes: List<BoundingBox>) {
-        boundingBoxes.forEach { box ->
-            if (box.clsName == "dog" || box.clsName == "cat" || box.clsName == "person") {
-                Log.d(TAG, "Detected ${box.clsName}")
-            }
+    fun handleDetectionResults(boundingBoxes: List<BoundingBox>): List<BoundingBox> {
+        val filteredBoxes = boundingBoxes.filter {
+            it.objectName == "dog" || it.objectName == "cat" || it.objectName == "person"
         }
+        filteredBoxes.forEach { box ->
+            Log.d(TAG, "Detected ${box.objectName} with confidence: ${box.cnf}")
+        }
+        return filteredBoxes
     }
 }
