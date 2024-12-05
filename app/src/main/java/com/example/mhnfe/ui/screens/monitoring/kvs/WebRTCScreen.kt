@@ -390,7 +390,7 @@ fun WebRtcScreen(
                         ) {
                             Icon(
                                 modifier = modifier.size(41.dp),
-                                painter = painterResource(id = R.drawable.switch_camera),
+                                painter = painterResource(id = R.drawable.switch_refresh),
                                 contentDescription = null,
                                 tint = Color.Unspecified
                             )
