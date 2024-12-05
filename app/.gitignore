@@ -1,3 +1,4 @@
 /build
 **/*.json
 .idea
+.kotlin/errors/
