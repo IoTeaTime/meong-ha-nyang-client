@@ -1,8 +1,5 @@
 package com.example.mhnfe.domain.ai.yolo
 
-import android.util.Log
-import com.example.mhnfe.domain.ai.BoundingBoxUtils
-
 data class BoundingBox(
     val x1: Float,
     val y1: Float,
@@ -22,12 +19,14 @@ object BoundingBoxProcessor {
     private const val IOU_THRESHOLD = 0.5F
     private const val TAG = "BoundingBoxProcessor"
 
+    // 콜백 -> 탐지된 객체 정보를 처리하도록 수정
     fun bestBoxes(
         array: FloatArray,
         labels: List<String>,
         numElements: Int,
-        numChannel: Int
-    ): List<BoundingBox> {
+        numChannel: Int,
+        callback: (List<BoundingBox>) -> Unit
+    ) {
         val boundingBoxes = mutableListOf<BoundingBox>()
 
         for (c in 0 until numElements) {
@@ -35,7 +34,7 @@ object BoundingBoxProcessor {
             var maxIdx = -1
             var j = 4
             var arrayIdx = c + numElements * j
-            while (j < numChannel){
+            while (j < numChannel) {
                 if (array[arrayIdx] > maxConf) {
                     maxConf = array[arrayIdx]
                     maxIdx = j - 4
@@ -77,10 +76,7 @@ object BoundingBoxProcessor {
             it.objectName in listOf("dog", "cat", "person")
         }
 
-        // BoundingBoxUtils에 데이터 업데이트
-        BoundingBoxUtils.updateBoundingBoxData(filteredBoxes)
-
-        return filteredBoxes
+        callback(filteredBoxes)
     }
 
     private fun applyNMS(boxes: List<BoundingBox>): MutableList<BoundingBox> {
