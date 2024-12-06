@@ -119,6 +119,7 @@ class ProfileViewModel @Inject constructor(
             try {
                 // 1. 액세스 토큰 가져오기
                 val token = accessTokenDataStore.data.map { it.accessToken }.first()
+                Log.e("","토큰: ${token}")
 
                 // 2. 회원탈퇴 API 호출
                 val response = withContext(Dispatchers.IO) {
