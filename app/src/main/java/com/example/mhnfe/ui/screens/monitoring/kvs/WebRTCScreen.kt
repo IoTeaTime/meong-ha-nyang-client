@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,9 +36,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -49,10 +52,12 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
+import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -81,6 +86,7 @@ fun WebRtcScreen(
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
     val mqttState by mqttViewModel.isConnected.collectAsState()
     val window = (context as? Activity)?.window
+    val isCameraSwitching by viewModel.isCameraSwitching.collectAsState()
     val isRecording = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -88,13 +94,14 @@ fun WebRtcScreen(
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize()
             if (result) {
-                mqttViewModel.createShadowWithSubscribe(context, 1)
+                mqttViewModel.cctvShadow(context, 1)
+                mqttViewModel.cctvInfoSub(context)
             }
         }
         if (role == ChannelRole.MASTER && mqttState) {
             aiViewModel.detectEvent(
-                onResult = { trackingId, objectType, coordinatesJson ->
-                    mqttViewModel.eventTopic(trackingId, objectType, coordinatesJson)
+                onResult = { trackingId, coordinatesJson, objectName, confidence ->
+                    mqttViewModel.eventTopic(trackingId, coordinatesJson, objectName, confidence)
                 }
             )
             mqttViewModel.startObservingData(context)
@@ -197,10 +204,48 @@ fun WebRtcScreen(
 //    }
 
     Log.d("WebRtcScreen", "channelName: $channelName, role: $role")
+
+    var isDimmed by remember { mutableStateOf(false) }
+    var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
+
+    // 밝기 조절 함수
+    fun adjustBrightness(dim: Boolean) {
+        window?.let {
+            val params = it.attributes
+            params.screenBrightness = if (dim) 0.0f else 1.0f
+            it.attributes = params
+        }
+        isDimmed = dim
+    }
+
+    // 10초 후 자동으로 어둡게 하는 타이머
+    LaunchedEffect(lastInteractionTime) {
+        if (role == ChannelRole.MASTER) {
+        delay(10000) // 10초 대기
+        adjustBrightness(true)
+        }
+
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(color = mainBlack)
+            // 마스터일 때만 터치 이벤트 감지
+            .then(
+                if (role == ChannelRole.MASTER) {
+                    modifier.pointerInput(Unit) {
+                        detectTapGestures {
+                            if (isDimmed) {
+                                adjustBrightness(false)
+                            }
+                            lastInteractionTime = System.currentTimeMillis()
+                        }
+                    }
+                } else {
+                    modifier
+                }
+            )
     ) {
         Box(
             modifier = modifier
@@ -209,13 +254,23 @@ fun WebRtcScreen(
         ) {
             when (uiState) {
                 is WebRTCUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = modifier
-                            .width(64.dp)
-                            .align(Alignment.Center),
-                        color = mainGray,
-                        trackColor = mainBlack
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column (
+                            modifier.fillMaxSize().background(color = Color.White),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
+                        ) {
+                            RunningDogLoadingAnimation()
+                            Text(
+                                text = "화면 연결중...",
+                                style = Typography.labelLarge,
+                                color = mainBlack
+                            )
+                        }
+                    }
                 }
 
                 is WebRTCUiState.Success -> {
@@ -225,11 +280,15 @@ fun WebRtcScreen(
                             try {
                                 viewModel.frameData
                                     .onEach { bitmap ->
-                                        bitmap?.let {
-                                            withContext(Dispatchers.Default) {
-                                                aiViewModel.processFrame(it)
-                                            }
-                                        } ?: Log.d("WebRtcScreen", "Received null bitmap")
+                                        if (!isCameraSwitching) {
+                                            bitmap?.let {
+                                                withContext(Dispatchers.Default) {
+                                                    aiViewModel.processFrame(it)
+                                                }
+                                            } ?: Log.d("WebRtcScreen", "Received null bitmap")
+                                        } else {
+                                            Log.d("WebRtcScreen", "Skipping frame processing due to camera switching")
+                                        }
                                     }
                                     .catch { e ->
                                         Log.e("WebRtcScreen", "Error collecting frames", e)
@@ -308,19 +367,9 @@ fun WebRtcScreen(
                             Icon(
                                 modifier = Modifier.size(35.dp),
                                 painter = painterResource(id = R.drawable.exit),
-                                contentDescription = null,
+                                contentDescription = "연결 종료",
                                 tint = Color.Unspecified
                             )
-                        }
-
-                        // MQTT 기기 상태 요청 테스트
-                        Button(
-                            onClick = {
-
-                            },
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Text("기기 정보 요청 발행")
                         }
                     }
                     Row(
@@ -355,9 +404,11 @@ fun WebRtcScreen(
                                 )
                             }
                         }else {
-                            // MASTER인 경우 빈 공간
-                            Spacer(
-                                modifier = Modifier.size(100.dp)
+                            Text(
+                                modifier = modifier.background(Color.White, shape = CircleShape).padding(10.dp),
+                                text = "10초 후 절전 모드가 실행됩니다",
+                                color = mainBlack,
+                                style = Typography.labelSmall,
                             )
                         }
 
