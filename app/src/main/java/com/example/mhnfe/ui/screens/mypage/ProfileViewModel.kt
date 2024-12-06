@@ -200,6 +200,8 @@ class ProfileViewModel @Inject constructor(
             try {
                 val token = accessTokenDataStore.data.map { it.accessToken }.first()
                 val memberId = memberIdDataStore.data.map {it.memberId}.first()
+                Log.d("ProfileViewModel", "token : $token")
+                Log.d("ProfileViewModel", "memberId : $memberId")
 
                 if (token.isNullOrEmpty()) {
                     _error.value = "No access token found"

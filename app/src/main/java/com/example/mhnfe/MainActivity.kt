@@ -5,12 +5,17 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import com.example.mhnfe.ui.theme.MhnFETheme
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import com.amazonaws.mobile.client.AWSMobileClient
 import com.amazonaws.mobile.client.Callback
 import com.amazonaws.mobile.client.UserStateDetails
 import com.example.mhnfe.ui.navigation.AppNavigation
+import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.screens.shared.AuthStateManager
 import com.example.mhnfe.utils.PermissionManager
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
@@ -25,6 +30,7 @@ import java.util.concurrent.CountDownLatch
 class MainActivity : ComponentActivity() {
 
     private lateinit var permissionManager: PermissionManager
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +71,18 @@ class MainActivity : ComponentActivity() {
             }
             Log.d(TAG, "FCM 토큰 저장됨: $token")  // 토큰 저장 확인 로그 추가
         })
+
+        // authStateViewModel.isLoggedOut 관찰
+        AuthStateManager.isLoggedOut.observe(this) { isLoggedOut ->
+            if (isLoggedOut) {
+                Log.d("MainActivity","logout try")
+                // 로그아웃 후 로그인 화면으로 이동
+                navController.navigate(NavRoutes.Auth.Login.route) {
+                    // 이전 백스택을 제거하여 로그인 화면이 최상위에 오도록 설정
+//                    popUpTo(NavRoutes.Auth.route) { inclusive = true }
+                }
+            }
+        }
 
         setContent {
             MhnFETheme {
