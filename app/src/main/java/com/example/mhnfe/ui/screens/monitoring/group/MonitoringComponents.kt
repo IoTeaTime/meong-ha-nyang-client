@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,21 +42,15 @@ fun CCTVItemCard(
     onEdit: () -> Unit = {},
     mqttViewModel: MqttViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
     val thingId = cctv.thingId
     var networkStatus by remember { mutableStateOf(1) }
     var batteryStatus by remember { mutableStateOf(0) }
 
     LaunchedEffect(thingId) {
-        mqttViewModel.createTopicAndShadowWithSubscribe(context, thingId) { reportedData ->
-            reportedData?.let {
-                if(it.networkStatus != null){
-                    networkStatus = it.networkStatus.SignalStrength!!
-                }
-                if(it.batteryLevel != null){
-                    batteryStatus = it.batteryLevel
-                    println("Updated batteryStatus: $batteryStatus")
-                }
+        mqttViewModel.groupThingsSub(thingId) { reportedData ->
+            reportedData.let {
+                networkStatus = it.networkStatus
+                batteryStatus = it.batteryLevel
             }
         }
     }

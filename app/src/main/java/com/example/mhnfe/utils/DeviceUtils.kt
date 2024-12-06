@@ -8,14 +8,13 @@ import android.net.NetworkCapabilities
 import android.net.wifi.WifiInfo
 import android.os.BatteryManager
 import android.os.Build
-import org.json.JSONObject
 
 object DeviceUtils {
     fun getShadowPayload(context: Context): String {
         val batteryLevel = getBatteryLevel(context)
         val kvsChannelActive = true
         val kvsChannelDeleteRequested = false
-        val networkStatus = getWifiInfo(context).toString()
+        val networkStatus = getWifiInfo(context)
 
         return """
         {
@@ -31,13 +30,12 @@ object DeviceUtils {
         """.trimIndent()
     }
 
-    fun getPublishPayload(context: Context, groupMessage: JSONObject): String {
+    fun getPublishPayload(context: Context): String {
         val batteryLevel = getBatteryLevel(context)
         val availableMemory = getAvailableMemory(context)
         val (deviceModel, osVersion) = getDeviceInfo()
         val appVersion = getAppVersion(context)
         val networkStatus = getWifiInfo(context).toString()
-        val timestamp = groupMessage.optLong("timestamp", System.currentTimeMillis() / 1000)
 
         return """
         {
@@ -46,8 +44,7 @@ object DeviceUtils {
             "deviceModel": "$deviceModel",
             "osVersion": "$osVersion",
             "appVersion": "$appVersion",
-            "networkStatus": $networkStatus,
-            "timestamp": $timestamp
+            "networkStatus": $networkStatus
         }
         """.trimIndent()
     }
@@ -86,26 +83,21 @@ object DeviceUtils {
         }
     }
 
-    private fun getWifiInfo(context: Context): JSONObject {
-        val wifiInfoJson = JSONObject()
-
+    private fun getWifiInfo(context: Context): Int {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkCapabilities: NetworkCapabilities? = cm.getNetworkCapabilities(cm.activeNetwork)
-
-        if (networkCapabilities != null && networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-            val wifiInfo = networkCapabilities.transportInfo as? WifiInfo
-            if (wifiInfo != null) {
-                val rssi = wifiInfo.rssi
-                val signalStrength = getSignalLevel(rssi)
-                wifiInfoJson.put("SignalStrength", signalStrength)
-            } else {
-                wifiInfoJson.put("Error", "No Wi-Fi info available")
+        return try {
+            val networkCapabilities: NetworkCapabilities? = cm.getNetworkCapabilities(cm.activeNetwork)
+            if (networkCapabilities != null && networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                val wifiInfo = networkCapabilities.transportInfo as? WifiInfo
+                if (wifiInfo != null) {
+                    val rssi = wifiInfo.rssi
+                    return getSignalLevel(rssi)
+                }
             }
-        } else {
-            wifiInfoJson.put("Error", "Not connected to Wi-Fi")
+            -1
+        } catch (e: Exception) {
+            -1
         }
-
-        return wifiInfoJson
     }
 
     private fun getSignalLevel(rssi: Int): Int {
@@ -135,8 +127,7 @@ object DeviceUtils {
         {
             "state": {
                 "reported": {
-                    "networkStatus": {
-                        "SignalStrength": $networkStatus
+                    "networkStatus":$networkStatus
                     }
                 }
             }
