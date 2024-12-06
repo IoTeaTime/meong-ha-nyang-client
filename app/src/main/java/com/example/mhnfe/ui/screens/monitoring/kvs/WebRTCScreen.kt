@@ -24,8 +24,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,7 +53,6 @@ import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-import com.example.mhnfe.ui.theme.mainGray
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -99,11 +96,6 @@ fun WebRtcScreen(
             }
         }
         if (role == ChannelRole.MASTER && mqttState) {
-            aiViewModel.detectEvent(
-                onResult = { trackingId, coordinatesJson, objectName, confidence ->
-                    mqttViewModel.eventTopic(trackingId, coordinatesJson, objectName, confidence)
-                }
-            )
             mqttViewModel.startObservingData(context)
         }
     }
@@ -283,7 +275,9 @@ fun WebRtcScreen(
                                         if (!isCameraSwitching) {
                                             bitmap?.let {
                                                 withContext(Dispatchers.Default) {
-                                                    aiViewModel.processFrame(it)
+                                                    aiViewModel.processFrame(it) { trackingId, coordinatesJson, objectName, confidence ->
+                                                        mqttViewModel.eventTopic(trackingId, coordinatesJson, objectName, confidence)
+                                                    }
                                                 }
                                             } ?: Log.d("WebRtcScreen", "Received null bitmap")
                                         } else {
@@ -298,6 +292,7 @@ fun WebRtcScreen(
                                 Log.e("WebRtcScreen", "Frame collection failed", e)
                             }
                         }
+
                         //UI
                         if (isViewsInitialized) {
                             localView?.let { renderer ->
