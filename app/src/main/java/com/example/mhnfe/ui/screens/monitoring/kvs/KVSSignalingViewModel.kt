@@ -859,7 +859,7 @@ class KVSSignalingViewModel : ViewModel() {
     val frameData = _frameData.asStateFlow()
 
     private var lastFrameTime = 0L
-    private val frameInterval = 5000L // 1초 간격
+    private val frameInterval = 200L // 1초 간격
 
 
     private fun convertI420ToBitmap(buffer: VideoFrame.I420Buffer) {
