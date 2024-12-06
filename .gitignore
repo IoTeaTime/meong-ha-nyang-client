@@ -7,9 +7,10 @@
 .externalNativeBuild
 .cxx
 local.properties
-/app/src/main/assets
 /app/src/main/res/raw
 .idea/
+.kotlin/
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
+/opencv/build
