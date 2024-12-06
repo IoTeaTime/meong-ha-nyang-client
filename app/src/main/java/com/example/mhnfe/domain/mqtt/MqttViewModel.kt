@@ -6,9 +6,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos
-import com.example.mhnfe.domain.mqtt.shadow.delta.ShadowDeltaMsg
 import com.example.mhnfe.domain.mqtt.shadow.DeviceInfoShadow
 import com.example.mhnfe.domain.mqtt.shadow.ReportedData
+import com.example.mhnfe.domain.mqtt.shadow.delta.ShadowDeltaMsg
+import com.example.mhnfe.domain.mqtt.topic.ReportedThingInfo
 import com.example.mhnfe.utils.DataObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -20,7 +21,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import org.json.JSONObject
 import java.io.File
 import java.security.KeyStore
 import javax.inject.Inject
@@ -110,33 +110,7 @@ class MqttViewModel @Inject constructor(
         Log.d(tag, "MQTT disconnected.")
     }
 
-    fun viewerInitialSubscribe(context: Context, thingList: List<String>, data: (ReportedData?) -> Unit) {
-        val topics = thingList.map { "/mhn/command/device/info/things/$it" }.toMutableList()
-        topics.forEach { topic ->
-            subscribe(topic) { receivedTopic, message ->
-                Log.d(tag, "Message received on topic $receivedTopic: $message")
-                handleThingTopicMessage(receivedTopic, message, context) { reportedData->
-                    data(reportedData)
-                }
-            }
-        }
-        Log.d(tag, "Subscribed to topics: ${topics.joinToString(", ")}")
-    }
-
-
-//    fun ShadowWithSubscribe(thingId: String){
-//        val shadowTopics = listOf(
-//            "\$aws/things/${thingId}/shadow/get/accepted",
-//            "\$aws/things/${thingId}/shadow/get/rejected"
-//        )
-//        shadowTopics.forEach { topic ->
-//            subscribe(topic) { receivedTopic, message ->
-//                handleShadowMessage(receivedTopic, message)
-//            }
-//        }
-//    }
-
-    fun createShadowWithSubscribe(context: Context, groupId: Int) {
+    fun cctvShadow(context: Context, groupId: Int) {
         val shadowTopics = listOf(
             "\$aws/things/${thingId}/shadow/update/delta",
             "\$aws/things/${thingId}/shadow/update/accepted",
@@ -148,50 +122,42 @@ class MqttViewModel @Inject constructor(
 
         shadowTopics.forEach { topic ->
             subscribe(topic) { receivedTopic, message ->
-                handleShadowMessage(receivedTopic, message)
+                cctvShadowReceiveHandler(receivedTopic, message)
             }
         }
 
         val groupTopic = "/mhn/command/device/info/groups/$groupId"
         subscribe(groupTopic) { receivedTopic, message ->
-            handleTopicMessage(receivedTopic, message, context)
+            cctvReceiveHandler(receivedTopic, message, context)
         }
-        updateShadow()
+        createShadow()
         Log.d(tag, "Shadow subscriptions and publication complete.")
     }
 
-    // group page cctv 배터리 및 네트워크 정보 subscribe
-    fun createTopicAndShadowWithSubscribe(context: Context, thingId: String, data: (ReportedData?) -> Unit){
-        //topic
+    fun groupThingsSub(thingId: String, data: (ReportedThingInfo) -> Unit){
         val topic = "/mhn/command/device/info/things/$thingId"
-        subscribe(topic) { receivedTopic, message ->
-            Log.d(tag, "Message received on topic $receivedTopic: $message")
-            handleThingTopicMessage(receivedTopic, message, context){ reportedData->
-                data(reportedData)
+        subscribe(topic) { _, message ->
+            viewerReceiveHandler(message) { stringMessage ->
+                data(stringMessage)
             }
         }
-
-        //shadow
-        subscribeShadowWithPayload(thingId){ reportedData->
-            data(reportedData)
-        }
-
-        Log.d(tag, "Shadow subscriptions and publication complete.")
     }
 
 
-    private fun handleTopicMessage(receivedTopic: String, message: String, context: Context) {
+    private fun cctvReceiveHandler(receivedTopic: String, message: String, context: Context) {
         try {
-            val jsonMessage = JSONObject(message)
 
             when {
                 receivedTopic.contains("groups") -> {
-                    val payload = DeviceUtils.getPublishPayload(context, jsonMessage)
+                    val payload = DeviceUtils.getPublishPayload(context)
                     publish("/mhn/command/device/info/things/$thingId", payload)
                 }
 
                 receivedTopic.contains("things") -> {
-                    Log.d(tag, "Thing message: $message")
+                    if (message == "information") {
+                        val payload = DeviceUtils.getPublishPayload(context)
+                        publish("/mhn/command/device/info/things/$thingId", payload)
+                    }
                 }
 
                 else -> {
@@ -203,20 +169,15 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    private fun handleThingTopicMessage(receivedTopic: String, message: String, context: Context, data: (ReportedData?) -> Unit) {
+    private fun viewerReceiveHandler(message: String, data: (ReportedThingInfo) -> Unit) {
         try {
-            // ignoreUnknownKeys 옵션 활성화
-            val json = Json { ignoreUnknownKeys = true }
-
-            // JSON 메시지 디코딩
-            val reportedData: ReportedData = json.decodeFromString(message)
-
-            Log.d(tag, "Thing message: $message")
-
-            data(reportedData)
-
+            if (message != "information") {
+                val json = Json { ignoreUnknownKeys = true }
+                val reportedData: ReportedThingInfo = json.decodeFromString(message)
+                data(reportedData)
+            }
         } catch (e: Exception) {
-            Log.e(tag, "Failed to process topic message: ${e.message}", e)
+            Log.e(tag, "Failed to handle thing topic: ${e.message}", e)
         }
     }
 
@@ -244,19 +205,16 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    private fun handleShadowMessage(topic: String, message: String) {
+    private fun cctvShadowReceiveHandler(topic: String, message: String) {
         try {
-            // JSON 파싱 시 ignoreUnknownKeys = true 설정
-            val jsonObject: ShadowDeltaMsg = try {
-                Json { ignoreUnknownKeys = true }.decodeFromString(message)
-            } catch (e: Exception) {
-                Log.e(tag, "Failed to decode shadow message: ${e.message}", e)
-                return
-            }
-
             when {
                 topic.contains("delta") -> {
-                    Log.d(tag, "Delta 메시지 수신: $jsonObject")
+                    val jsonObject: ShadowDeltaMsg = try {
+                        Json { ignoreUnknownKeys = true }.decodeFromString(message)
+                    } catch (e: Exception) {
+                        Log.e(tag, "Failed to decode shadow message: ${e.message}", e)
+                        return
+                    }
                     if (jsonObject.state?.delta?.kvsChannelDeleteRequested == true) {
                         iotClientHelper.deleteDevice()
                         Log.d(tag, "IoT Device 삭제 성공")
@@ -264,19 +222,6 @@ class MqttViewModel @Inject constructor(
                         Log.d(tag, "Delta 처리 완료: $jsonObject")
                     }
                 }
-
-                topic.contains("accepted") -> {
-                    Log.d(tag, "Accepted 메시지 수신: $jsonObject")
-                }
-
-                topic.contains("rejected") -> {
-                    Log.e(tag, "Rejected 메시지 수신: $jsonObject")
-                }
-
-                topic.contains("documents") -> {
-                    Log.d(tag, "Documents 메시지 수신: $jsonObject")
-                }
-
                 else -> {
                     Log.w(tag, "Unhandled Shadow Topic: $topic")
                 }
@@ -286,21 +231,31 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    fun getDeviceInfo(payload: String, groupId: Long) {
+    fun cctvInfoSub(context: Context){
+        subscribe("/mhn/command/device/info/things/$thingId") { receivedTopic, message ->
+            cctvReceiveHandler(receivedTopic, message, context)
+        }
+    }
+
+    fun cctvInfoRequestPub(thingId: String){
+        publish("/mhn/command/device/info/things/$thingId", "information")
+    }
+
+    fun groupInfoRequestPub(payload: String, groupId: Long) {
         val topic = "/mhn/command/device/info/groups/$groupId"
         publish(topic, payload)
     }
 
-    fun publishAIResult(payload: String) {
+    fun cctvAiResultPub(payload: String) {
         val topic = "/mhn/event/detect/things/$thingId"
         publish(topic, payload)
     }
 
-    private fun updateShadow() {
+    private fun createShadow() {
         publish("\$aws/things/${thingId}/shadow/update", DeviceUtils.getShadowPayload(appContext))
     }
 
-    private fun updateShadowWithPayload(payload: String) {
+    private fun updateShadow(payload: String) {
         val topic = "\$aws/things/${thingId}/shadow/update"
         try {
             awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
@@ -310,7 +265,6 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    // 데이터 관찰 시작
     fun startObservingData(context: Context) {
         if (dataObserver == null) {
             dataObserver = DataObserver(context).apply {
@@ -319,25 +273,29 @@ class MqttViewModel @Inject constructor(
                 CoroutineScope(Dispatchers.IO).launch {
                     batteryLevel.collect { newBatteryLevel ->
                         val payload = DeviceUtils.getBatteryPayload(newBatteryLevel)
-                        updateShadowWithPayload(payload)
+                        updateShadow(payload)
                     }
                 }
 
                 CoroutineScope(Dispatchers.IO).launch {
                     networkStatus.collect { newNetworkStatus ->
                         val payload = DeviceUtils.getNetworkPayload(newNetworkStatus)
-                        updateShadowWithPayload(payload)
+                        updateShadow(payload)
                     }
                 }
 
                 CoroutineScope(Dispatchers.IO).launch {
                     kvsChannelActive.collect { isActive ->
                         val payload = DeviceUtils.getKvsChannelPayload(isActive)
-                        updateShadowWithPayload(payload)
+                        updateShadow(payload)
                     }
                 }
             }
         }
+    }
+
+    fun stopObservingData() {
+        dataObserver = null // todo. mqtt 연결 해제될 때 같이 수정
     }
 
     //shadow
@@ -354,26 +312,6 @@ class MqttViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e(tag, "Failed to publish shadow get: ${e.message}", e)
         }
-    }
-
-    // 데이터 관찰 중지
-    fun stopObservingData() {
-        dataObserver = null // todo. mqtt 연결 해제될 때 같이 수정
-    }
-
-    fun testSub(connectionReceived: (String) -> Unit) {
-        Log.d("GroupScreen", "Test Subscribe Success")
-        subscribe("/mhn/connect/test/$thingId") { _, message ->
-            val isSuccess = message == "The connection is still active"
-            val status = if (isSuccess) "Connected" else "Disconnected"
-
-            Log.d("GroupScreen", "Connection status: $status, Message: $message")
-            connectionReceived(message)
-        }
-    }
-
-    fun testPub() {
-        publish("/mhn/connect/test/$thingId", "The connection is still active")
     }
 
     private fun publish(topic: String, payload: String) {

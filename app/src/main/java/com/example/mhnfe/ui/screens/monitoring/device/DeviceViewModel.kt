@@ -42,7 +42,7 @@ class DeviceViewModel @Inject constructor(
             val response: Response<CctvInfoResponse> = deviceRepository.getCctvInfo(token, cctvId)
             if(response.isSuccessful) {
                 _cctv.value = response.body()?.body?.toCCTV()
-                response.body()?.body?.let { onCctvInfoFetched }
+                response.body()?.body?.let { onCctvInfoFetched(it) }
             } else {
                 val jsonObject = JSONObject(response.errorBody()!!.string())
                 val errorBody = Json.decodeFromString<DeleteDeviceResponse>(jsonObject.toString())

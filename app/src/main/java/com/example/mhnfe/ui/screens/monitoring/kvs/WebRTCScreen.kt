@@ -2,23 +2,16 @@ package com.example.mhnfe.ui.screens.monitoring.kvs
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
-import android.os.Build
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,17 +20,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,7 +60,6 @@ import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
@@ -100,7 +87,8 @@ fun WebRtcScreen(
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize()
             if (result) {
-                mqttViewModel.createShadowWithSubscribe(context, 17)
+                mqttViewModel.cctvShadow(context, 1)
+                mqttViewModel.cctvInfoSub(context)
             }
         }
         if (role == ChannelRole.MASTER && mqttState) {
@@ -110,7 +98,7 @@ fun WebRtcScreen(
                 },
                 onPayloadReady = { payload ->
                     try {
-                        mqttViewModel.publishAIResult(payload)
+                        mqttViewModel.cctvAiResultPub(payload)
                     } catch (e: Exception) {
                         Log.e("WebRTCScreen", "Failed to publish AI event", e)
                     }
@@ -330,16 +318,6 @@ fun WebRtcScreen(
                                 contentDescription = null,
                                 tint = Color.Unspecified
                             )
-                        }
-
-                        // MQTT 기기 상태 요청 테스트
-                        Button(
-                            onClick = {
-
-                            },
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Text("기기 정보 요청 발행")
                         }
                     }
                     Row(
