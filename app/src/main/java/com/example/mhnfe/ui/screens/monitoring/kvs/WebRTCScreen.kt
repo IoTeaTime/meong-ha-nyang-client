@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,7 +66,6 @@ import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
 
-
 @Composable
 @SuppressLint("HardwareIds")
 fun WebRtcScreen(
@@ -99,15 +100,8 @@ fun WebRtcScreen(
         }
         if (role == ChannelRole.MASTER && mqttState) {
             aiViewModel.detectEvent(
-                onResult = { result ->
-                    Log.d("WebRTCScreen", "AI Result: $result")
-                },
-                onPayloadReady = { payload ->
-                    try {
-                        mqttViewModel.cctvAiResultPub(payload)
-                    } catch (e: Exception) {
-                        Log.e("WebRTCScreen", "Failed to publish AI event", e)
-                    }
+                onResult = { trackingId, coordinatesJson, objectName, confidence ->
+                    mqttViewModel.eventTopic(trackingId, coordinatesJson, objectName, confidence)
                 }
             )
             mqttViewModel.startObservingData(context)
