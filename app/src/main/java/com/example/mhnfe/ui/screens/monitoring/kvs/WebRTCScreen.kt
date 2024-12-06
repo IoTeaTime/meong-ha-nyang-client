@@ -100,8 +100,8 @@ fun WebRtcScreen(
         }
         if (role == ChannelRole.MASTER && mqttState) {
             aiViewModel.detectEvent(
-                onResult = { trackingId, coordinatesJson, objectName, confidence ->
-                    mqttViewModel.eventTopic(trackingId, coordinatesJson, objectName, confidence)
+                onResult = { trackingId, timestamp, objectName, confidence, coordinates ->
+                    mqttViewModel.eventTopic(trackingId, timestamp, objectName, confidence, coordinates)
                 }
             )
             mqttViewModel.startObservingData(context)
