@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
 import android.content.Context.MODE_PRIVATE
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -210,6 +211,8 @@ fun LoginScreen(
                             } else {
                                 Log.e(TAG, "JWT 토큰이 null이어서 FCM 토큰 전송이 불가능합니다.")
                             }
+
+                            Toast.makeText(context, "로그인에 성공하였습니다.", Toast.LENGTH_SHORT).show()
 
                             if(loginResponse?.body?.isGroupMember == true)
                             {

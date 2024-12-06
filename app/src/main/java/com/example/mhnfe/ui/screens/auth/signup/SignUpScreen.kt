@@ -463,11 +463,11 @@ fun SignUpScreen(
                     LaunchedEffect(signUpResponse) {
                         signUpResponse?.let { response ->
                             if (response.result.code == 201) {
-                                Toast.makeText(context, "회원가입을 완료하였습니다.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "회원가입에 성공하였습니다.", Toast.LENGTH_SHORT).show()
                                 Log.d("SignUpScreen", "회원가입 성공: ${response.result.message} ${response.result.description}")
                                 onLoginClick()
                             } else {
-                                Toast.makeText(context, "회원가입을 실패하였습니다.", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "회원가입에 실패하였습니다.", Toast.LENGTH_SHORT).show()
                                 Log.e("SignUpScreen", "회원가입 실패: ${response.result.message} ${response.result.description}")
                             }
                         }
