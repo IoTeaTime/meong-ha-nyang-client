@@ -18,6 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.opencv.android.OpenCVLoader
 import java.util.concurrent.CountDownLatch
 
 @AndroidEntryPoint
@@ -28,6 +29,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         permissionManager = PermissionManager(this)
+
+        // OpenCV 초기화
+        if (!OpenCVLoader.initDebug()) {
+            Log.e("OpenCV", "OpenCV 초기화 실패")
+        } else {
+            Log.d("OpenCV", "OpenCV 초기화 성공")
+        }
 
         val auth = AWSMobileClient.getInstance()
         initializeMobileClient(auth, this@MainActivity)
