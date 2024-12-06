@@ -24,9 +24,8 @@ interface QRApi {
         @Body request: ViewerQRRequest
     ): ViewerQRResponse
 
-    @GET("/api/cctv-device/{cctvId}")
+    @GET("/api/cctv-device")
     suspend fun cctvIdInfo(
         @Header("Authorization") token: String,
-        @Path("cctvId")cctvId: Int
     ): CctvInfoResponse
 }

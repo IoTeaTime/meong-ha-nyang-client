@@ -17,13 +17,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mhnfe.R
 import com.example.mhnfe.data.model.CCTV
+import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainGray3
 
@@ -33,7 +40,21 @@ fun CCTVItemCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onEdit: () -> Unit = {},
+    mqttViewModel: MqttViewModel = hiltViewModel()
 ) {
+    val thingId = cctv.thingId
+    var networkStatus by remember { mutableStateOf(1) }
+    var batteryStatus by remember { mutableStateOf(0) }
+
+    LaunchedEffect(thingId) {
+        mqttViewModel.groupThingsSub(thingId) { reportedData ->
+            reportedData.let {
+                networkStatus = it.networkStatus
+                batteryStatus = it.batteryLevel
+            }
+        }
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -67,7 +88,7 @@ fun CCTVItemCard(
                 ) {
                     Icon(
                         modifier = modifier.size(20.dp, 16.dp).align(Alignment.Center),
-                        painter = painterResource(id = if(cctv.networkStatus == "양호") R.drawable.good_signal else R.drawable.bad_signal),
+                        painter = painterResource(id = if(networkStatus >= 2) R.drawable.good_signal else R.drawable.bad_signal),
                         contentDescription = "signal",
                         tint = Color.Unspecified
                     )
@@ -80,8 +101,8 @@ fun CCTVItemCard(
                         painter = painterResource(
                             id = when {
                                 //배터리 양 별로 다른 아이콘
-                                cctv.batteryStatus >= 80 -> R.drawable.full_battery
-                                cctv.batteryStatus >= 40 -> R.drawable.medium_battery
+                                batteryStatus >= 80 -> R.drawable.full_battery
+                                batteryStatus >= 40 -> R.drawable.medium_battery
                                 else -> R.drawable.low_battery
                             }),
                         contentDescription = "편집"
