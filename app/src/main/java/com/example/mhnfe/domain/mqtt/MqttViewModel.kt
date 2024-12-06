@@ -134,7 +134,7 @@ class MqttViewModel @Inject constructor(
         Log.d(tag, "Shadow subscriptions and publication complete.")
     }
 
-    fun groupThingsSub(thingId: String, data: (ReportedThingInfo) -> Unit){
+    fun groupThingsSub(thingId: String, data: (ReportedThingInfo) -> Unit) {
         val topic = "/mhn/command/device/info/things/$thingId"
         subscribe(topic) { _, message ->
             viewerReceiveHandler(message) { stringMessage ->
@@ -182,7 +182,11 @@ class MqttViewModel @Inject constructor(
     }
 
     //group screen shadow handler
-    private fun groupPageHandleShadowMessage(topic: String, message: String, data: (ReportedData?) -> Unit) {
+    private fun groupPageHandleShadowMessage(
+        topic: String,
+        message: String,
+        data: (ReportedData?) -> Unit
+    ) {
         try {
             // ignoreUnknownKeys 옵션 활성화
             val json = Json { ignoreUnknownKeys = true }
@@ -195,6 +199,7 @@ class MqttViewModel @Inject constructor(
                 topic.contains("thingId") -> {
                     Log.d(tag, "Accepted 메시지 수신: $message")
                 }
+
                 else -> {
                     Log.w(tag, "Unhandled Shadow Topic: $topic")
                 }
@@ -222,6 +227,7 @@ class MqttViewModel @Inject constructor(
                         Log.d(tag, "Delta 처리 완료: $jsonObject")
                     }
                 }
+
                 else -> {
                     Log.w(tag, "Unhandled Shadow Topic: $topic")
                 }
@@ -231,13 +237,13 @@ class MqttViewModel @Inject constructor(
         }
     }
 
-    fun cctvInfoSub(context: Context){
+    fun cctvInfoSub(context: Context) {
         subscribe("/mhn/command/device/info/things/$thingId") { receivedTopic, message ->
             cctvReceiveHandler(receivedTopic, message, context)
         }
     }
 
-    fun cctvInfoRequestPub(thingId: String){
+    fun cctvInfoRequestPub(thingId: String) {
         publish("/mhn/command/device/info/things/$thingId", "information")
     }
 
@@ -298,14 +304,34 @@ class MqttViewModel @Inject constructor(
         dataObserver = null // todo. mqtt 연결 해제될 때 같이 수정
     }
 
+    fun eventTopic(
+        trackingId: Int,
+        coordinatesJson: String,
+        objectName: String,
+        confidence: String
+    ) {
+        val payload =
+            """
+                {
+                    "trackingId": $trackingId,
+                    "timestamp": ${System.currentTimeMillis() / 1000}, 
+                    "coordinates": $coordinatesJson,
+                    "objectType": "$objectName",
+                    "confidence": "$confidence"
+               }
+            """.trimIndent()
+
+        publish("/mhn/event/detect/things/$thingId", payload)
+    }
+
     //shadow
-    fun subscribeShadowWithPayload(thingId: String,data: (ReportedData?) -> Unit) {
+    fun subscribeShadowWithPayload(thingId: String, data: (ReportedData?) -> Unit) {
         val topic = "\$aws/things/${thingId}/shadow/update/accepted"
-        Log.d(tag, "Subscribe shadow accepted: \$aws/things/${thingId}/shadow/update/accepted", )
+        Log.d(tag, "Subscribe shadow accepted: \$aws/things/${thingId}/shadow/update/accepted")
         try {
-            subscribe(topic,{ receivedTopic, message ->
+            subscribe(topic, { receivedTopic, message ->
                 Log.d(tag, "Message received on topic $receivedTopic: $message")
-                groupPageHandleShadowMessage(receivedTopic, message) { reportedData->
+                groupPageHandleShadowMessage(receivedTopic, message) { reportedData ->
                     data(reportedData)
                 }
             })
