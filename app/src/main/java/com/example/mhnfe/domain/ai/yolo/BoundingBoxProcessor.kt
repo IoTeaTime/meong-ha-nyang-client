@@ -1,6 +1,7 @@
 package com.example.mhnfe.domain.ai.yolo
 
 import android.util.Log
+import com.example.mhnfe.domain.ai.BoundingBoxUtils
 
 data class BoundingBox(
     val x1: Float,
@@ -76,9 +77,8 @@ object BoundingBoxProcessor {
             it.objectName in listOf("dog", "cat", "person")
         }
 
-        filteredBoxes.forEach { box ->
-            Log.d(TAG, "Detected ${box.objectName} with confidence: ${box.cnf}")
-        }
+        // BoundingBoxUtils에 데이터 업데이트
+        BoundingBoxUtils.updateBoundingBoxData(filteredBoxes)
 
         return filteredBoxes
     }

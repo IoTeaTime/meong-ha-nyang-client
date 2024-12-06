@@ -14,6 +14,9 @@ data class BoundingBoxCoordinates(
 object BoundingBoxUtils {
     private const val TAG = "BoundingBoxUtils"
 
+    // 내부 상태를 저장할 변수
+    private var latestBoundingBoxes: List<BoundingBox> = emptyList()
+
     // BoundingBox 객체의 좌표를 변환하여 BoundingBoxCoordinates 객체 생성
     private fun BoundingBoxCoordinates(box: BoundingBox): BoundingBoxCoordinates {
         return BoundingBoxCoordinates(
@@ -52,7 +55,7 @@ object BoundingBoxUtils {
         return JSONObject().apply {
             boundingBoxes.forEachIndexed { index, box ->
                 put("box_$index", JSONObject().apply {
-                    put("confidence", box.cnf)
+                    put("confidence", box.cnf.toDouble())
                 })
             }
         }.toString()
@@ -67,5 +70,14 @@ object BoundingBoxUtils {
                 })
             }
         }.toString()
+    }
+    // 내부 데이터를 업데이트하는 메서드
+    fun updateBoundingBoxData(newBoundingBoxes: List<BoundingBox>) {
+        latestBoundingBoxes = newBoundingBoxes
+    }
+
+    // 최신 데이터를 가져오는 메서드
+    fun getLatestBoundingBoxData(): List<BoundingBox> {
+        return latestBoundingBoxes
     }
 }
