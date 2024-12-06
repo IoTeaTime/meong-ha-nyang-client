@@ -30,7 +30,6 @@ import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-import kotlinx.coroutines.delay
 
 @Composable
 fun GroupScreen(
@@ -43,21 +42,9 @@ fun GroupScreen(
     val groupInfo by groupViewModel.groupInfo.collectAsState()
 
     LaunchedEffect(Unit) {
-        mqttViewModel.testSub { _ ->
-            groupViewModel.fetchGroupInfo { groupInfo ->
-
-                val groupId = groupInfo.groupId
-                val payload = """
-            {
-                "groupInfo": "$groupInfo?.groupName",
-                "timestamp": ${System.currentTimeMillis() / 1000}
-            }
-            """.trimIndent()
-                mqttViewModel.getDeviceInfo(payload, groupId)
-            }
+        groupViewModel.fetchGroupInfo { groupInfo ->
+                mqttViewModel.groupInfoRequestPub("", groupInfo.groupId)
         }
-        delay(100)
-        mqttViewModel.testPub();
     }
 
 
@@ -74,8 +61,7 @@ fun GroupScreen(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(
-                40.dp,
-                alignment = Alignment.CenterVertically
+                40.dp, alignment = Alignment.CenterVertically
             )
         ) {
             //마스터 화면 일 때 버튼 추가
@@ -92,16 +78,14 @@ fun GroupScreen(
                             navController.navigate(
                                 NavRoutes.Monitoring.QRGenerate.createRoute(UserType.CCTV)
                             )
-                        },
-                        text = "CCTV 추가"
+                        }, text = "CCTV 추가"
                     )
                     SmallButton(
                         onClick = {
                             navController.navigate(
                                 NavRoutes.Monitoring.QRGenerate.createRoute(UserType.VIEWER)
                             )
-                        },
-                        text = "참여자 추가"
+                        }, text = "참여자 추가"
                     )
                 }
             }
@@ -113,43 +97,32 @@ fun GroupScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        style = Typography.bodyMedium,
-                        text = "등록된 CCTV가 없습니다.",
-                        color = mainBlack
+                        style = Typography.bodyMedium, text = "등록된 CCTV가 없습니다.", color = mainBlack
                     )
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    items(
-                        items = cctvList,
-                        key = { it.cctvId }
-                    ) { cctvItem ->
-                        CCTVItemCard(
-                            cctv = cctvItem.toCCTV(),
-                            onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set(
-                                    "role",
-                                    ChannelRole.VIEWER
+                    items(items = cctvList, key = { it.cctvId }) { cctvItem ->
+                        CCTVItemCard(cctv = cctvItem.toCCTV(), onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                "role", ChannelRole.VIEWER
+                            )
+                            navController.navigate(
+                                NavRoutes.Monitoring.Viewer.createRoute(
+                                    channelName = cctvItem.kvsChannelName
                                 )
-                                navController.navigate(
-                                    NavRoutes.Monitoring.Viewer.createRoute(
-                                        channelName = cctvItem.kvsChannelName
-                                    )
+                            )
+                        }, onEdit = {
+                            navController.navigate(
+                                NavRoutes.Monitoring.DeviceInformation.createRoute(
+                                    cctvItem.cctvId
                                 )
-                            },
-                            onEdit = {
-                                navController.navigate(
-                                    NavRoutes.Monitoring.DeviceInformation.createRoute(
-                                        cctvItem.cctvId
-                                    )
-                                )
-                            }
-                        )
+                            )
+                        })
 
                     }
                 }
@@ -160,10 +133,7 @@ fun GroupScreen(
 
 fun CctvInfo.toCCTV(): CCTV {
     return CCTV(
-        id = cctvId,
-        deviceName = cctvNickname,
-        thingId = thingId,
-        channelName = kvsChannelName
+        id = cctvId, deviceName = cctvNickname, thingId = thingId, channelName = kvsChannelName
     )
 }
 
