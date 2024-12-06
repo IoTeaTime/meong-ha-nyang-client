@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos
 import com.example.mhnfe.domain.mqtt.shadow.delta.ShadowDeltaMsg
-import com.example.mhnfe.domain.mqtt.topic.DeviceInfoTopic
-import com.example.mhnfe.domain.mqtt.topic.ReportedData
+import com.example.mhnfe.domain.mqtt.shadow.DeviceInfoShadow
+import com.example.mhnfe.domain.mqtt.shadow.ReportedData
 import com.example.mhnfe.utils.DataObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -123,6 +123,7 @@ class MqttViewModel @Inject constructor(
         Log.d(tag, "Subscribed to topics: ${topics.joinToString(", ")}")
     }
 
+
 //    fun ShadowWithSubscribe(thingId: String){
 //        val shadowTopics = listOf(
 //            "\$aws/things/${thingId}/shadow/get/accepted",
@@ -160,21 +161,24 @@ class MqttViewModel @Inject constructor(
     }
 
     // group page cctv 배터리 및 네트워크 정보 subscribe
-    fun createTopicAndShadowWithSubscribe(context: Context, thingList: List<String>, data: (ReportedData?) -> Unit){
+    fun createTopicAndShadowWithSubscribe(context: Context, thingId: String, data: (ReportedData?) -> Unit){
         //topic
-        viewerInitialSubscribe(context,thingList){ reportedData->
-            data(reportedData)
-        }
-
-        //shadow
-        thingList.forEach { thingId ->
-            subscribeShadowWithPayload(thingId){ reportedData->
+        val topic = "/mhn/command/device/info/things/$thingId"
+        subscribe(topic) { receivedTopic, message ->
+            Log.d(tag, "Message received on topic $receivedTopic: $message")
+            handleThingTopicMessage(receivedTopic, message, context){ reportedData->
                 data(reportedData)
             }
         }
 
+        //shadow
+        subscribeShadowWithPayload(thingId){ reportedData->
+            data(reportedData)
+        }
+
         Log.d(tag, "Shadow subscriptions and publication complete.")
     }
+
 
     private fun handleTopicMessage(receivedTopic: String, message: String, context: Context) {
         try {
@@ -223,7 +227,7 @@ class MqttViewModel @Inject constructor(
             val json = Json { ignoreUnknownKeys = true }
 
             // JSON 메시지 디코딩
-            val device: DeviceInfoTopic = json.decodeFromString(message)
+            val device: DeviceInfoShadow = json.decodeFromString(message)
             // JSON 파싱 시 ignoreUnknownKeys = true 설정
             val reportedData: ReportedData? = device.state?.reported
             when {

@@ -436,7 +436,7 @@ class KVSSignalingViewModel : ViewModel() {
                 //뷰어에서 음성전송 받기
                 .setAudioDeviceModule(
                     JavaAudioDeviceModule.builder(getApplicationContext())
-                        .createAudioDeviceModule())
+                    .createAudioDeviceModule())
                 .createPeerConnectionFactory()
 
         } catch(e: Exception) {
@@ -981,7 +981,6 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
 
-    private var isUsingFrontCamera = true
 
     fun initializeSurfaceViews(context: Context, eglBaseContext: EglBase.Context, role: ChannelRole) {
         viewModelScope.launch(Dispatchers.Main) {
@@ -1103,7 +1102,7 @@ class KVSSignalingViewModel : ViewModel() {
                     override fun onAddStream(mediaStream: MediaStream) {
                         super.onAddStream(mediaStream)
                         Log.d(TAG, "Adding remote video stream (and audio) to the view")
-                        addRemoteStreamToVideoView(mediaStream, isMaster)
+                        addRemoteStreamToVideoView(mediaStream)
                     }
 
                     override fun onIceConnectionChange(iceConnectionState: PeerConnection.IceConnectionState) {
@@ -1161,7 +1160,7 @@ class KVSSignalingViewModel : ViewModel() {
                     override fun onAddStream(mediaStream: MediaStream) {
                         super.onAddStream(mediaStream)
                         Log.d(TAG, "Adding remote video stream (and audio) to the view")
-                        addRemoteStreamToVideoView(mediaStream, isMaster)
+                        addRemoteStreamToVideoView(mediaStream)
                     }
 
                     override fun onIceConnectionChange(iceConnectionState: PeerConnection.IceConnectionState) {
@@ -1419,7 +1418,7 @@ class KVSSignalingViewModel : ViewModel() {
         }
     }
 
-    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean, ) {
+    private fun addRemoteStreamToVideoView(stream: MediaStream) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 val remoteVideoTrack = stream.videoTracks.firstOrNull()
@@ -1439,21 +1438,18 @@ class KVSSignalingViewModel : ViewModel() {
                     Log.d(TAG, "Remote audio track found: ${audioTrack.id()}, enabled: ${audioTrack.enabled()}")
                     audioTrack.setEnabled(true)
                 } ?: Log.e(TAG, "No audio tracks in remote stream")
-                if (!isMaster) {
-                    remoteVideoTrack?.let { videoTrack ->
-                        Log.d(
-                            TAG,
-                            "remoteVideoTrackId=${videoTrack.id()} videoTrackState=${videoTrack.state()}"
-                        )
-                        _remoteView.value?.let { renderer ->
-                            try {
-                                videoTrack.addSink(renderer)
-                            } catch (e: Exception) {
-                                Log.e(TAG, "Error adding sink to remote video track", e)
-                            }
-                        } ?: Log.e(TAG, "Remote renderer is null")
-                    } ?: Log.e(TAG, "Remote video track is null")
-                }
+
+
+                remoteVideoTrack?.let { videoTrack ->
+                    Log.d(TAG, "remoteVideoTrackId=${videoTrack.id()} videoTrackState=${videoTrack.state()}")
+                    _remoteView.value?.let { renderer ->
+                        try {
+                            videoTrack.addSink(renderer)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error adding sink to remote video track", e)
+                        }
+                    } ?: Log.e(TAG, "Remote renderer is null")
+                } ?: Log.e(TAG, "Remote video track is null")
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error in setting remote stream", e)
@@ -1582,10 +1578,12 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
     private var isBackCamera = false
-    private var videoTrack: VideoTrack? = null
+    private val _isCameraSwitching = MutableStateFlow(false)
+    val isCameraSwitching: StateFlow<Boolean> = _isCameraSwitching
 
     fun switchCamera(context: Context) {
         viewModelScope.launch {
+            _isCameraSwitching.value = true
             try {
                 (videoCapturer as? CameraVideoCapturer)?.let { capturer ->
                     val enumerator = Camera1Enumerator(false)
@@ -1605,9 +1603,6 @@ class KVSSignalingViewModel : ViewModel() {
                         capturer.switchCamera(object : CameraVideoCapturer.CameraSwitchHandler {
                             override fun onCameraSwitchDone(isFrontCamera: Boolean) {
                                 isBackCamera = !isFrontCamera
-                                isUsingFrontCamera = isFrontCamera
-                                _localView.value?.setMirror(isFrontCamera)
-                                _remoteView.value?.setMirror(!isFrontCamera)
                                 Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
                             }
 
@@ -1625,6 +1620,8 @@ class KVSSignalingViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("Camera", "카메라 전환 중 에러 발생", e)
+            } finally {
+                _isCameraSwitching.value = false
             }
         }
     }
@@ -1716,8 +1713,8 @@ class KVSSignalingViewModel : ViewModel() {
             }
         }
     }
-}
 
+}
 
 
 

@@ -1,6 +1,5 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,11 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -29,7 +25,6 @@ import com.example.mhnfe.data.model.CCTV
 import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
-import com.example.mhnfe.domain.mqtt.topic.ReportedData
 import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
@@ -45,23 +40,11 @@ fun GroupScreen(
     mqttViewModel: MqttViewModel = hiltViewModel(),
     groupViewModel: GroupViewModel = hiltViewModel(),
 ) {
-    val context = LocalContext.current
-    var connectionState: Boolean = false
     val groupInfo by groupViewModel.groupInfo.collectAsState()
 
-    LaunchedEffect(Unit, groupInfo) {
+    LaunchedEffect(Unit) {
         mqttViewModel.testSub { _ ->
             groupViewModel.fetchGroupInfo { groupInfo ->
-
-                //cctv 배터리 및 네트워크 mqtt 연결
-                val cctvList = groupInfo?.cctv ?: emptyList()
-                val thingList = cctvList.mapNotNull { it.thingId }
-
-                if (thingList.isNotEmpty()) {
-                    mqttViewModel.createTopicAndShadowWithSubscribe(context,thingList){ data->
-                        data
-                    }
-                }
 
                 val groupId = groupInfo.groupId
                 val payload = """
@@ -167,6 +150,7 @@ fun GroupScreen(
                                 )
                             }
                         )
+
                     }
                 }
             }
