@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos
 import com.example.mhnfe.domain.mqtt.shadow.delta.ShadowDeltaMsg
-import com.example.mhnfe.domain.mqtt.topic.DeviceInfoTopic
-import com.example.mhnfe.domain.mqtt.topic.ReportedData
+import com.example.mhnfe.domain.mqtt.shadow.DeviceInfoShadow
+import com.example.mhnfe.domain.mqtt.shadow.ReportedData
 import com.example.mhnfe.utils.DataObserver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -227,7 +227,7 @@ class MqttViewModel @Inject constructor(
             val json = Json { ignoreUnknownKeys = true }
 
             // JSON 메시지 디코딩
-            val device: DeviceInfoTopic = json.decodeFromString(message)
+            val device: DeviceInfoShadow = json.decodeFromString(message)
             // JSON 파싱 시 ignoreUnknownKeys = true 설정
             val reportedData: ReportedData? = device.state?.reported
             when {
