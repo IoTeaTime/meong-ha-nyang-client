@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.screens.auth.signup
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.SpanStyle
 
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -322,6 +324,8 @@ fun SignUpScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
+                val context = LocalContext.current
+
                 if (currentStep == 0) {
                     MiddleButton(
                         text = "확인",
@@ -344,6 +348,7 @@ fun SignUpScreen(
                                                         emailErrorMessage = ""
                                                         isEmailError = false
                                                         errorMessage = null
+                                                        Toast.makeText(context, "인증코드가 메일로 전송되었습니다.", Toast.LENGTH_SHORT).show()
                                                         currentStep++
                                                     }
                                                     500 -> {
@@ -453,13 +458,16 @@ fun SignUpScreen(
                             }
                         }
                     )
+                    val context = LocalContext.current
 
                     LaunchedEffect(signUpResponse) {
                         signUpResponse?.let { response ->
                             if (response.result.code == 201) {
+                                Toast.makeText(context, "회원가입을 완료하였습니다.", Toast.LENGTH_SHORT).show()
                                 Log.d("SignUpScreen", "회원가입 성공: ${response.result.message} ${response.result.description}")
                                 onLoginClick()
                             } else {
+                                Toast.makeText(context, "회원가입을 실패하였습니다.", Toast.LENGTH_SHORT).show()
                                 Log.e("SignUpScreen", "회원가입 실패: ${response.result.message} ${response.result.description}")
                             }
                         }
