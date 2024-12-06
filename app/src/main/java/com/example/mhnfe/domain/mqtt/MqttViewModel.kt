@@ -309,7 +309,7 @@ class MqttViewModel @Inject constructor(
         timestamp: Long,
         objectName: String,
         confidence: Double,
-        coordinatesJson: String
+        coordinates: String
     ) {
         val payload =
             """
@@ -318,7 +318,7 @@ class MqttViewModel @Inject constructor(
                     "timestamp": ${System.currentTimeMillis() / 1000}, 
                     "objectType": "$objectName",
                     "confidence": "$confidence",
-                    "coordinates": $coordinatesJson
+                    "coordinates": $coordinates
                }
             """.trimIndent()
 
