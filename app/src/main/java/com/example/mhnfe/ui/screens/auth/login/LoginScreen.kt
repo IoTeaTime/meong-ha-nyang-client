@@ -33,7 +33,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -135,7 +134,7 @@ fun LoginScreen(
                         onIsErrorChange = {passwordError = it},
                         warningText = errorMessage ?: "",
                         hintText = "비밀번호",
-                        visualTransformation = PasswordVisualTransformation()
+                        isPasswordField = true
                     )
 
                     // 자동 로그인 체크박스

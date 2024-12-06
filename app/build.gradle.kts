@@ -90,6 +90,9 @@ dependencies {
 
     val nav_version = "2.8.0"
 
+    // Compose Material Icons
+    implementation ("androidx.compose.material:material-icons-extended:x.x.x")
+
     // Retrofit library for making HTTP requests to the server
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     // Gson converter library
