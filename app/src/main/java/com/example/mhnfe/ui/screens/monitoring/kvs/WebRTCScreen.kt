@@ -24,9 +24,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +53,7 @@ import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
+import com.example.mhnfe.ui.theme.mainGray
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -65,6 +63,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.webrtc.EglBase
 import org.webrtc.Logging
+
 
 @Composable
 @SuppressLint("HardwareIds")
@@ -94,7 +93,8 @@ fun WebRtcScreen(
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize()
             if (result) {
-                mqttViewModel.createShadowWithSubscribe(context, 17)
+                mqttViewModel.cctvShadow(context, 1)
+                mqttViewModel.cctvInfoSub(context)
             }
         }
         if (role == ChannelRole.MASTER && mqttState) {
@@ -104,7 +104,7 @@ fun WebRtcScreen(
                 },
                 onPayloadReady = { payload ->
                     try {
-                        mqttViewModel.publishAIResult(payload)
+                        mqttViewModel.cctvAiResultPub(payload)
                     } catch (e: Exception) {
                         Log.e("WebRTCScreen", "Failed to publish AI event", e)
                     }
@@ -377,16 +377,6 @@ fun WebRtcScreen(
                                 tint = Color.Unspecified
                             )
                         }
-
-                        // MQTT 기기 상태 요청 테스트
-                        Button(
-                            onClick = {
-
-                            },
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Text("기기 정보 요청 발행")
-                        }
                     }
                     Row(
                         modifier = modifier
@@ -420,9 +410,11 @@ fun WebRtcScreen(
                                 )
                             }
                         }else {
-                            // MASTER인 경우 빈 공간
-                            Spacer(
-                                modifier = Modifier.size(100.dp)
+                            Text(
+                                modifier = modifier.background(Color.White, shape = CircleShape).padding(10.dp),
+                                text = "10초 후 절전 모드가 실행됩니다",
+                                color = mainBlack,
+                                style = Typography.labelSmall,
                             )
                         }
 

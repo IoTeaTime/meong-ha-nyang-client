@@ -25,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -34,7 +33,6 @@ import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.SubTopBar
 import com.example.mhnfe.ui.screens.monitoring.device.DeviceViewModel
-import com.example.mhnfe.ui.screens.monitoring.group.GroupViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray2
@@ -44,21 +42,14 @@ fun DeviceInfoScreen(
     modifier: Modifier = Modifier,
     cctvId: Long,
     navController: NavController,
-    groupViewModel: GroupViewModel = hiltViewModel(),
     mqttViewModel: MqttViewModel = hiltViewModel(),
     deviceViewModel: DeviceViewModel = hiltViewModel()
 ) {
-    val groupInfo by groupViewModel.groupInfo.collectAsState()
     val cctv by deviceViewModel.cctv.collectAsState()
-
-    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         deviceViewModel.getCctvInfo(cctvId) { cctvInfo ->
-            mqttViewModel.viewerInitialSubscribe(context, listOf(cctvInfo.thingId)) { reportedData->
-                cctv?.networkStatus = reportedData?.networkStatus.toString()
-                cctv?.batteryStatus = reportedData?.batteryLevel!!
-            }
+            mqttViewModel.cctvInfoRequestPub(cctvInfo.thingId)
         }
     }
 
