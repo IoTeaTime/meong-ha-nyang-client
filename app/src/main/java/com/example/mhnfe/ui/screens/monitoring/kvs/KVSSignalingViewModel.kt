@@ -859,7 +859,7 @@ class KVSSignalingViewModel : ViewModel() {
     val frameData = _frameData.asStateFlow()
 
     private var lastFrameTime = 0L
-    private val frameInterval = 200L // 1초 간격
+    private val frameInterval = 500L // 1초 간격
 
 
     private fun convertI420ToBitmap(buffer: VideoFrame.I420Buffer) {
@@ -1578,9 +1578,12 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
     private var isBackCamera = false
+    private val _isCameraSwitching = MutableStateFlow(false)
+    val isCameraSwitching: StateFlow<Boolean> = _isCameraSwitching
 
     fun switchCamera(context: Context) {
         viewModelScope.launch {
+            _isCameraSwitching.value = true
             try {
                 (videoCapturer as? CameraVideoCapturer)?.let { capturer ->
                     val enumerator = Camera1Enumerator(false)
@@ -1617,6 +1620,8 @@ class KVSSignalingViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("Camera", "카메라 전환 중 에러 발생", e)
+            } finally {
+                _isCameraSwitching.value = false
             }
         }
     }
