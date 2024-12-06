@@ -436,7 +436,7 @@ class KVSSignalingViewModel : ViewModel() {
                 //뷰어에서 음성전송 받기
                 .setAudioDeviceModule(
                     JavaAudioDeviceModule.builder(getApplicationContext())
-                    .createAudioDeviceModule())
+                        .createAudioDeviceModule())
                 .createPeerConnectionFactory()
 
         } catch(e: Exception) {
@@ -1102,7 +1102,7 @@ class KVSSignalingViewModel : ViewModel() {
                     override fun onAddStream(mediaStream: MediaStream) {
                         super.onAddStream(mediaStream)
                         Log.d(TAG, "Adding remote video stream (and audio) to the view")
-                        addRemoteStreamToVideoView(mediaStream)
+                        addRemoteStreamToVideoView(mediaStream, isMaster)
                     }
 
                     override fun onIceConnectionChange(iceConnectionState: PeerConnection.IceConnectionState) {
@@ -1160,7 +1160,7 @@ class KVSSignalingViewModel : ViewModel() {
                     override fun onAddStream(mediaStream: MediaStream) {
                         super.onAddStream(mediaStream)
                         Log.d(TAG, "Adding remote video stream (and audio) to the view")
-                        addRemoteStreamToVideoView(mediaStream)
+                        addRemoteStreamToVideoView(mediaStream, isMaster)
                     }
 
                     override fun onIceConnectionChange(iceConnectionState: PeerConnection.IceConnectionState) {
@@ -1418,7 +1418,7 @@ class KVSSignalingViewModel : ViewModel() {
         }
     }
 
-    private fun addRemoteStreamToVideoView(stream: MediaStream) {
+    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean, ) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 val remoteVideoTrack = stream.videoTracks.firstOrNull()
@@ -1438,18 +1438,21 @@ class KVSSignalingViewModel : ViewModel() {
                     Log.d(TAG, "Remote audio track found: ${audioTrack.id()}, enabled: ${audioTrack.enabled()}")
                     audioTrack.setEnabled(true)
                 } ?: Log.e(TAG, "No audio tracks in remote stream")
-
-
-                remoteVideoTrack?.let { videoTrack ->
-                    Log.d(TAG, "remoteVideoTrackId=${videoTrack.id()} videoTrackState=${videoTrack.state()}")
-                    _remoteView.value?.let { renderer ->
-                        try {
-                            videoTrack.addSink(renderer)
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Error adding sink to remote video track", e)
-                        }
-                    } ?: Log.e(TAG, "Remote renderer is null")
-                } ?: Log.e(TAG, "Remote video track is null")
+                if (!isMaster) {
+                    remoteVideoTrack?.let { videoTrack ->
+                        Log.d(
+                            TAG,
+                            "remoteVideoTrackId=${videoTrack.id()} videoTrackState=${videoTrack.state()}"
+                        )
+                        _remoteView.value?.let { renderer ->
+                            try {
+                                videoTrack.addSink(renderer)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error adding sink to remote video track", e)
+                            }
+                        } ?: Log.e(TAG, "Remote renderer is null")
+                    } ?: Log.e(TAG, "Remote video track is null")
+                }
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error in setting remote stream", e)
@@ -1576,6 +1579,7 @@ class KVSSignalingViewModel : ViewModel() {
         _localView.value = null
         _remoteView.value = null
     }
+
 
     private var isBackCamera = false
     private val _isCameraSwitching = MutableStateFlow(false)
@@ -1713,8 +1717,8 @@ class KVSSignalingViewModel : ViewModel() {
             }
         }
     }
-
 }
+
 
 
 
