@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.screens.auth.signup
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.SpanStyle
 
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -260,7 +262,8 @@ fun SignUpScreen(
                                 passwordErrorMessage = ""
                             },
                             hintText = "8자리 이상 입력해주세요",
-                            warningText = passwordErrorMessage
+                            warningText = passwordErrorMessage,
+                            isPasswordField = true
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "비밀번호 확인")
@@ -274,7 +277,8 @@ fun SignUpScreen(
                                 isConfirmPasswordError = false
                             },
                             hintText = "비밀번호를 한번 더 입력해주세요",
-                            warningText = if (isConfirmPasswordError) "비밀번호가 일치하지 않습니다." else ""
+                            warningText = if (isConfirmPasswordError) "비밀번호가 일치하지 않습니다." else "",
+                            isPasswordField = true
                         )
                     }
                     3 -> {
@@ -322,6 +326,8 @@ fun SignUpScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
+                val context = LocalContext.current
+
                 if (currentStep == 0) {
                     MiddleButton(
                         text = "확인",
@@ -344,6 +350,7 @@ fun SignUpScreen(
                                                         emailErrorMessage = ""
                                                         isEmailError = false
                                                         errorMessage = null
+                                                        Toast.makeText(context, "인증코드가 메일로 전송되었습니다.", Toast.LENGTH_SHORT).show()
                                                         currentStep++
                                                     }
                                                     500 -> {
@@ -453,13 +460,16 @@ fun SignUpScreen(
                             }
                         }
                     )
+                    val context = LocalContext.current
 
                     LaunchedEffect(signUpResponse) {
                         signUpResponse?.let { response ->
                             if (response.result.code == 201) {
+                                Toast.makeText(context, "회원가입에 성공하였습니다.", Toast.LENGTH_SHORT).show()
                                 Log.d("SignUpScreen", "회원가입 성공: ${response.result.message} ${response.result.description}")
                                 onLoginClick()
                             } else {
+                                Toast.makeText(context, "회원가입에 실패하였습니다.", Toast.LENGTH_SHORT).show()
                                 Log.e("SignUpScreen", "회원가입 실패: ${response.result.message} ${response.result.description}")
                             }
                         }
