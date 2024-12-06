@@ -67,10 +67,9 @@ class QRRepositoryImpl @Inject constructor(
         return response
     }
     override suspend fun getCctvInfo(): CctvInfoResponse{
-        val cctvId = cctvResponseDataStore.data.map { it.cctvId }.first()
         val cctvAccessToken = cctvResponseDataStore.data.map { it.accessToken }.first()
         return withContext(Dispatchers.IO) {
-            qrApi.cctvIdInfo(cctvAccessToken, cctvId)
+            qrApi.cctvIdInfo(cctvAccessToken)
         }
     }
 }
