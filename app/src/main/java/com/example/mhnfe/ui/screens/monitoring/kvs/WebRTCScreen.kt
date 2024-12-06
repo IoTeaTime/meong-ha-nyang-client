@@ -52,6 +52,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
+import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.screens.auth.main.MainViewModel
 import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
@@ -75,7 +77,8 @@ fun WebRtcScreen(
     role: ChannelRole,
     viewModel: KVSSignalingViewModel,
     mqttViewModel: MqttViewModel = hiltViewModel(),
-    aiViewModel: AiViewModel = hiltViewModel()
+    aiViewModel: AiViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -90,11 +93,30 @@ fun WebRtcScreen(
     val isRecording = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        // Todo. 그룹 ID 반환 로직 추가
+        var groupId = 0
+        mainViewModel.getCctvAccessToken { cctvAccessToken ->
+            if(cctvAccessToken != "") {
+                mainViewModel.fetchCctvId(
+                    onSuccess = { cctvInfo ->
+                        Log.d(
+                            "MainScreen",
+                            "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}"
+                        )
+                        groupId = cctvInfo.body.groupId
+                    },
+                    onFailure = { fetchError ->
+                        Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
+                    }
+                )
+            }
+        }
+
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize()
             if (result) {
-                mqttViewModel.cctvShadow(context, 1)
+                if (groupId != 0) {
+                    mqttViewModel.cctvShadow(context, groupId)
+                }
                 mqttViewModel.cctvInfoSub(context)
             }
         }

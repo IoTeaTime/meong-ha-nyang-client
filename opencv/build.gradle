@@ -120,6 +120,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    kotlinOptions {
+        jvmTarget = "17" // Kotlin JVM 타겟을 Java 17에 맞게 설정
+    }
 
     buildTypes {
         debug {
