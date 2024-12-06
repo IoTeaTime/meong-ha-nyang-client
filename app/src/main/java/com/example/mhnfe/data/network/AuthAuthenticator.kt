@@ -1,5 +1,6 @@
 package com.example.mhnfe.data.network
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.token.TokenManager
@@ -16,13 +17,21 @@ class AuthAuthenticator @Inject constructor(
     private val tokenManager: TokenManager
 ) : Authenticator {
 
-    override fun authenticate(route: Route?, response: Response): Request {
-        if (response.code == HTTP_UNAUTHORIZED) {
+    override fun authenticate(route: Route?, response: Response): Request? {
+        // URL에 "open-api"가 포함된 요청은 인증 로직을 건너뜀
+        val urlPath = response.request.url.encodedPath // 예: "/api/v1/open-api/resource"
+        if (urlPath.startsWith("/open-api/auth/check-verification")) {
+            Log.d("AuthAuthenticator","AuthAuthenticator pass urlPath")
+        }
+
+        else if (response.code == HTTP_UNAUTHORIZED) {
             // The access token is expired. Refresh the credentials.
+            Log.d("AuthAuthenticator","AuthAuthenticator Start")
             synchronized(this) {
                 // Make sure only one coroutine refreshes the token at a time.
                 return runBlocking {
                     val newTokenResult = tokenManager.refreshAccessToken()
+                    Log.d("AuthAuthenticator","AuthAuthenticator get newToken!!}")
                     if (newTokenResult!=null) {
                         val accessToken = newTokenResult
                         // Update the access token in your storage.
@@ -33,12 +42,13 @@ class AuthAuthenticator @Inject constructor(
                             .header("Authorization", accessToken)
                             .build()
                     } else {
+                        Log.d("AuthAuthenticator","AuthAuthenticator failed by expired refreshToken!!")
                         return@runBlocking response.request
                     }
                 }
             }
         }
-        return response.request
+        return null
     }
 }
 
