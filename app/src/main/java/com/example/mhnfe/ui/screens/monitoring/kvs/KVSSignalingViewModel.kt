@@ -436,7 +436,7 @@ class KVSSignalingViewModel : ViewModel() {
                 //뷰어에서 음성전송 받기
                 .setAudioDeviceModule(
                     JavaAudioDeviceModule.builder(getApplicationContext())
-                    .createAudioDeviceModule())
+                        .createAudioDeviceModule())
                 .createPeerConnectionFactory()
 
         } catch(e: Exception) {
@@ -999,7 +999,7 @@ class KVSSignalingViewModel : ViewModel() {
                 val remoteRenderer = SurfaceViewRenderer(context).apply {
                     init(eglBaseContext, null)
                     setEnableHardwareScaler(true)
-                    setMirror(true)
+                    setMirror(false)
                 }
 
                 _localView.value = localRenderer
@@ -1419,7 +1419,7 @@ class KVSSignalingViewModel : ViewModel() {
         }
     }
 
-    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean) {
+    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean, ) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 val remoteVideoTrack = stream.videoTracks.firstOrNull()
@@ -1447,7 +1447,6 @@ class KVSSignalingViewModel : ViewModel() {
                         )
                         _remoteView.value?.let { renderer ->
                             try {
-                                renderer.setMirror(isUsingFrontCamera)
                                 videoTrack.addSink(renderer)
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error adding sink to remote video track", e)
@@ -1583,6 +1582,7 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
     private var isBackCamera = false
+    private var videoTrack: VideoTrack? = null
 
     fun switchCamera(context: Context) {
         viewModelScope.launch {
@@ -1606,8 +1606,8 @@ class KVSSignalingViewModel : ViewModel() {
                             override fun onCameraSwitchDone(isFrontCamera: Boolean) {
                                 isBackCamera = !isFrontCamera
                                 isUsingFrontCamera = isFrontCamera
-                                _localView.value?.setMirror(true)
-                                _remoteView.value?.setMirror(isFrontCamera)
+                                _localView.value?.setMirror(isFrontCamera)
+                                _remoteView.value?.setMirror(!isFrontCamera)
                                 Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
                             }
 
@@ -1716,27 +1716,8 @@ class KVSSignalingViewModel : ViewModel() {
             }
         }
     }
-    private val _isAudioEnabled = MutableStateFlow(true)
-    val isAudioEnabled = _isAudioEnabled.asStateFlow()
-
-    fun toggleAudio() {
-        viewModelScope.launch {
-            _isAudioEnabled.value = !_isAudioEnabled.value
-            // remoteAudioTrack의 상태를 업데이트
-            _remoteVideoTrack.value?.let { track ->
-                track.setEnabled(_isAudioEnabled.value)
-            }
-            val audioManager = applicationContext?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-            if (_isAudioEnabled.value) {
-                audioManager?.mode = AudioManager.MODE_IN_COMMUNICATION
-                audioManager?.isSpeakerphoneOn = true
-            } else {
-                audioManager?.isSpeakerphoneOn = false
-            }
-        }
-    }
-
 }
+
 
 
 
