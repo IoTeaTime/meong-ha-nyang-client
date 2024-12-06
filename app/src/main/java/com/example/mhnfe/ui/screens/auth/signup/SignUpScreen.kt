@@ -262,7 +262,8 @@ fun SignUpScreen(
                                 passwordErrorMessage = ""
                             },
                             hintText = "8자리 이상 입력해주세요",
-                            warningText = passwordErrorMessage
+                            warningText = passwordErrorMessage,
+                            isPasswordField = true
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "비밀번호 확인")
@@ -276,7 +277,8 @@ fun SignUpScreen(
                                 isConfirmPasswordError = false
                             },
                             hintText = "비밀번호를 한번 더 입력해주세요",
-                            warningText = if (isConfirmPasswordError) "비밀번호가 일치하지 않습니다." else ""
+                            warningText = if (isConfirmPasswordError) "비밀번호가 일치하지 않습니다." else "",
+                            isPasswordField = true
                         )
                     }
                     3 -> {
