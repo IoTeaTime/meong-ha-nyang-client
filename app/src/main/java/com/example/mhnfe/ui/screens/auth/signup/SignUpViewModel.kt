@@ -29,13 +29,6 @@ class SignUpViewModel @Inject constructor(
     private val _emailCheckResponse = MutableStateFlow<CheckEmailResponse?>(null)
     val emailCheckResponse: StateFlow<CheckEmailResponse?> = _emailCheckResponse
 
-    private val _sendEmailVerificationResponse = MutableStateFlow<SendEmailVerificationResponse?>(null)
-    val sendEmailVerificationResponse: StateFlow<SendEmailVerificationResponse?> = _sendEmailVerificationResponse
-
-    private val _checkEmailVerificationResponse = MutableStateFlow<CheckEmailVerificationResponse?>(null)
-    val checkEmailVerificationResponse: StateFlow<CheckEmailVerificationResponse?> = _checkEmailVerificationResponse
-
-
     suspend fun checkEmailStatus(email: String): Pair<Int, String> {
 //        Log.d("SignUpScreen", "checkEmailDuplicate 호출, email=$email")
         return try {
@@ -74,45 +67,45 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
-    fun sendEmailVerification(email: String) {
-        viewModelScope.launch {
-            try {
-                val response = authRepository.sendEmailVerification(email)
-                if (response.result.code == 200)
-                {
-                    _sendEmailVerificationResponse.value = response
-                    _errorMessage.value = null
-                } else {
-                    _errorMessage.value = "가입된 계정이 아닙니다."
-                }
-            } catch (e: HttpException) {
-                _sendEmailVerificationResponse.value = null
-                _errorMessage.value = e.message()
-            } catch (e: Exception) {
-                _sendEmailVerificationResponse.value = null
-                _errorMessage.value = "인증 메일 전송 중 오류가 발생했습니다."
+    suspend fun sendEmailVerification(email: String): Pair<Int, String> {
+        return try {
+            // API call
+            val response = authRepository.sendEmailVerification(email)
+
+            // Response handling
+            when (response.result.code) {
+                200 -> Pair(200, response.result.description ?: "이메일이 정상적으로 전송되었습니다.")
+                500 -> Pair(500, response.result.description ?: "올바른 이메일이 아닙니다.")
+                else -> Pair(response.result.code, response.result.description ?: "알 수 없는 상태")
             }
+        } catch (e: HttpException) {
+            // HTTP exception handling
+            val statusCode = e.code()
+            val errorMessage = e.message ?: "알 수 없는 오류"
+            Log.e("SignUpViewModel", "sendEmailVerification: HTTP 예외 발생 - 코드: $statusCode, 메시지: $errorMessage", e)
+
+            Pair(statusCode, "HTTP 오류 발생: $errorMessage")
         }
     }
 
-    fun checkEmailVerification(email: String, code: String) {
-        viewModelScope.launch {
-            try {
-                val response = authRepository.checkEmailVerification(email, code)
-                if(response.result.code == 200)
-                {
-                    _checkEmailVerificationResponse.value = response
-                    _errorMessage.value = null
-                } else {
-                    _errorMessage.value = "인증 코드가 일치하지 않습니다."
-                }
-            } catch (e: HttpException) {
-                _sendEmailVerificationResponse.value = null
-                _errorMessage.value = e.message()
-            } catch (e: Exception) {
-                _sendEmailVerificationResponse.value = null
-                _errorMessage.value = "인증 메일 인증 중 오류가 발생했습니다."
+    suspend fun checkEmailVerification(email: String, code: String): Pair<Int, String> {
+        return try {
+            // API call
+            val response = authRepository.checkEmailVerification(email, code)
+
+            // Response handling
+            when (response.result.code) {
+                200 -> Pair(200, response.result.description ?: "올바른 인증 번호 입니다.")
+                401 -> Pair(401, response.result.description ?: "이메일 인증 코드가 일치하지 않습니다.")
+                else -> Pair(response.result.code, response.result.description ?: "알 수 없는 상태")
             }
+        } catch (e: HttpException) {
+            // HTTP exception handling
+            val statusCode = e.code()
+            val errorMessage = e.message ?: "알 수 없는 오류"
+            Log.e("SignUpViewModel", "checkEmailVerification: HTTP 예외 발생 - 코드: $statusCode, 메시지: $errorMessage", e)
+
+            Pair(statusCode, "HTTP 오류 발생: $errorMessage")
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.mhnfe.data.network
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.response.AccessToken
 import kotlinx.coroutines.flow.first
@@ -14,16 +15,18 @@ class AuthInterceptor @Inject constructor(
     private val accessTokenDataStore: DataStore<AccessToken>
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
+        Log.d("AuthInterceptor","AuthInterceptor Start!!")
         return runBlocking {
             val accessToken = accessTokenDataStore.data.map { it.accessToken }.first()
 
             // 헤더에 "Authorization" 키가 존재하는 경우에만 intercept 수행
             val request = if (accessToken.isNotEmpty() && chain.request().headers["Authorization"] != null) {
+                Log.d("AuthInterceptor","AuthInterceptor Success!!")
                 chain.request().putTokenHeader(accessToken)
             } else {
                 chain.request()
             }
-
+            Log.d("AuthInterceptor","AuthInterceptor Pass")
             chain.proceed(request)
         }
     }
