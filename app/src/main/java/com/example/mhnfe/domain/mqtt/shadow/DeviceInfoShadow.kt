@@ -1,9 +1,9 @@
-package com.example.mhnfe.domain.mqtt.topic
+package com.example.mhnfe.domain.mqtt.shadow
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DeviceInfoTopic(
+data class DeviceInfoShadow(
     val state: State? = null,
     val metadata: Metadata? = null,
     val version: Int? = null,

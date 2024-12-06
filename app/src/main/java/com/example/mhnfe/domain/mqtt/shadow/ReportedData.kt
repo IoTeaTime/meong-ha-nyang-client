@@ -1,4 +1,4 @@
-package com.example.mhnfe.domain.mqtt.topic
+package com.example.mhnfe.domain.mqtt.shadow
 
 import kotlinx.serialization.Serializable
 
