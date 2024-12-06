@@ -93,6 +93,7 @@ fun WebRtcScreen(
     val isViewsInitialized by viewModel.isViewsInitialized.collectAsState()
     val mqttState by mqttViewModel.isConnected.collectAsState()
     val window = (context as? Activity)?.window
+    val isCameraSwitching by viewModel.isCameraSwitching.collectAsState()
     val isRecording = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -244,11 +245,15 @@ fun WebRtcScreen(
                             try {
                                 viewModel.frameData
                                     .onEach { bitmap ->
-                                        bitmap?.let {
-                                            withContext(Dispatchers.Default) {
-                                                aiViewModel.processFrame(it)
-                                            }
-                                        } ?: Log.d("WebRtcScreen", "Received null bitmap")
+                                        if (!isCameraSwitching) {
+                                            bitmap?.let {
+                                                withContext(Dispatchers.Default) {
+                                                    aiViewModel.processFrame(it)
+                                                }
+                                            } ?: Log.d("WebRtcScreen", "Received null bitmap")
+                                        } else {
+                                            Log.d("WebRtcScreen", "Skipping frame processing due to camera switching")
+                                        }
                                     }
                                     .catch { e ->
                                         Log.e("WebRtcScreen", "Error collecting frames", e)
