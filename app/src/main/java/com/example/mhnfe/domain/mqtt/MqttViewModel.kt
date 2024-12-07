@@ -143,6 +143,21 @@ class MqttViewModel @Inject constructor(
         }
     }
 
+    fun groupShadowSub(thingId: String, data: (ReportedData?) -> Unit) {
+        val topic = "\$aws/things/${thingId}/shadow/update/accepted"
+        Log.d(tag, "Subscribe shadow accepted: \$aws/things/${thingId}/shadow/update/accepted")
+        try {
+            subscribe(topic, { receivedTopic, message ->
+                Log.d(tag, "Message received on topic $receivedTopic: $message")
+                groupShadowReceiveHandler(receivedTopic, message) { reportedData ->
+                    data(reportedData)
+                }
+            })
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to publish shadow get: ${e.message}", e)
+        }
+    }
+
 
     private fun cctvReceiveHandler(receivedTopic: String, message: String, context: Context) {
         try {
@@ -182,7 +197,7 @@ class MqttViewModel @Inject constructor(
     }
 
     //group screen shadow handler
-    private fun groupPageHandleShadowMessage(
+    private fun groupShadowReceiveHandler(
         topic: String,
         message: String,
         data: (ReportedData?) -> Unit
@@ -330,30 +345,9 @@ class MqttViewModel @Inject constructor(
         publish("/mhn/event/detect/things/$thingId", payload)
     }
 
-
-    //shadow
-    fun subscribeShadowWithPayload(thingId: String, data: (ReportedData?) -> Unit) {
-        val topic = "\$aws/things/${thingId}/shadow/update/accepted"
-        Log.d(tag, "Subscribe shadow accepted: \$aws/things/${thingId}/shadow/update/accepted")
-        try {
-            subscribe(topic, { receivedTopic, message ->
-                Log.d(tag, "Message received on topic $receivedTopic: $message")
-                groupPageHandleShadowMessage(receivedTopic, message) { reportedData ->
-                    data(reportedData)
-                }
-            })
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to publish shadow get: ${e.message}", e)
-        }
-    }
-
     private fun publish(topic: String, payload: String) {
-        try {
-            awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
-            Log.d(tag, "Published to topic $topic: \n $payload")
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to publish message: ${e.message}", e)
-        }
+        awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
+        Log.d(tag, "Published to topic $topic: \n $payload")
     }
 
     private fun subscribe(topic: String, onMessageReceived: (String, String) -> Unit) {
