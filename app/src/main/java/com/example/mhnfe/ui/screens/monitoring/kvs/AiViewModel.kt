@@ -29,7 +29,7 @@ class AiViewModel @Inject constructor(
 
     fun processFrame(
         bitmap: Bitmap?,
-        onResult: (Int, String, Float, List<Map<String, Float>>) -> Unit
+        onResult: (Int, String, Float, List<Map<String, Int>>) -> Unit
     ) {
         viewModelScope.launch {
             try {
