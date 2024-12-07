@@ -251,7 +251,9 @@ fun WebRtcScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column (
-                            modifier.fillMaxSize().background(color = Color.White),
+                            modifier
+                                .fillMaxSize()
+                                .background(color = Color.White),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
                         ) {
@@ -276,7 +278,12 @@ fun WebRtcScreen(
                                             bitmap?.let {
                                                 withContext(Dispatchers.Default) {
                                                     aiViewModel.processFrame(it) { trackingId, coordinatesJson, objectName, confidence ->
-                                                        mqttViewModel.eventTopic(trackingId, coordinatesJson, objectName, confidence)
+                                                        mqttViewModel.eventTopic(
+                                                            trackingId,
+                                                            objectName,
+                                                            coordinatesJson,
+                                                            confidence
+                                                        )
                                                     }
                                                 }
                                             } ?: Log.d("WebRtcScreen", "Received null bitmap")
@@ -292,7 +299,6 @@ fun WebRtcScreen(
                                 Log.e("WebRtcScreen", "Frame collection failed", e)
                             }
                         }
-
                         //UI
                         if (isViewsInitialized) {
                             localView?.let { renderer ->
@@ -400,7 +406,9 @@ fun WebRtcScreen(
                             }
                         }else {
                             Text(
-                                modifier = modifier.background(Color.White, shape = CircleShape).padding(10.dp),
+                                modifier = modifier
+                                    .background(Color.White, shape = CircleShape)
+                                    .padding(10.dp),
                                 text = "10초 후 절전 모드가 실행됩니다",
                                 color = mainBlack,
                                 style = Typography.labelSmall,
