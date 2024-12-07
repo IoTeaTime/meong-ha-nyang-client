@@ -89,7 +89,7 @@ fun LoginScreen(
             modifier = modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(horizontal = 34.dp, vertical = 30.dp),
+                .padding(horizontal = 34.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -106,13 +106,13 @@ fun LoginScreen(
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "로고",
-                    modifier = Modifier.size(250.dp),
+                    modifier = modifier.size(250.dp),
                     contentScale = ContentScale.Fit
                 )
 
                 // 입력 필드들과 자동로그인을 포함하는 Column
                 Column(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
                         .wrapContentHeight(),
                     verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
@@ -148,7 +148,7 @@ fun LoginScreen(
                     // 자동 로그인 체크박스
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
+                        modifier = modifier
                             .offset((-12).dp)
                             .fillMaxWidth()
                             .wrapContentHeight(),
@@ -183,7 +183,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .wrapContentHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp, alignment = Alignment.CenterVertically)
             ) {
                 if (errorMessage != null) {
                     Text(
