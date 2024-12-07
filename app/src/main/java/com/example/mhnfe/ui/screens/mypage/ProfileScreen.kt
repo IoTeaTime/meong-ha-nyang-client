@@ -284,7 +284,10 @@ fun ProfileScreen(
             }
             if (dialogVisible) {
                 EditPopup(
-                    onConfirmation = { setDialogVisible(false) },
+                    onConfirmation = {
+                        profileViewModel.fetchMemberDetails()
+                        setDialogVisible(false)
+                    },
                     onDismissRequest = { setDialogVisible(false) },
                     isDialogVisible = dialogVisible
                 )

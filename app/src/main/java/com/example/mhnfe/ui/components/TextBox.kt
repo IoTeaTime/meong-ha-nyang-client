@@ -16,6 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -36,6 +39,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,10 +61,14 @@ fun MainTextBox(
     onInputTextChange: (String) -> Unit = {},
     hintText: String = "", // setting hint text
     warningText: String = "", // setting warning text
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    isPasswordField: Boolean = false
 ) {
     var isFocused by remember { mutableStateOf(false) } // focus state
     val backgroundColor = Color.White
+
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    val visualTransformation = if (isPasswordField && !isPasswordVisible) PasswordVisualTransformation() else VisualTransformation.None
 
     // borderColor changed by conditions
     val borderColor = when {
@@ -106,7 +114,7 @@ fun MainTextBox(
                 Row(
                     modifier = modifier
                         .fillMaxWidth()
-                        .padding(start = 8.dp, end = 8.dp)
+                        .padding(start = 10.dp, end = 10.dp)
                         .wrapContentHeight(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp , alignment = Alignment.Start),
                     verticalAlignment = Alignment.CenterVertically
@@ -128,13 +136,37 @@ fun MainTextBox(
                     }
                     // cancel button
                     if (inputText.isNotEmpty()) {
-                        IconButton(onClick = { onInputTextChange("") }) {
-                            Icon(
-                                imageVector = ImageVector.vectorResource(id = R.drawable.cancel_button),
-                                contentDescription = "Clear text",
-                                modifier = modifier.size(20.dp),
-                                tint = Color.Unspecified
-                            )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isPasswordField) {
+                                IconButton(
+                                    modifier = modifier
+                                    .size(20.dp),
+                                    onClick = { isPasswordVisible = !isPasswordVisible }
+                                ) {
+                                    Icon(
+                                        modifier = modifier.size(20.dp),
+                                        imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = if (isPasswordVisible) "비밀번호 숨기기" else "비밀번호 보기",
+                                        tint = mainGray
+                                    )
+                                }
+                            }
+
+                            IconButton(
+                                modifier = modifier
+                                    .size(20.dp),
+                                onClick = { onInputTextChange("") }
+                            ) {
+                                Icon(
+                                    modifier = modifier.size(20.dp),
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.cancel_button),
+                                    contentDescription = "Clear text",
+                                    tint = Color.Unspecified
+                                )
+                            }
                         }
                     }
                 }
