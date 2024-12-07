@@ -78,9 +78,6 @@ dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.foundation.android)
     implementation(project(":opencv"))
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -201,6 +198,7 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite-api:2.16.1")
     implementation("org.tensorflow:tensorflow-lite-gpu:2.16.1")
     implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.16.1")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 }
 
 kapt {
