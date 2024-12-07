@@ -58,7 +58,11 @@ class AiViewModel @Inject constructor(
                                 val imageName = imageResult.first // 이미지 이름
                                 val imageData = imageResult.second // JPEG 포맷 이미지 데이터
 
-                                if (BoundingBoxUtils.shouldTriggerEvent(lastEventTime, eventDelayMillis)) {
+                                if (BoundingBoxUtils.shouldTriggerEvent(
+                                        lastEventTime,
+                                        eventDelayMillis
+                                    )
+                                ) {
                                     lastEventTime = System.currentTimeMillis()
                                     Log.d("DetectEvent", "detectEvent() 시작")
 
@@ -85,11 +89,12 @@ class AiViewModel @Inject constructor(
 
                                             val trackingId = DetectionManager.getNextTrackingId()
 
-                                    // BoundingBoxUtils를 사용하여 데이터 추출
-                                    val (objectType, confidence) = BoundingBoxUtils.getTypeAndConfidence(
-                                        boundingBoxes
-                                    )
-                                    val coordinates = BoundingBoxUtils.getCoordinates(boundingBoxes)
+                                            // BoundingBoxUtils를 사용하여 데이터 추출
+                                            val (objectType, confidence) = BoundingBoxUtils.getTypeAndConfidence(
+                                                boundingBoxes
+                                            )
+                                            val coordinates =
+                                                BoundingBoxUtils.getCoordinates(boundingBoxes)
 
                                             onResult(
                                                 trackingId,
