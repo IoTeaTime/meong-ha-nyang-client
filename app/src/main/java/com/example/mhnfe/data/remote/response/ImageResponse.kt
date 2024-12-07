@@ -1,5 +1,6 @@
 package com.example.mhnfe.data.remote.response
 
+import com.example.mhnfe.data.model.ImageInfo
 
 
 data class ImageResponse(
@@ -23,11 +24,4 @@ data class ImageResponseBody(
 
 data class ImageListBody(
     val images : List<ImageInfo>
-)
-
-data class ImageInfo(
-    val imageId: Long,
-    val imageName: String,
-    val imagePath: String,
-    val formattedCreatedAt: String
 )
