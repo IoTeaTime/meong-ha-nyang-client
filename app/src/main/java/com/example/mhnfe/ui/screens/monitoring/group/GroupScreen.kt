@@ -28,6 +28,7 @@ import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.components.SmallButton
 import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.screens.shared.AuthStateViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 
@@ -35,7 +36,9 @@ import com.example.mhnfe.ui.theme.mainBlack
 fun GroupScreen(
     modifier: Modifier = Modifier,
     userType: UserType,
-    navController: NavController,
+    bottomNavController: NavController,
+    mainNavController: NavController,
+    authStateViewModel: AuthStateViewModel = hiltViewModel(),
     mqttViewModel: MqttViewModel = hiltViewModel(),
     groupViewModel: GroupViewModel = hiltViewModel(),
 ) {
@@ -51,7 +54,20 @@ fun GroupScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            MainTopBar(text = groupInfo?.groupName ?: "그룹")
+            MainTopBar(
+                text = groupInfo?.groupName ?: "그룹",
+                onImageClick = {
+                    try{
+                        authStateViewModel.logout()
+                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                            popUpTo(NavRoutes.Main.route) { inclusive = true }
+                        }
+                    } catch (e: Exception) {
+                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                            popUpTo(NavRoutes.Main.route) { inclusive = true }
+                        }
+                    }
+                })
         },
     ) { innerPadding ->
         Column(
@@ -75,14 +91,14 @@ fun GroupScreen(
                 ) {
                     SmallButton(
                         onClick = {
-                            navController.navigate(
+                            bottomNavController.navigate(
                                 NavRoutes.Monitoring.QRGenerate.createRoute(UserType.CCTV)
                             )
                         }, text = "CCTV 추가"
                     )
                     SmallButton(
                         onClick = {
-                            navController.navigate(
+                            bottomNavController.navigate(
                                 NavRoutes.Monitoring.QRGenerate.createRoute(UserType.VIEWER)
                             )
                         }, text = "참여자 추가"
@@ -108,16 +124,16 @@ fun GroupScreen(
                 ) {
                     items(items = cctvList, key = { it.cctvId }) { cctvItem ->
                         CCTVItemCard(cctv = cctvItem.toCCTV(), groupId = groupInfo!!.groupId, onClick = {
-                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                            bottomNavController.currentBackStackEntry?.savedStateHandle?.set(
                                 "role", ChannelRole.VIEWER
                             )
-                            navController.navigate(
+                            bottomNavController.navigate(
                                 NavRoutes.Monitoring.Viewer.createRoute(
                                     channelName = cctvItem.kvsChannelName
                                 )
                             )
                         }, onEdit = {
-                            navController.navigate(
+                            bottomNavController.navigate(
                                 NavRoutes.Monitoring.DeviceInformation.createRoute(
                                     cctvItem.cctvId
                                 )

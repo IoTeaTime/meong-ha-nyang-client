@@ -20,10 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mhnfe.data.model.reportItems
 import com.example.mhnfe.ui.components.MainTopBar
+import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.screens.shared.AuthStateViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import java.time.LocalDate
@@ -33,14 +36,29 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ReportDetailScreen(
     modifier: Modifier = Modifier,
-    navController: NavController
+    mainNavController: NavController,
+    authStateViewModel: AuthStateViewModel = hiltViewModel()
 ) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            MainTopBar(text = "리포트")
+            MainTopBar(
+                text = "리포트",
+                onImageClick = {
+                    try{
+                        authStateViewModel.logout()
+                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                            popUpTo(NavRoutes.Main.route) { inclusive = true }
+                        }
+                    } catch (e: Exception) {
+                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                            popUpTo(NavRoutes.Main.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
         },
     ) { innerPadding ->
         Column(
@@ -100,6 +118,7 @@ fun ReportDetailScreen(
 @Composable
 private fun Preview(){
     val navController = rememberNavController()
-    ReportDetailScreen(navController = navController)
+    ReportDetailScreen(
+        mainNavController = navController)
 
 }
