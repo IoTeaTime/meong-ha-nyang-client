@@ -16,18 +16,26 @@ class AuthInterceptor @Inject constructor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         Log.d("AuthInterceptor","AuthInterceptor Start!!")
-        return runBlocking {
-            val accessToken = accessTokenDataStore.data.map { it.accessToken }.first()
 
-            // 헤더에 "Authorization" 키가 존재하는 경우에만 intercept 수행
-            val request = if (accessToken.isNotEmpty() && chain.request().headers["Authorization"] != null) {
-                Log.d("AuthInterceptor","AuthInterceptor Success!!")
-                chain.request().putTokenHeader(accessToken)
-            } else {
-                chain.request()
+        val url = chain.request().url.toString()
+        if (url.contains( "/api/member") && chain.request().method == "DELETE") {
+            Log.d("AuthInterceptor", "Skipping request for URL: $url")
+            return chain.proceed(chain.request())  // 요청을 그냥 진행
+        } else {
+            return runBlocking {
+                val accessToken = accessTokenDataStore.data.map { it.accessToken }.first()
+
+                // 헤더에 "Authorization" 키가 존재하는 경우에만 intercept 수행
+                val request =
+                    if (accessToken.isNotEmpty() && chain.request().headers["Authorization"] != null) {
+                        Log.d("AuthInterceptor", "AuthInterceptor Success!!")
+                        chain.request().putTokenHeader(accessToken)
+                    } else {
+                        chain.request()
+                    }
+                Log.d("AuthInterceptor", "AuthInterceptor Pass")
+                chain.proceed(request)
             }
-            Log.d("AuthInterceptor","AuthInterceptor Pass")
-            chain.proceed(request)
         }
     }
 

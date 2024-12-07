@@ -321,8 +321,8 @@ class MqttViewModel @Inject constructor(
 
     fun eventTopic(
         trackingId: Int,
-        coordinatesJson: String,
         objectName: String,
+        coordinates: String,
         confidence: String
     ) {
         val payload =
@@ -330,9 +330,9 @@ class MqttViewModel @Inject constructor(
                 {
                     "trackingId": $trackingId,
                     "timestamp": ${System.currentTimeMillis() / 1000}, 
-                    "coordinates": $coordinatesJson,
                     "objectType": "$objectName",
-                    "confidence": "$confidence"
+                    "confidence": "$confidence",
+                    "coordinates": $coordinates
                }
             """.trimIndent()
 

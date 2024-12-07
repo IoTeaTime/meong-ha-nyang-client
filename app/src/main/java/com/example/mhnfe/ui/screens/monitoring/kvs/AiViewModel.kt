@@ -1,1 +1,68 @@
-package com.example.mhnfe.ui.screens.monitoring.kvsimport android.content.Contextimport android.graphics.Bitmapimport android.util.Logimport androidx.lifecycle.ViewModelimport androidx.lifecycle.viewModelScopeimport com.example.mhnfe.domain.ai.BoundingBoxUtilsimport com.example.mhnfe.domain.ai.DetectionManagerimport com.example.mhnfe.domain.ai.opencv.BitmapToMatConverterimport com.example.mhnfe.domain.ai.opencv.MotionDetectorimport com.example.mhnfe.domain.ai.yolo.BoundingBoximport com.example.mhnfe.domain.ai.yolo.YoloDetectionManagerimport dagger.hilt.android.lifecycle.HiltViewModelimport dagger.hilt.android.qualifiers.ApplicationContextimport kotlinx.coroutines.delayimport kotlinx.coroutines.launchimport org.opencv.core.Matimport org.opencv.core.Rectimport javax.inject.Inject@HiltViewModelclass AiViewModel @Inject constructor(    @ApplicationContext private val context: Context, // Context 주입) : ViewModel() {    private val tag = "AiViewModel"    private val motionDetector = MotionDetector()    private val yoloDetectionManager = YoloDetectionManager(context)    private var boundingBoxes: List<BoundingBox> = listOf()    private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록    private val eventDelayMillis = 5000L // event data to iot 딜레이 시간    fun processFrame(bitmap: Bitmap?) {        viewModelScope.launch {            try {                bitmap?.let { bmp ->                    // Log.d(tag, "Frame received: ${bmp.width}x${bmp.height}")                    // Bitmap을 Mat으로 변환                    val currentFrame: Mat = BitmapToMatConverter.BitToMat(bmp)                    // OpenCV로 움직임 감지                    val motionAreas: List<Rect> = motionDetector.detectMotion(currentFrame)                    // 감지된 움직임 영역을 로그에 출력                    if (motionAreas.isNotEmpty()) {                        Log.d(tag, "Motion detected in ${motionAreas.size} area(s)")                        // Yolo 실행                        yoloDetectionManager.detect(bmp)                        // Event data to IoT                        detectEvent(                            onResult = { trackingId, coordinatesJson, objectName, confidence ->                                Log.d(tag, "Detected object: $trackingId, $objectName")}                        )                    } else {                        Log.d(tag, "No motion detected")                    }                    // 현재 프레임 객체 해제                    currentFrame.release()                }            } catch (e: Exception) {                Log.e(tag, "Frame processing error", e)            }        }    }    fun detectEvent(onResult: (Int, String, String ,String) -> Unit) {        viewModelScope.launch {            val currentTime = System.currentTimeMillis()            if (currentTime - lastEventTime < eventDelayMillis) {                return@launch            }            try {                lastEventTime = currentTime // 이벤트 시간                Log.d("DetectEvent", "detectEvent() 시작")                val trackingId = DetectionManager.getNextTrackingId()                val timestamp = System.currentTimeMillis() / 1000                val boundingBoxes = BoundingBoxUtils.getLatestBoundingBoxData()                if (boundingBoxes.isEmpty()) {                    Log.d("DetectEvent", "No bounding boxes available")                }                // 좌표 - 탐지된 이름 - confidence 순                val coordinatesJson = BoundingBoxUtils.coordinatesJson(boundingBoxes)                val objectName = BoundingBoxUtils.objectNameJson(boundingBoxes)                val confidence = BoundingBoxUtils.confidenceJson(boundingBoxes)                onResult(trackingId, coordinatesJson, objectName, confidence )                // 딜레이                delay(eventDelayMillis)            } catch (e: Exception) {                Log.e("DetectEvent", "detectEvent() 중 오류 발생: ${e.message}", e)            }        }    }}
+package com.example.mhnfe.ui.screens.monitoring.kvs
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.mhnfe.domain.ai.BoundingBoxUtils
+import com.example.mhnfe.domain.ai.DetectionManager
+import com.example.mhnfe.domain.ai.opencv.BitmapToMatConverter
+import com.example.mhnfe.domain.ai.opencv.MotionDetector
+import com.example.mhnfe.domain.ai.yolo.YoloDetectionManager
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.launch
+import org.opencv.core.Mat
+import org.opencv.core.Rect
+import javax.inject.Inject
+
+@HiltViewModel
+class AiViewModel @Inject constructor(
+    @ApplicationContext private val context: Context, // Context 주입
+) : ViewModel() {
+    private val tag = "AiViewModel"
+    private val motionDetector = MotionDetector()
+    private val yoloDetectionManager = YoloDetectionManager(context)
+    private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록
+    private val eventDelayMillis = 500L // event data to iot 딜레이 시간
+
+    fun processFrame(bitmap: Bitmap?, onResult: (Int, String, String, String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                bitmap?.let { bmp ->
+                    val currentFrame: Mat = BitmapToMatConverter.BitToMat(bmp)
+                    val motionAreas: List<Rect> = motionDetector.detectMotion(currentFrame)
+
+                    if (motionAreas.isNotEmpty()) {
+                        Log.d(tag, "Motion detected in ${motionAreas.size} area(s)")
+
+                        // Yolo 실행 및 콜백 처리
+                        yoloDetectionManager.detect(bmp) { boundingBoxes, _ ->
+                            if (boundingBoxes.isNotEmpty()) {
+                                if (BoundingBoxUtils.shouldTriggerEvent(lastEventTime, eventDelayMillis)) {
+                                    lastEventTime = System.currentTimeMillis()
+                                    Log.d("DetectEvent", "detectEvent() 시작")
+
+                                    val trackingId = DetectionManager.getNextTrackingId()
+
+                                    // BoundingBoxUtil을 사용하여 JSON 데이터 생성
+                                    val coordinatesJson = BoundingBoxUtils.generateCoordinatesJson(boundingBoxes)
+                                    val objectNameJson = BoundingBoxUtils.generateObjectNameJson(boundingBoxes)
+                                    val confidenceJson = BoundingBoxUtils.generateConfidenceJson(boundingBoxes)
+
+                                    onResult(trackingId, coordinatesJson, objectNameJson, confidenceJson)
+                                }
+                            }
+                        }
+                    }
+
+                    // 현재 프레임 객체 해제
+                    currentFrame.release()
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "Frame processing error", e)
+            }
+        }
+    }
+}
