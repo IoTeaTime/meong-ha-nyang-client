@@ -114,27 +114,7 @@ fun DeviceInfoScreen(
         },
     ) { innerPadding ->
         if (cctv != null) {
-            if (!mqttStatus) {
-               // MQTT가 연결되지 않은 경우
-                Box(
-                    modifier = modifier
-                        .padding(innerPadding)
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator() // 로딩 표시
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "기기 연결을 시도 중입니다...",
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            } else {
+            if (mqttStatus) {
                 Column(
                     modifier = modifier
                         .padding(innerPadding)
@@ -183,6 +163,26 @@ fun DeviceInfoScreen(
                                 contentScale = ContentScale.Fit
                             )
                         }
+                    }
+                }
+            } else {
+                // MQTT가 연결되지 않은 경우
+                Box(
+                    modifier = modifier
+                        .padding(innerPadding)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator() // 로딩 표시
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "기기 연결을 시도 중입니다...",
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
