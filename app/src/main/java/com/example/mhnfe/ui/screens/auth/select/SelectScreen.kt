@@ -49,7 +49,9 @@ fun SelectScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            MainTopBar(text = "선택")
+            MainTopBar(
+                text = "선택",
+                onImageClick = { navController.navigate(NavRoutes.Auth.Login.route)})
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->

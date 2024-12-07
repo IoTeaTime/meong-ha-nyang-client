@@ -228,7 +228,8 @@ fun MainContent(
                 composable(NavRoutes.Monitoring.Group.route) {
                     GroupScreen(
                         userType = userType,
-                        navController = bottomNavController  // bottomNavController 전달
+                        bottomNavController= bottomNavController,
+                        mainNavController = mainNavController
                     )
                 }
                 composable(NavRoutes.Monitoring.Master.route) {
@@ -306,7 +307,9 @@ fun MainContent(
 //                        navController = bottomNavController,
 //                        kvsViewModel = kvsViewModel,
 //                    )
-                    ReportDetailScreen(navController = bottomNavController)
+                    ReportDetailScreen(
+                        mainNavController = mainNavController
+                    )
                 }
                 //추후에 화면이 추가 될 수 있기 때문에 이렇게 따로 빼서 구현 추후 화면 추가가 없을 시 삭제
             }
