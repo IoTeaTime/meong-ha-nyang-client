@@ -277,12 +277,12 @@ fun WebRtcScreen(
                                         if (!isCameraSwitching) {
                                             bitmap?.let {
                                                 withContext(Dispatchers.Default) {
-                                                    aiViewModel.processFrame(it) { trackingId, coordinatesJson, objectName, confidence ->
+                                                    aiViewModel.processFrame(it) { trackingId, objectType, confidence, coordinates ->
                                                         mqttViewModel.eventTopic(
                                                             trackingId,
-                                                            objectName,
-                                                            coordinatesJson,
-                                                            confidence
+                                                            objectType,
+                                                            confidence,
+                                                            coordinates
                                                         )
                                                     }
                                                 }

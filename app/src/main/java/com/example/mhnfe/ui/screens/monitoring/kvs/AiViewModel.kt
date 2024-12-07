@@ -27,7 +27,10 @@ class AiViewModel @Inject constructor(
     private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록
     private val eventDelayMillis = 500L // event data to iot 딜레이 시간
 
-    fun processFrame(bitmap: Bitmap?, onResult: (Int, String, String, String) -> Unit) {
+    fun processFrame(
+        bitmap: Bitmap?,
+        onResult: (Int, String, Float, List<Map<String, Float>>) -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 bitmap?.let { bmp ->
@@ -46,12 +49,13 @@ class AiViewModel @Inject constructor(
 
                                     val trackingId = DetectionManager.getNextTrackingId()
 
-                                    // BoundingBoxUtil을 사용하여 JSON 데이터 생성
-                                    val coordinatesJson = BoundingBoxUtils.generateCoordinatesJson(boundingBoxes)
-                                    val objectNameJson = BoundingBoxUtils.generateObjectNameJson(boundingBoxes)
-                                    val confidenceJson = BoundingBoxUtils.generateConfidenceJson(boundingBoxes)
+                                    // BoundingBoxUtils를 사용하여 데이터 추출
+                                    val (objectType, confidence) = BoundingBoxUtils.getTypeAndConfidence(
+                                        boundingBoxes
+                                    )
+                                    val coordinates = BoundingBoxUtils.getCoordinates(boundingBoxes)
 
-                                    onResult(trackingId, coordinatesJson, objectNameJson, confidenceJson)
+                                    onResult(trackingId, objectType, confidence, coordinates)
                                 }
                             }
                         }
