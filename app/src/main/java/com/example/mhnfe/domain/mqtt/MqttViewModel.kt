@@ -308,32 +308,28 @@ class MqttViewModel @Inject constructor(
         trackingId: Int,
         objectName: String,
         confidence: Float,
-        coordinates: List<Map<String, Float>>
+        coordinates: List<Map<String, Int>>
     ) {
-        val coordinatesJson = coordinates.firstOrNull()?.let { coord ->
+        val payload = coordinates.firstOrNull().let { coord ->
             """
         {
-            "x1": ${coord["x1"]}, "y1": ${coord["y1"]},
-            "x2": ${coord["x2"]}, "y2": ${coord["y2"]},
-            "x3": ${coord["x3"]}, "y3": ${coord["y3"]},
-            "x4": ${coord["x4"]}, "y4": ${coord["y4"]}
+            "trackingId": $trackingId,
+            "timestamp": ${System.currentTimeMillis() / 1000},
+            "objectType": "$objectName",
+            "confidence": $confidence,
+            "coordinates": {
+                "x1": ${coord!!["x1"]}, "y1": ${coord["y1"]},
+                "x2": ${coord["x2"]}, "y2": ${coord["y2"]},
+                "x3": ${coord["x3"]}, "y3": ${coord["y3"]},
+                "x4": ${coord["x4"]}, "y4": ${coord["y4"]}
+            }
         }
         """.trimIndent()
-        } ?: "{}"
-
-        val payload =
-            """
-            {
-                "trackingId": $trackingId,
-                "timestamp": ${System.currentTimeMillis() / 1000}, 
-                "objectType": "$objectName",
-                "confidence": $confidence,
-                "coordinates": $coordinatesJson
-           }
-        """.trimIndent()
+        }
 
         publish("/mhn/event/detect/things/$thingId", payload)
     }
+
 
     //shadow
     fun subscribeShadowWithPayload(thingId: String, data: (ReportedData?) -> Unit) {
