@@ -166,7 +166,7 @@ fun DeviceInfoScreen(
                     }
                 }
             } else {
-                // MQTT가 연결되지 않은 경우
+                // MQTT 응답을 받지 못한 경우
                 Box(
                     modifier = modifier
                         .padding(innerPadding)
