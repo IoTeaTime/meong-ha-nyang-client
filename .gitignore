@@ -13,4 +13,4 @@ local.properties
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
-/ovencv/build
+/opencv/build

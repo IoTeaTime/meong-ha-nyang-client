@@ -24,8 +24,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,10 +50,11 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
+import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.screens.auth.main.MainViewModel
 import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-import com.example.mhnfe.ui.theme.mainGray
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -75,7 +74,8 @@ fun WebRtcScreen(
     role: ChannelRole,
     viewModel: KVSSignalingViewModel,
     mqttViewModel: MqttViewModel = hiltViewModel(),
-    aiViewModel: AiViewModel = hiltViewModel()
+    aiViewModel: AiViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -90,20 +90,34 @@ fun WebRtcScreen(
     val isRecording = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        // Todo. 그룹 ID 반환 로직 추가
+        var groupId = 0
+        mainViewModel.getCctvAccessToken { cctvAccessToken ->
+            if(cctvAccessToken != "") {
+                mainViewModel.fetchCctvId(
+                    onSuccess = { cctvInfo ->
+                        Log.d(
+                            "MainScreen",
+                            "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}"
+                        )
+                        groupId = cctvInfo.body.groupId
+                    },
+                    onFailure = { fetchError ->
+                        Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
+                    }
+                )
+            }
+        }
+
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize()
             if (result) {
-                mqttViewModel.cctvShadow(context, 1)
+                if (groupId != 0) {
+                    mqttViewModel.cctvShadow(context, groupId)
+                }
                 mqttViewModel.cctvInfoSub(context)
             }
         }
         if (role == ChannelRole.MASTER && mqttState) {
-            aiViewModel.detectEvent(
-                onResult = { trackingId, timestamp, objectName, confidence, coordinates ->
-                    mqttViewModel.eventTopic(trackingId, timestamp, objectName, confidence, coordinates)
-                }
-            )
             mqttViewModel.startObservingData(context)
         }
     }
@@ -259,7 +273,9 @@ fun WebRtcScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column (
-                            modifier.fillMaxSize().background(color = Color.White),
+                            modifier
+                                .fillMaxSize()
+                                .background(color = Color.White),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
                         ) {
@@ -283,7 +299,14 @@ fun WebRtcScreen(
                                         if (!isCameraSwitching) {
                                             bitmap?.let {
                                                 withContext(Dispatchers.Default) {
-                                                    aiViewModel.processFrame(it)
+                                                    aiViewModel.processFrame(it) { trackingId, coordinatesJson, objectName, confidence ->
+                                                        mqttViewModel.eventTopic(
+                                                            trackingId,
+                                                            objectName,
+                                                            coordinatesJson,
+                                                            confidence
+                                                        )
+                                                    }
                                                 }
                                             } ?: Log.d("WebRtcScreen", "Received null bitmap")
                                         } else {
@@ -405,7 +428,9 @@ fun WebRtcScreen(
                             }
                         }else {
                             Text(
-                                modifier = modifier.background(Color.White, shape = CircleShape).padding(10.dp),
+                                modifier = modifier
+                                    .background(Color.White, shape = CircleShape)
+                                    .padding(10.dp),
                                 text = "10초 후 절전 모드가 실행됩니다",
                                 color = mainBlack,
                                 style = Typography.labelSmall,

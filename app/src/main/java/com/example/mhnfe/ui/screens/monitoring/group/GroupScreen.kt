@@ -123,7 +123,7 @@ fun GroupScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(items = cctvList, key = { it.cctvId }) { cctvItem ->
-                        CCTVItemCard(cctv = cctvItem.toCCTV(), onClick = {
+                        CCTVItemCard(cctv = cctvItem.toCCTV(), groupId = groupInfo!!.groupId, onClick = {
                             bottomNavController.currentBackStackEntry?.savedStateHandle?.set(
                                 "role", ChannelRole.VIEWER
                             )

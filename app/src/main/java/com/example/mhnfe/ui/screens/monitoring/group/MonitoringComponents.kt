@@ -1,5 +1,7 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,10 +35,16 @@ import com.example.mhnfe.data.model.CCTV
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainGray3
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 @Composable
 fun CCTVItemCard(
     cctv: CCTV,
+    groupId: Long,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     onEdit: () -> Unit = {},
@@ -45,12 +53,51 @@ fun CCTVItemCard(
     val thingId = cctv.thingId
     var networkStatus by remember { mutableStateOf(1) }
     var batteryStatus by remember { mutableStateOf(0) }
+    val scope = CoroutineScope(Dispatchers.Main)
+    val interval: Long = 15000
 
-    LaunchedEffect(thingId) {
-        mqttViewModel.groupThingsSub(thingId) { reportedData ->
+
+    LaunchedEffect(Unit) {
+
+        //topic pub sub
+        scope.launch {
+            var messageReceived: Boolean
+            mqttViewModel.groupThingsSub(thingId) { reportedData ->
+                // 메시지 수신 시 처리
+                reportedData.let {
+                    networkStatus = it.networkStatus
+                    batteryStatus = it.batteryLevel
+                }
+                // 메시지가 도착했음을 플래그로 표시하고 타임아웃 Job 취소
+                messageReceived = true
+            }
+            while (isActive) {
+                // Group Info Request Publish
+                mqttViewModel.groupInfoRequestPub("", groupId)
+                // 메시지가 도착했는지 확인하는 플래그
+                messageReceived = false
+                // 메시지 타임아웃을 처리하기 위한 Job
+                val timeoutJob = launch {
+                    if (!messageReceived) {
+                        // 메시지가 없으면 네트워크와 배터리를 0으로 설정
+                        networkStatus = 0
+                        batteryStatus = 0
+                    }
+                }
+                delay(interval) // 다음 요청 전 대기
+                timeoutJob.cancel()
+            }
+        }
+
+        //shadow sub
+        mqttViewModel.groupShadowSub(thingId) { reportedData ->
             reportedData.let {
-                networkStatus = it.networkStatus
-                batteryStatus = it.batteryLevel
+                if (it != null) {
+                    networkStatus = it.networkStatus!!
+                }
+                if (it != null) {
+                    batteryStatus = it.batteryLevel!!
+                }
             }
         }
     }
