@@ -3,6 +3,7 @@ package com.example.mhnfe.domain.ai.yolo
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.SystemClock
+import android.util.Log
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.ops.CastOp
@@ -39,7 +40,6 @@ class YoloDetector(
 
     private fun setTensorDimensions() {
         val inputShape = interpreter.getInputTensor(0)?.shape()
-        val outputShape = interpreter.getOutputTensor(0)?.shape()
 
         if (inputShape != null) {
             tensorWidth = inputShape[1]
@@ -52,6 +52,7 @@ class YoloDetector(
             }
         }
 
+        val outputShape = interpreter.getOutputTensor(0)?.shape()
         if (outputShape != null) {
             numChannel = outputShape[1]
             numElements = outputShape[2]
@@ -84,15 +85,15 @@ class YoloDetector(
         val output = TensorBuffer.createFixedSize(intArrayOf(1, numChannel, numElements), OUTPUT_IMAGE_TYPE)
         interpreter.run(imageBuffer, output.buffer)
 
-        val bestBoxes = BoundingBoxProcessor.bestBoxes(output.floatArray, labels, numElements, numChannel)
-        inferenceTime = SystemClock.uptimeMillis() - inferenceTime
+        BoundingBoxProcessor.bestBoxes(output.floatArray, labels, numElements, numChannel) { bestBoxes ->
+            inferenceTime = SystemClock.uptimeMillis() - inferenceTime
 
-        if (bestBoxes == null) {
-            detectorListener.onEmptyDetect()
-            return
+            try {
+                detectorListener.onDetect(bestBoxes, inferenceTime)
+            } catch (e: Exception) {
+                Log.e("YoloDetector", "Error: ${e.message}")
+            }
         }
-
-        detectorListener.onDetect(bestBoxes, inferenceTime)
     }
 
     interface DetectorListener {
