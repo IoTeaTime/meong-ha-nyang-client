@@ -42,8 +42,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.data.remote.response.ImageInfo
 import com.example.mhnfe.ui.components.MainTopBar
+import com.example.mhnfe.ui.screens.shared.AuthStateViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import java.time.LocalDate
@@ -52,8 +54,9 @@ import java.time.LocalDate
 @Composable
 fun ReportDetailScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,
-    viewModel: ReportViewModel = hiltViewModel()
+    mainNavController: NavController,
+    viewModel: ReportViewModel = hiltViewModel(),
+    authStateViewModel: AuthStateViewModel = hiltViewModel()
 ) {
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     val uiState by viewModel.uiState.collectAsState()
@@ -66,7 +69,21 @@ fun ReportDetailScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            MainTopBar(text = "리포트")
+            MainTopBar(
+                text = "리포트",
+                onImageClick = {
+                    try{
+                        authStateViewModel.logout()
+                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                            popUpTo(NavRoutes.Main.route) { inclusive = true }
+                        }
+                    } catch (e: Exception) {
+                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                            popUpTo(NavRoutes.Main.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
         },
     ) { innerPadding ->
         Column(
@@ -215,6 +232,7 @@ fun ImageDialog(
 @Composable
 private fun Preview(){
     val navController = rememberNavController()
-    ReportDetailScreen(navController = navController)
+    ReportDetailScreen(
+        mainNavController = navController)
 
 }

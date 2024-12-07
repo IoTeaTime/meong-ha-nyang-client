@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.response.CctvInfoResponse
+import com.example.mhnfe.data.remote.response.CctvSelfInfoResponse
 import com.example.mhnfe.domain.repository.GroupRepository
 import com.example.mhnfe.domain.repository.QRRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,7 @@ class MainViewModel @Inject constructor(
 //    private val tokenManager: TokenManager
 ) : ViewModel() {
 
-    private val _cctvInfo = MutableStateFlow<CctvInfoResponse?>(null)
+    private val _cctvInfo = MutableStateFlow<CctvSelfInfoResponse?>(null)
     val cctvInfo = _cctvInfo.asStateFlow()
 
     fun autoLogin(
@@ -53,7 +54,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun fetchCctvId(
-        onSuccess: (CctvInfoResponse) -> Unit,
+        onSuccess: (CctvSelfInfoResponse) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         viewModelScope.launch {

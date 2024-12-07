@@ -9,6 +9,7 @@ import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.remote.response.CctvQRResponse
+import com.example.mhnfe.data.remote.response.CctvSelfInfoResponse
 import com.example.mhnfe.data.remote.response.ViewerQRResponse
 import com.example.mhnfe.domain.repository.QRRepository
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +67,7 @@ class QRRepositoryImpl @Inject constructor(
         Log.d("QRRepository", "Viewer QR 응답: $response")
         return response
     }
-    override suspend fun getCctvInfo(): CctvInfoResponse{
+    override suspend fun getCctvInfo(): CctvSelfInfoResponse {
         val cctvAccessToken = cctvResponseDataStore.data.map { it.accessToken }.first()
         return withContext(Dispatchers.IO) {
             qrApi.cctvIdInfo(cctvAccessToken)

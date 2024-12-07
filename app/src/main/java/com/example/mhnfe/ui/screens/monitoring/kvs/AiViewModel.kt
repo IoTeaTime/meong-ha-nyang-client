@@ -9,6 +9,7 @@ import com.example.mhnfe.domain.ai.BoundingBoxUtils
 import com.example.mhnfe.domain.ai.DetectionManager
 import com.example.mhnfe.domain.ai.opencv.BitmapToMatConverter
 import com.example.mhnfe.domain.ai.opencv.MotionDetector
+import com.example.mhnfe.domain.ai.yolo.HandleDetection
 import com.example.mhnfe.domain.ai.yolo.YoloDetectionManager
 import com.example.mhnfe.domain.repository.ImageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,6 +35,7 @@ class AiViewModel @Inject constructor(
     private val yoloDetectionManager = YoloDetectionManager(context)
     private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록
     private val eventDelayMillis = 500L // event data to iot 딜레이 시간
+    private val handleDetection = HandleDetection()
 
     fun processFrame(bitmap: Bitmap?, onResult: (Int, String, String, String) -> Unit) {
         viewModelScope.launch {
@@ -47,7 +49,8 @@ class AiViewModel @Inject constructor(
 
                         // Yolo 실행 및 콜백 처리
                         yoloDetectionManager.detect(bmp) { boundingBoxes, _ ->
-                            if (boundingBoxes.isNotEmpty()) {
+                            val filteredBoxes = handleDetection.handleDetectionResults(boundingBoxes)
+                            if (filteredBoxes.isNotEmpty()) {
                                 val imageResult = createImage(bmp)
                                 val imageName = imageResult.first // 이미지 이름
                                 val imageData = imageResult.second // JPEG 포맷 이미지 데이터

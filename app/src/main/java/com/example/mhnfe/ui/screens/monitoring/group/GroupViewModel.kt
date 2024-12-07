@@ -57,7 +57,8 @@ class GroupViewModel @Inject constructor(
                             }
                         }
                         else -> {
-                            Log.e("GroupViewModel", "Unexpected error", e)
+                            Log.e("GroupViewModel", "Unexpected error : ${e.message}")
+
                             _error.value = "예기치 못한 오류가 발생했습니다: ${e.message}"
                         }
                     }
