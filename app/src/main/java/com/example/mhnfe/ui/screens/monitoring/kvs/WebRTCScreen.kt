@@ -24,8 +24,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,7 +53,6 @@ import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
-import com.example.mhnfe.ui.theme.mainGray
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -99,11 +96,6 @@ fun WebRtcScreen(
             }
         }
         if (role == ChannelRole.MASTER && mqttState) {
-            aiViewModel.detectEvent(
-                onResult = { trackingId, coordinatesJson, objectName, confidence ->
-                    mqttViewModel.eventTopic(trackingId, coordinatesJson, objectName, confidence)
-                }
-            )
             mqttViewModel.startObservingData(context)
         }
     }
@@ -259,7 +251,9 @@ fun WebRtcScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column (
-                            modifier.fillMaxSize().background(color = Color.White),
+                            modifier
+                                .fillMaxSize()
+                                .background(color = Color.White),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(20.dp, alignment = Alignment.CenterVertically)
                         ) {
@@ -283,7 +277,14 @@ fun WebRtcScreen(
                                         if (!isCameraSwitching) {
                                             bitmap?.let {
                                                 withContext(Dispatchers.Default) {
-                                                    aiViewModel.processFrame(it)
+                                                    aiViewModel.processFrame(it) { trackingId, coordinatesJson, objectName, confidence ->
+                                                        mqttViewModel.eventTopic(
+                                                            trackingId,
+                                                            objectName,
+                                                            coordinatesJson,
+                                                            confidence
+                                                        )
+                                                    }
                                                 }
                                             } ?: Log.d("WebRtcScreen", "Received null bitmap")
                                         } else {
@@ -405,7 +406,9 @@ fun WebRtcScreen(
                             }
                         }else {
                             Text(
-                                modifier = modifier.background(Color.White, shape = CircleShape).padding(10.dp),
+                                modifier = modifier
+                                    .background(Color.White, shape = CircleShape)
+                                    .padding(10.dp),
                                 text = "10초 후 절전 모드가 실행됩니다",
                                 color = mainBlack,
                                 style = Typography.labelSmall,
