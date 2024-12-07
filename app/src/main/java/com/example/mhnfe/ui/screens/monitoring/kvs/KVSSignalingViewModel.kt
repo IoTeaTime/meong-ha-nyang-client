@@ -874,6 +874,7 @@ class KVSSignalingViewModel : ViewModel() {
 
             // Y 데이터 복사
             buffer.dataY.get(nv21, 0, ySize)
+            Log.d(TAG, "Copied Y data")
 
             // U와 V 데이터를 NV21 포맷으로 인터리빙
             val uBuffer = buffer.dataU
@@ -883,9 +884,11 @@ class KVSSignalingViewModel : ViewModel() {
                 nv21[pos++] = vBuffer.get(i)
                 nv21[pos++] = uBuffer.get(i)
             }
+            Log.d(TAG, "Copied UV data")
 
             // YuvImage로 변환
             val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
+            Log.d(TAG, "Created YuvImage")
 
             val out = ByteArrayOutputStream()
             yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
@@ -904,6 +907,7 @@ class KVSSignalingViewModel : ViewModel() {
     }
     private fun convertNV21ToBitmap(buffer: VideoFrame.Buffer, rotation: Int) {
         try {
+            Log.d(TAG, "Converting frame: ${buffer.width}x${buffer.height}, rotation: $rotation")
 
             // 먼저 I420로 변환
             val i420Buffer = buffer.toI420()
@@ -920,6 +924,7 @@ class KVSSignalingViewModel : ViewModel() {
 
                 // Y 데이터 복사
                 i420Buffer.dataY.get(nv21, 0, ySize)
+                Log.d(TAG, "Copied Y data")
 
                 // U와 V 데이터를 NV21 포맷으로 인터리빙
                 val uBuffer = i420Buffer.dataU
@@ -929,16 +934,20 @@ class KVSSignalingViewModel : ViewModel() {
                     nv21[pos++] = vBuffer.get(i)
                     nv21[pos++] = uBuffer.get(i)
                 }
+                Log.d(TAG, "Copied UV data")
 
                 // YuvImage로 변환
                 val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
+                Log.d(TAG, "Created YuvImage")
 
                 val out = ByteArrayOutputStream()
                 yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
+                Log.d(TAG, "Compressed to JPEG")
 
                 val imageBytes = out.toByteArray()
                 var bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                     ?: throw Exception("Failed to decode bitmap")
+                Log.d(TAG, "Decoded bitmap: ${bitmap.width}x${bitmap.height}")
 
                 // 회전 처리
                 if (rotation != 0) {
@@ -951,10 +960,13 @@ class KVSSignalingViewModel : ViewModel() {
                         matrix,
                         true
                     )
+                    Log.d(TAG, "Applied rotation: $rotation")
                 }
 
+                Log.d(TAG, "Successfully created bitmap: ${bitmap.width}x${bitmap.height}")
                 viewModelScope.launch(Dispatchers.Main) {
                     _frameData.value = bitmap
+                    Log.d(TAG, "Posted bitmap to StateFlow")
                 }
 
             } catch (e: Exception) {
@@ -969,6 +981,7 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
 
+    private var isUsingFrontCamera = true
 
     fun initializeSurfaceViews(context: Context, eglBaseContext: EglBase.Context, role: ChannelRole) {
         viewModelScope.launch(Dispatchers.Main) {
@@ -986,7 +999,7 @@ class KVSSignalingViewModel : ViewModel() {
                 val remoteRenderer = SurfaceViewRenderer(context).apply {
                     init(eglBaseContext, null)
                     setEnableHardwareScaler(true)
-                    setMirror(false)
+                    setMirror(true)
                 }
 
                 _localView.value = localRenderer
@@ -1010,6 +1023,7 @@ class KVSSignalingViewModel : ViewModel() {
 
                                     try {
                                         val buffer = frame.buffer
+                                        Log.d(TAG, "Got buffer: ${buffer?.javaClass?.simpleName}")
 
                                         when (buffer) {
                                             is VideoFrame.I420Buffer -> {
@@ -1405,7 +1419,7 @@ class KVSSignalingViewModel : ViewModel() {
         }
     }
 
-    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean, ) {
+    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 val remoteVideoTrack = stream.videoTracks.firstOrNull()
@@ -1433,6 +1447,7 @@ class KVSSignalingViewModel : ViewModel() {
                         )
                         _remoteView.value?.let { renderer ->
                             try {
+                                renderer.setMirror(isUsingFrontCamera)
                                 videoTrack.addSink(renderer)
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error adding sink to remote video track", e)
@@ -1567,14 +1582,10 @@ class KVSSignalingViewModel : ViewModel() {
         _remoteView.value = null
     }
 
-
     private var isBackCamera = false
-    private val _isCameraSwitching = MutableStateFlow(false)
-    val isCameraSwitching: StateFlow<Boolean> = _isCameraSwitching
 
     fun switchCamera(context: Context) {
         viewModelScope.launch {
-            _isCameraSwitching.value = true
             try {
                 (videoCapturer as? CameraVideoCapturer)?.let { capturer ->
                     val enumerator = Camera1Enumerator(false)
@@ -1594,6 +1605,9 @@ class KVSSignalingViewModel : ViewModel() {
                         capturer.switchCamera(object : CameraVideoCapturer.CameraSwitchHandler {
                             override fun onCameraSwitchDone(isFrontCamera: Boolean) {
                                 isBackCamera = !isFrontCamera
+                                isUsingFrontCamera = isFrontCamera
+                                _localView.value?.setMirror(true)
+                                _remoteView.value?.setMirror(isFrontCamera)
                                 Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
                             }
 
@@ -1611,8 +1625,6 @@ class KVSSignalingViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("Camera", "카메라 전환 중 에러 발생", e)
-            } finally {
-                _isCameraSwitching.value = false
             }
         }
     }
@@ -1704,8 +1716,27 @@ class KVSSignalingViewModel : ViewModel() {
             }
         }
     }
-}
+    private val _isAudioEnabled = MutableStateFlow(true)
+    val isAudioEnabled = _isAudioEnabled.asStateFlow()
 
+    fun toggleAudio() {
+        viewModelScope.launch {
+            _isAudioEnabled.value = !_isAudioEnabled.value
+            // remoteAudioTrack의 상태를 업데이트
+            _remoteVideoTrack.value?.let { track ->
+                track.setEnabled(_isAudioEnabled.value)
+            }
+            val audioManager = applicationContext?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            if (_isAudioEnabled.value) {
+                audioManager?.mode = AudioManager.MODE_IN_COMMUNICATION
+                audioManager?.isSpeakerphoneOn = true
+            } else {
+                audioManager?.isSpeakerphoneOn = false
+            }
+        }
+    }
+
+}
 
 
 
