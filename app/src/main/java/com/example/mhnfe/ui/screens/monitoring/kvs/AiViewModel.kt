@@ -33,7 +33,7 @@ class AiViewModel @Inject constructor(
     private val motionDetector = MotionDetector()
     private val yoloDetectionManager = YoloDetectionManager(context)
     private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록
-    private val eventDelayMillis = 500L // event data to iot 딜레이 시간
+    private val eventDelayMillis = 6000L // event data to iot 딜레이 시간
     private val handleDetection = HandleDetection()
 
     fun processFrame(
