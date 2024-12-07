@@ -306,10 +306,9 @@ class MqttViewModel @Inject constructor(
 
     fun eventTopic(
         trackingId: Int,
-        timestamp: Long,
         objectName: String,
-        confidence: Double,
-        coordinates: String
+        coordinates: String,
+        confidence: String
     ) {
         val payload =
             """

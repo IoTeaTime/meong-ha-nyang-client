@@ -9,13 +9,10 @@ import com.example.mhnfe.domain.ai.BoundingBoxUtils
 import com.example.mhnfe.domain.ai.DetectionManager
 import com.example.mhnfe.domain.ai.opencv.BitmapToMatConverter
 import com.example.mhnfe.domain.ai.opencv.MotionDetector
-import com.example.mhnfe.domain.ai.yolo.BoundingBox
 import com.example.mhnfe.domain.ai.yolo.YoloDetectionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import org.opencv.core.Mat
 import org.opencv.core.Rect
 import javax.inject.Inject
@@ -27,70 +24,44 @@ class AiViewModel @Inject constructor(
     private val tag = "AiViewModel"
     private val motionDetector = MotionDetector()
     private val yoloDetectionManager = YoloDetectionManager(context)
-    private var boundingBoxes: List<BoundingBox> = listOf()
     private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록
-    private val eventDelayMillis = 5000L // event data to iot 딜레이 시간
+    private val eventDelayMillis = 500L // event data to iot 딜레이 시간
 
-    fun processFrame(bitmap: Bitmap?) {
+    fun processFrame(bitmap: Bitmap?, onResult: (Int, String, String, String) -> Unit) {
         viewModelScope.launch {
             try {
                 bitmap?.let { bmp ->
                     val currentFrame: Mat = BitmapToMatConverter.BitToMat(bmp)
-
                     val motionAreas: List<Rect> = motionDetector.detectMotion(currentFrame)
 
                     if (motionAreas.isNotEmpty()) {
                         Log.d(tag, "Motion detected in ${motionAreas.size} area(s)")
-                        // Yolo 실행
-                        yoloDetectionManager.detect(bmp)
 
-                    } else {
-                        Log.d(tag, "No motion detected")
+                        // Yolo 실행 및 콜백 처리
+                        yoloDetectionManager.detect(bmp) { boundingBoxes, _ ->
+                            if (boundingBoxes.isNotEmpty()) {
+                                if (BoundingBoxUtils.shouldTriggerEvent(lastEventTime, eventDelayMillis)) {
+                                    lastEventTime = System.currentTimeMillis()
+                                    Log.d("DetectEvent", "detectEvent() 시작")
+
+                                    val trackingId = DetectionManager.getNextTrackingId()
+
+                                    // BoundingBoxUtil을 사용하여 JSON 데이터 생성
+                                    val coordinatesJson = BoundingBoxUtils.generateCoordinatesJson(boundingBoxes)
+                                    val objectNameJson = BoundingBoxUtils.generateObjectNameJson(boundingBoxes)
+                                    val confidenceJson = BoundingBoxUtils.generateConfidenceJson(boundingBoxes)
+
+                                    onResult(trackingId, coordinatesJson, objectNameJson, confidenceJson)
+                                }
+                            }
+                        }
                     }
+
                     // 현재 프레임 객체 해제
                     currentFrame.release()
                 }
             } catch (e: Exception) {
                 Log.e(tag, "Frame processing error", e)
-            }
-        }
-    }
-
-    fun detectEvent(onResult: (Int, Long, String, Double, String) -> Unit) {
-        viewModelScope.launch {
-            val currentTime = System.currentTimeMillis()
-            if (currentTime - lastEventTime < eventDelayMillis) {
-                return@launch
-            }
-            try {
-                lastEventTime = currentTime // 이벤트 시간
-                Log.d("DetectEvent", "detectEvent() 시작")
-
-                val trackingId = DetectionManager.getNextTrackingId()
-                val timestamp = System.currentTimeMillis() / 1000
-
-                val boundingBoxes = BoundingBoxUtils.getLatestBoundingBoxData()
-                if (boundingBoxes.isEmpty()) {
-                    Log.d("DetectEvent", "No objects detected")
-                    return@launch
-                }
-
-                // 좌표 - 탐지된 이름 - confidence 순
-                val coordinatesJson = JSONObject(BoundingBoxUtils.coordinatesJson(boundingBoxes))
-                val confidenceJson = JSONObject(BoundingBoxUtils.confidenceJson(boundingBoxes))
-                val objectTypeJson = JSONObject(BoundingBoxUtils.objectNameJson(boundingBoxes))
-
-                // 불용어 제거
-                val confidence = confidenceJson.getJSONObject("box_0").getDouble("confidence")
-                val objectName = objectTypeJson.getJSONObject("box_0").getString("object_name")
-                val coordinates = coordinatesJson.getJSONObject("box_0").toString()
-
-
-                onResult(trackingId, timestamp, objectName, confidence, coordinates)
-
-                delay(eventDelayMillis)
-            } catch (e: Exception) {
-                Log.e("DetectEvent", "detectEvent() 중 오류 발생: ${e.message}", e)
             }
         }
     }
