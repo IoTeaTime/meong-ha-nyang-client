@@ -874,7 +874,6 @@ class KVSSignalingViewModel : ViewModel() {
 
             // Y 데이터 복사
             buffer.dataY.get(nv21, 0, ySize)
-            Log.d(TAG, "Copied Y data")
 
             // U와 V 데이터를 NV21 포맷으로 인터리빙
             val uBuffer = buffer.dataU
@@ -884,11 +883,9 @@ class KVSSignalingViewModel : ViewModel() {
                 nv21[pos++] = vBuffer.get(i)
                 nv21[pos++] = uBuffer.get(i)
             }
-            Log.d(TAG, "Copied UV data")
 
             // YuvImage로 변환
             val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
-            Log.d(TAG, "Created YuvImage")
 
             val out = ByteArrayOutputStream()
             yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
@@ -907,7 +904,6 @@ class KVSSignalingViewModel : ViewModel() {
     }
     private fun convertNV21ToBitmap(buffer: VideoFrame.Buffer, rotation: Int) {
         try {
-            Log.d(TAG, "Converting frame: ${buffer.width}x${buffer.height}, rotation: $rotation")
 
             // 먼저 I420로 변환
             val i420Buffer = buffer.toI420()
@@ -924,7 +920,6 @@ class KVSSignalingViewModel : ViewModel() {
 
                 // Y 데이터 복사
                 i420Buffer.dataY.get(nv21, 0, ySize)
-                Log.d(TAG, "Copied Y data")
 
                 // U와 V 데이터를 NV21 포맷으로 인터리빙
                 val uBuffer = i420Buffer.dataU
@@ -934,20 +929,16 @@ class KVSSignalingViewModel : ViewModel() {
                     nv21[pos++] = vBuffer.get(i)
                     nv21[pos++] = uBuffer.get(i)
                 }
-                Log.d(TAG, "Copied UV data")
 
                 // YuvImage로 변환
                 val yuvImage = YuvImage(nv21, ImageFormat.NV21, width, height, null)
-                Log.d(TAG, "Created YuvImage")
 
                 val out = ByteArrayOutputStream()
                 yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
-                Log.d(TAG, "Compressed to JPEG")
 
                 val imageBytes = out.toByteArray()
                 var bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                     ?: throw Exception("Failed to decode bitmap")
-                Log.d(TAG, "Decoded bitmap: ${bitmap.width}x${bitmap.height}")
 
                 // 회전 처리
                 if (rotation != 0) {
@@ -960,13 +951,10 @@ class KVSSignalingViewModel : ViewModel() {
                         matrix,
                         true
                     )
-                    Log.d(TAG, "Applied rotation: $rotation")
                 }
 
-                Log.d(TAG, "Successfully created bitmap: ${bitmap.width}x${bitmap.height}")
                 viewModelScope.launch(Dispatchers.Main) {
                     _frameData.value = bitmap
-                    Log.d(TAG, "Posted bitmap to StateFlow")
                 }
 
             } catch (e: Exception) {
@@ -1022,7 +1010,6 @@ class KVSSignalingViewModel : ViewModel() {
 
                                     try {
                                         val buffer = frame.buffer
-                                        Log.d(TAG, "Got buffer: ${buffer?.javaClass?.simpleName}")
 
                                         when (buffer) {
                                             is VideoFrame.I420Buffer -> {
