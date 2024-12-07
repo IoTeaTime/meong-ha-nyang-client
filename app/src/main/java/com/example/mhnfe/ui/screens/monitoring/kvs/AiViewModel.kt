@@ -10,6 +10,7 @@ import com.example.mhnfe.domain.ai.DetectionManager
 import com.example.mhnfe.domain.ai.opencv.BitmapToMatConverter
 import com.example.mhnfe.domain.ai.opencv.MotionDetector
 import com.example.mhnfe.domain.ai.yolo.YoloDetectionManager
+import com.example.mhnfe.domain.repository.ImageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
@@ -26,6 +27,7 @@ import java.io.ByteArrayOutputStream
 @HiltViewModel
 class AiViewModel @Inject constructor(
     @ApplicationContext private val context: Context, // Context 주입
+    private val imageRepository: ImageRepository
 ) : ViewModel() {
     private val tag = "AiViewModel"
     private val motionDetector = MotionDetector()
@@ -54,14 +56,52 @@ class AiViewModel @Inject constructor(
                                     lastEventTime = System.currentTimeMillis()
                                     Log.d("DetectEvent", "detectEvent() 시작")
 
-                                    val trackingId = DetectionManager.getNextTrackingId()
+                                    //api 연결
+                                    viewModelScope.launch {
+                                        try {
+                                            //Presigned URL 가져오기
+                                            val urlResponse =
+                                                imageRepository.getPresignedUrl(imageName)
 
-                                    // BoundingBoxUtil을 사용하여 JSON 데이터 생성
-                                    val coordinatesJson = BoundingBoxUtils.generateCoordinatesJson(boundingBoxes)
-                                    val objectNameJson = BoundingBoxUtils.generateObjectNameJson(boundingBoxes)
-                                    val confidenceJson = BoundingBoxUtils.generateConfidenceJson(boundingBoxes)
+                                            //Presigned URL 이미지 업로드
+                                            val uploadResult = imageRepository.uploadToPresignedUrl(
+                                                urlResponse.body.presignedUrl,
+                                                imageData
+                                            )
 
-                                    onResult(trackingId, coordinatesJson, objectNameJson, confidenceJson)
+                                            if (uploadResult) {
+                                                imageRepository.saveImage(
+                                                    imageName = urlResponse.body.imageName,
+                                                    imagePath = urlResponse.body.imagePath
+                                                )
+                                                Log.e("PresignedURL", "이미지 저장 성공")
+                                            }
+
+                                            val trackingId = DetectionManager.getNextTrackingId()
+                                            // BoundingBoxUtil을 사용하여 JSON 데이터 생성
+                                            val coordinatesJson =
+                                                BoundingBoxUtils.generateCoordinatesJson(
+                                                    boundingBoxes
+                                                )
+                                            val objectNameJson =
+                                                BoundingBoxUtils.generateObjectNameJson(
+                                                    boundingBoxes
+                                                )
+                                            val confidenceJson =
+                                                BoundingBoxUtils.generateConfidenceJson(
+                                                    boundingBoxes
+                                                )
+
+                                            onResult(
+                                                trackingId,
+                                                coordinatesJson,
+                                                objectNameJson,
+                                                confidenceJson
+                                            )
+                                        }catch (e: Exception) {
+                                            Log.e(tag, "Image upload failed", e)
+                                        }
+                                    }
                                 }
                             }
                         }

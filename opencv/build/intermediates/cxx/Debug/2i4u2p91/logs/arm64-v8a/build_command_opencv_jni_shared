@@ -1,0 +1,4 @@
+/Users/kim-seung-yeon/Library/Android/sdk/cmake/3.22.1/bin/ninja \
+  -C \
+  /Users/kim-seung-yeon/AndroidStudioProjects/meong-ha-nyang-client/opencv/.cxx/Debug/2i4u2p91/arm64-v8a \
+  opencv_jni_shared

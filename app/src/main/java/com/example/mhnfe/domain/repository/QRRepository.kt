@@ -2,6 +2,7 @@ package com.example.mhnfe.domain.repository
 
 import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.remote.response.CctvQRResponse
+import com.example.mhnfe.data.remote.response.ImageListResponse
 import com.example.mhnfe.data.remote.response.ViewerQRResponse
 
 interface QRRepository {
