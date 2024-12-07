@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
 import android.content.Context.MODE_PRIVATE
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +33,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -134,7 +134,7 @@ fun LoginScreen(
                         onIsErrorChange = {passwordError = it},
                         warningText = errorMessage ?: "",
                         hintText = "비밀번호",
-                        visualTransformation = PasswordVisualTransformation()
+                        isPasswordField = true
                     )
 
                     // 자동 로그인 체크박스
@@ -210,6 +210,8 @@ fun LoginScreen(
                             } else {
                                 Log.e(TAG, "JWT 토큰이 null이어서 FCM 토큰 전송이 불가능합니다.")
                             }
+
+                            Toast.makeText(context, "로그인에 성공하였습니다.", Toast.LENGTH_SHORT).show()
 
                             if(loginResponse?.body?.isGroupMember == true)
                             {
