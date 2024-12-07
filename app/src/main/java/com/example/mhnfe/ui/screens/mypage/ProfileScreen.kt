@@ -228,7 +228,7 @@ fun ProfileScreen(
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
-                                profileResponse?.body?.member?.id?.toString()?.let {
+                                profileResponse?.body?.member?.email?.let {
                                     Text(
                                         modifier = modifier,
                                         text = it,
