@@ -10,7 +10,7 @@ import org.opencv.imgproc.Imgproc
 class MotionDetector {
 
     private var previousFrame: Mat? = null
-    private val minArea = 1000 // 최소 움직임 영역 크기
+    private val minArea = 1300 // 최소 움직임 영역 크기
     private val tag = "MotionDetector"
 
     fun detectMotion(currentFrame: Mat): List<Rect> {
@@ -35,11 +35,11 @@ class MotionDetector {
 
                     // 가우시안 블러 적용
                     val blurredFrame = Mat()
-                    Imgproc.GaussianBlur(diffFrame, blurredFrame, Size(21.0, 21.0), 0.0)
+                    Imgproc.GaussianBlur(diffFrame, blurredFrame, Size(31.0, 31.0), 0.0)
 
                     // 차이를 Threshold로 처리(이진화)
                     val threshFrame = Mat()
-                    Imgproc.threshold(blurredFrame, threshFrame, 25.0, 255.0, Imgproc.THRESH_BINARY)
+                    Imgproc.threshold(blurredFrame, threshFrame, 50.0, 255.0, Imgproc.THRESH_BINARY)
 
                     // 모폴로지 연산(침식 후 팽창)
                     Imgproc.dilate(threshFrame, threshFrame, Mat(), Point(-1.0, -1.0), 2)
