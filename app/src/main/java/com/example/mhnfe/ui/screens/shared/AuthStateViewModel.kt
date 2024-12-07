@@ -1,0 +1,67 @@
+package com.example.mhnfe.ui.screens.shared
+
+import android.content.SharedPreferences
+import androidx.datastore.core.DataStore
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.mhnfe.data.remote.api.UserApi
+import com.example.mhnfe.data.remote.response.AccessToken
+import com.example.mhnfe.data.remote.response.LogoutResponse
+import com.example.mhnfe.data.remote.response.RefreshToken
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+
+@HiltViewModel
+class AuthStateViewModel @Inject constructor(
+    private val userApi: UserApi,
+    private val accessTokenDataStore: DataStore<AccessToken>,
+    private val refreshTokenDataStore: DataStore<RefreshToken>,
+    private val sharedPreferences: SharedPreferences
+) : ViewModel() {
+
+    private val _logoutResponse = MutableStateFlow<LogoutResponse?>(null)
+    val logoutResponse: StateFlow<LogoutResponse?> = _logoutResponse
+
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                // 1. 액세스 토큰 가져오기
+                val token = accessTokenDataStore.data.map { it.accessToken }.first()
+
+                // 2. 로그아웃 API 호출
+                val response = withContext(Dispatchers.IO) {
+                    userApi.logout(token)
+                }
+
+                // 3. 로그아웃 후 처리
+                if (response.result.code == 200) {
+                    // 4. 데이터 초기화 (AccessToken, RefreshToken, LoginRequest, SharedPreferences 등)
+                    clearUserData()
+                }
+                _logoutResponse.value = response
+            } catch (e: Exception) {
+                // 에러 처리
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // 사용자 데이터 초기화 메서드
+    suspend fun clearUserData() {
+        // AccessToken 초기화
+        accessTokenDataStore.updateData { AccessToken("") }
+
+        // RefreshToken 초기화
+        refreshTokenDataStore.updateData { RefreshToken("") }
+
+        // SharedPreferences 초기화
+        sharedPreferences.edit().clear().apply()
+    }
+}

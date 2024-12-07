@@ -145,7 +145,9 @@ fun MainScreen(
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "명하냥 로고",
-            modifier = modifier.size(315.dp, 358.dp)
+            modifier = modifier
+                .size(315.dp, 358.dp)
+                .padding(top = 60.dp)
         )
 
         // 버튼 영역
