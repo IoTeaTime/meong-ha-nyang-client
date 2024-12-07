@@ -4,10 +4,6 @@ import android.util.Log
 import androidx.datastore.core.DataStore
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.token.TokenManager
-import com.example.mhnfe.ui.screens.shared.AuthStateManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -51,42 +47,13 @@ class AuthAuthenticator @Inject constructor(
                                 .build()
                         } else {
                             Log.d("AuthAuthenticator","AuthAuthenticator failed by expired refreshToken!!")
-                            // 비동기적으로 로그아웃 상태 변경
-                            GlobalScope.launch(Dispatchers.Main) {
-                                Log.d("AuthAuthenticator","logout try")
-                                AuthStateManager.logout()
-                            }
                             return@runBlocking null
                         }
                     } catch (e: Exception) {
                         // 예외가 발생하면 로그아웃 처리
                         Log.e("AuthAuthenticator", "Error while refreshing token", e)
-                        GlobalScope.launch(Dispatchers.Main) {
-                            Log.d("AuthAuthenticator","logout due to exception")
-                            AuthStateManager.logout()
-                        }
                         return@runBlocking null
                     }
-//                    Log.d("AuthAuthenticator","AuthAuthenticator get newToken!!}")
-//                    if (newTokenResult!=null) {
-//                        val accessToken = newTokenResult
-//                        // Update the access token in your storage.
-//                        accessTokenDataStore.updateData { currentToken ->
-//                            currentToken.copy(accessToken = accessToken)
-//                        }
-//                        return@runBlocking response.request.newBuilder()
-//                            .header("Authorization", accessToken)
-//                            .build()
-//                    } else {
-//                        Log.d("AuthAuthenticator","AuthAuthenticator failed by expired refreshToken!!")
-//                        // 비동기적으로 로그아웃 상태 변경
-//
-//                        GlobalScope.launch(Dispatchers.Main) {
-//                            Log.d("AuthAuthenticator","logout try")
-//                            AuthStateManager.logout()
-//                        }
-//                        return@runBlocking null
-//                    }
                 }
             }
         }

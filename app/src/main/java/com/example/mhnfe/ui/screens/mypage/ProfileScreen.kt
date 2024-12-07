@@ -42,6 +42,7 @@ import com.example.mhnfe.ui.components.LogoutPopUp
 import com.example.mhnfe.ui.components.LongButton
 import com.example.mhnfe.ui.components.MainTopBar
 import com.example.mhnfe.ui.navigation.NavRoutes
+import com.example.mhnfe.ui.screens.shared.AuthStateViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray2
@@ -53,14 +54,15 @@ fun ProfileScreen(
     userType: UserType,
     bottomNavController: NavController,
     mainNavController: NavController,
-    profileViewModel: ProfileViewModel = hiltViewModel()
+    profileViewModel: ProfileViewModel = hiltViewModel(),
+    authStateViewModel: AuthStateViewModel = hiltViewModel()
 ) {
     val (dialogVisible, setDialogVisible) = remember { mutableStateOf(false) }
     val (dialogVisible1, setDialogVisible1) = remember { mutableStateOf(false) }
     val (dialogVisible2, setDialogVisible2) = remember { mutableStateOf(false) }
     val (dialogVisible3, setDialogVisible3) = remember { mutableStateOf(false) }
 
-    val logoutResponse by profileViewModel.logoutResponse.collectAsState()
+    val logoutResponse by authStateViewModel.logoutResponse.collectAsState()
     val quitResponse by profileViewModel.quitResponse.collectAsState()
     val exitGroupResponse by profileViewModel.exitGroupResponse.collectAsState()
 
@@ -98,7 +100,20 @@ fun ProfileScreen(
         modifier = modifier
             .fillMaxSize(),
         topBar = {
-            MainTopBar(text = "마이페이지")
+            MainTopBar(
+                text = "마이페이지",
+                onImageClick = {
+                    try{
+                        authStateViewModel.logout()
+                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                            popUpTo(NavRoutes.Main.route) { inclusive = true }
+                        }
+                    } catch (e: Exception) {
+                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                            popUpTo(NavRoutes.Main.route) { inclusive = true }
+                        }
+                    }
+                })
         },
     ) { innerPadding ->
         Column(
@@ -305,7 +320,7 @@ fun ProfileScreen(
             if (dialogVisible2) {
                 LogoutPopUp(
                     onConfirmation = {
-                        profileViewModel.logout()
+                        authStateViewModel.logout()
                         setDialogVisible2(false)
                     },
                     text = "로그아웃 하시겠습니까?",

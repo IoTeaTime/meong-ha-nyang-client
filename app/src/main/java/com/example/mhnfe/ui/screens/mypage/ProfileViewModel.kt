@@ -43,9 +43,6 @@ class ProfileViewModel @Inject constructor(
     private val memberIdDataStore: DataStore<MemberId>
 ) : ViewModel() {
 
-    private val _logoutResponse = MutableStateFlow<LogoutResponse?>(null)
-    val logoutResponse: StateFlow<LogoutResponse?> = _logoutResponse
-
     private val _quitResponse = MutableStateFlow<DeleteResponse?>(null)
     val quitResponse: StateFlow<DeleteResponse?> = _quitResponse
 
@@ -63,30 +60,6 @@ class ProfileViewModel @Inject constructor(
 
     private val _exitGroupResponse = MutableStateFlow<Response<ApiResponse>?>(null)
     val exitGroupResponse: StateFlow<Response<ApiResponse>?> = _exitGroupResponse
-
-    fun logout() {
-        viewModelScope.launch {
-            try {
-                // 1. 액세스 토큰 가져오기
-                val token = accessTokenDataStore.data.map { it.accessToken }.first()
-
-                // 2. 로그아웃 API 호출
-                val response = withContext(Dispatchers.IO) {
-                    userApi.logout(token)
-                }
-
-                // 3. 로그아웃 후 처리
-                if (response.result.code == 200) {
-                    // 4. 데이터 초기화 (AccessToken, RefreshToken, LoginRequest, SharedPreferences 등)
-                    clearUserData()
-                }
-                _logoutResponse.value = response
-            } catch (e: Exception) {
-                // 에러 처리
-                e.printStackTrace()
-            }
-        }
-    }
 
     fun exitGroup() {
         viewModelScope.launch {

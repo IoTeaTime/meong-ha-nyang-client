@@ -102,13 +102,13 @@ class LoginViewModel @Inject constructor(
     // 엑세스 토큰과 리프레시 토큰, 그룹 아이디 저장
     private suspend fun saveTokens(accessToken: String, refreshToken: String, groupId: Long, memberId: Int) {
         // 엑세스 토큰 저장
-//        accessTokenDataStore.updateData { currentToken ->
-//            currentToken.copy(accessToken = accessToken)
-//        }
-//        // 리프레시 토큰 저장
-//        refreshTokenDataStore.updateData { currentToken ->
-//            currentToken.copy(refreshToken = refreshToken)
-//        }
+        accessTokenDataStore.updateData { currentToken ->
+            currentToken.copy(accessToken = accessToken)
+        }
+        // 리프레시 토큰 저장
+        refreshTokenDataStore.updateData { currentToken ->
+            currentToken.copy(refreshToken = refreshToken)
+        }
         groupIdDataStore.updateData { currentGroupId ->
             currentGroupId.copy(groupId = groupId)
         }
