@@ -183,7 +183,10 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .wrapContentHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp, alignment = Alignment.CenterVertically)
+                verticalArrangement = Arrangement.spacedBy(
+                    14.dp,
+                    alignment = Alignment.CenterVertically
+                )
             ) {
                 if (errorMessage != null) {
                     Text(

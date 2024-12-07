@@ -17,12 +17,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import org.opencv.core.Mat
 import org.opencv.core.Rect
-import javax.inject.Inject
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.io.ByteArrayOutputStream
-
+import javax.inject.Inject
 
 
 @HiltViewModel
@@ -34,10 +33,13 @@ class AiViewModel @Inject constructor(
     private val motionDetector = MotionDetector()
     private val yoloDetectionManager = YoloDetectionManager(context)
     private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록
-    private val eventDelayMillis = 500L // event data to iot 딜레이 시간
+    private val eventDelayMillis = 6000L // event data to iot 딜레이 시간
     private val handleDetection = HandleDetection()
 
-    fun processFrame(bitmap: Bitmap?, onResult: (Int, String, String, String) -> Unit) {
+    fun processFrame(
+        bitmap: Bitmap?,
+        onResult: (Int, String, Float, List<Map<String, Int>>) -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 bitmap?.let { bmp ->
@@ -49,7 +51,8 @@ class AiViewModel @Inject constructor(
 
                         // Yolo 실행 및 콜백 처리
                         yoloDetectionManager.detect(bmp) { boundingBoxes, _ ->
-                            val filteredBoxes = handleDetection.handleDetectionResults(boundingBoxes)
+                            val filteredBoxes =
+                                handleDetection.handleDetectionResults(boundingBoxes)
                             if (filteredBoxes.isNotEmpty()) {
                                 val imageResult = createImage(bmp)
                                 val imageName = imageResult.first // 이미지 이름
@@ -81,30 +84,24 @@ class AiViewModel @Inject constructor(
                                             }
 
                                             val trackingId = DetectionManager.getNextTrackingId()
-                                            // BoundingBoxUtil을 사용하여 JSON 데이터 생성
-                                            val coordinatesJson =
-                                                BoundingBoxUtils.generateCoordinatesJson(
-                                                    boundingBoxes
-                                                )
-                                            val objectNameJson =
-                                                BoundingBoxUtils.generateObjectNameJson(
-                                                    boundingBoxes
-                                                )
-                                            val confidenceJson =
-                                                BoundingBoxUtils.generateConfidenceJson(
-                                                    boundingBoxes
-                                                )
+
+                                    // BoundingBoxUtils를 사용하여 데이터 추출
+                                    val (objectType, confidence) = BoundingBoxUtils.getTypeAndConfidence(
+                                        boundingBoxes
+                                    )
+                                    val coordinates = BoundingBoxUtils.getCoordinates(boundingBoxes)
 
                                             onResult(
                                                 trackingId,
-                                                coordinatesJson,
-                                                objectNameJson,
-                                                confidenceJson
+                                                objectType,
+                                                confidence,
+                                                coordinates
                                             )
-                                        }catch (e: Exception) {
+                                        } catch (e: Exception) {
                                             Log.e(tag, "Image upload failed", e)
                                         }
                                     }
+
                                 }
                             }
                         }
@@ -118,6 +115,7 @@ class AiViewModel @Inject constructor(
             }
         }
     }
+
     private fun createImage(bitmap: Bitmap, quality: Int = 80): Pair<String, ByteArray> {
         // 현재 시간을 기반으로 동적 이미지 이름 생성
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())

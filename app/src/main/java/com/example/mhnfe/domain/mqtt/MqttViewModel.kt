@@ -322,32 +322,32 @@ class MqttViewModel @Inject constructor(
     fun eventTopic(
         trackingId: Int,
         objectName: String,
-        coordinates: String,
-        confidence: String
+        confidence: Float,
+        coordinates: List<Map<String, Int>>
     ) {
-        val payload =
+        val payload = coordinates.firstOrNull().let { coord ->
             """
-                {
-                    "trackingId": $trackingId,
-                    "timestamp": ${System.currentTimeMillis() / 1000}, 
-                    "objectType": "$objectName",
-                    "confidence": "$confidence",
-                    "coordinates": $coordinates
-               }
-            """.trimIndent()
+        {
+            "trackingId": $trackingId,
+            "timestamp": ${System.currentTimeMillis() / 1000},
+            "objectType": "$objectName",
+            "confidence": $confidence,
+            "coordinates": {
+                "x1": ${coord!!["x1"]}, "y1": ${coord["y1"]},
+                "x2": ${coord["x2"]}, "y2": ${coord["y2"]},
+                "x3": ${coord["x3"]}, "y3": ${coord["y3"]},
+                "x4": ${coord["x4"]}, "y4": ${coord["y4"]}
+            }
+        }
+        """.trimIndent()
+        }
 
         publish("/mhn/event/detect/things/$thingId", payload)
     }
 
-
-
     private fun publish(topic: String, payload: String) {
-        try {
-            awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
-            Log.d(tag, "Published to topic $topic: $payload")
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to publish message: ${e.message}", e)
-        }
+        awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
+        Log.d(tag, "Published to topic $topic: \n $payload")
     }
 
     private fun subscribe(topic: String, onMessageReceived: (String, String) -> Unit) {

@@ -22,17 +22,19 @@ interface ImageApi {
         @Url presignedUrl: String,
         @Body image: RequestBody
     ): Response<Unit>
+
     @POST("api/image-device")
     suspend fun imageDevice(
         @Header("Authorization") token: String,
         @Body request: ImageSaveRequest
-    ) : saveImageResponse
+    ): saveImageResponse
 
     @POST("/api/image-device/presigned-url")
-    suspend fun  urlImage(
+    suspend fun urlImage(
         @Header("Authorization") token: String,
         @Body request: ImageRequest
-    ) : ImageResponse
+    ): ImageResponse
+
     @GET("api/image")
     suspend fun getImages(
         @Header("Authorization") token: String,

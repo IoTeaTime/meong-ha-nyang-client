@@ -1,61 +1,50 @@
 package com.example.mhnfe.domain.ai
 
 import com.example.mhnfe.domain.ai.yolo.BoundingBox
-import org.json.JSONObject
-
-// 좌표 데이터 클래스
-data class BoundingBoxCoordinates(
-    val x1: Int, val y1: Int,
-    val x2: Int, val y2: Int,
-    val x3: Int, val y3: Int,
-    val x4: Int, val y4: Int
-)
 
 object BoundingBoxUtils {
 
-    // BoundingBox 객체의 좌표를 BoundingBoxCoordinates 객체로 변환
-    private fun boundingBoxCoordinates(box: BoundingBox): BoundingBoxCoordinates {
-        return BoundingBoxCoordinates(
-            x1 = box.x1.toInt(),  // 좌상단 x
-            y1 = box.y1.toInt(),  // 좌상단 y
-            x2 = box.x2.toInt(),  // 우상단 x
-            y2 = box.y1.toInt(),  // 우상단 y (같은 y값)
-            x3 = box.x1.toInt(),  // 좌하단 x (같은 x값)
-            y3 = box.y2.toInt(),  // 좌하단 y
-            x4 = box.x2.toInt(),  // 우하단 x (같은 x값)
-            y4 = box.y2.toInt()   // 우하단 y
-        )
+    // 객체 이름과 신뢰도를 각각 반환하는 메서드
+    fun getTypeAndConfidence(boundingBoxes: List<BoundingBox>): Pair<String, Float> {
+        return if (boundingBoxes.isNotEmpty()) {
+            val box = boundingBoxes.first()
+            box.objectName to box.cnf
+        } else {
+            "unknown" to 0.0f
+        }
     }
 
-    // 각 박스의 좌표를 JSON 형식으로 반환
-    fun generateCoordinatesJson(boundingBoxes: List<BoundingBox>): String {
-        return JSONObject().apply {
-            boundingBoxes.forEachIndexed { index, box ->
-                val coordinates = boundingBoxCoordinates(box)
-                put("box_$index", JSONObject().apply {
-                    put("x1", coordinates.x1)
-                    put("y1", coordinates.y1)
-                    put("x2", coordinates.x2)
-                    put("y2", coordinates.y2)
-                    put("x3", coordinates.x3)
-                    put("y3", coordinates.y3)
-                    put("x4", coordinates.x4)
-                    put("y4", coordinates.y4)
-                })
-            }
-        }.toString()
+    // 각 박스의 좌표를 반환하는 메서드
+    fun getCoordinates(boundingBoxes: List<BoundingBox>): List<Map<String, Int>> {
+        return boundingBoxes.map { box ->
+            mapOf(
+                "x1" to box.x1,
+                "y1" to box.y1,
+                "x2" to box.x2,
+                "y2" to box.y2,
+                "x3" to box.x1,
+                "y3" to box.y2,
+                "x4" to box.x2,
+                "y4" to box.y1
+            )
+        }
     }
 
-    fun generateObjectNameJson(boundingBoxes: List<BoundingBox>): String =
-        boundingBoxes.joinToString(prefix = "[", postfix = "]") { box ->
-            "{\"object_name\":\"${box.objectName}\"}"
-        }
-
-    fun generateConfidenceJson(boundingBoxes: List<BoundingBox>): String =
-        boundingBoxes.joinToString(prefix = "[", postfix = "]") { box ->
-            "{\"confidence\":${box.cnf}}"
-        }
-
+    // 이벤트 발생 여부를 결정하는 메서드
     fun shouldTriggerEvent(lastEventTime: Long, eventDelayMillis: Long): Boolean =
         (System.currentTimeMillis() - lastEventTime) >= eventDelayMillis
+
+    // 좌표를 단일 JSON 객체로 변환하는 메서드
+    fun getFirstCoordinatesAsJson(boundingBoxes: List<BoundingBox>): String {
+        return boundingBoxes.firstOrNull()?.let { box ->
+            """
+            {
+                "x1": ${box.x1}, "y1": ${box.y1},
+                "x2": ${box.x2}, "y2": ${box.y2},
+                "x3": ${box.x1}, "y3": ${box.y2},
+                "x4": ${box.x2}, "y4": ${box.y1}
+            }
+            """.trimIndent()
+        } ?: "{}"
+    }
 }

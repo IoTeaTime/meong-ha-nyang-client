@@ -30,5 +30,5 @@ data class CctvInfoResponse(
 
 data class CctvSelfInfoResponse(
     val result: Result,
-    val body : CctvSelfInfoResponseBody
+    val body: CctvSelfInfoResponseBody
 )

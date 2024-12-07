@@ -72,13 +72,13 @@ fun ReportDetailScreen(
             MainTopBar(
                 text = "리포트",
                 onImageClick = {
-                    try{
+                    try {
                         authStateViewModel.logout()
-                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                        mainNavController.navigate(NavRoutes.Auth.Main.route) {
                             popUpTo(NavRoutes.Main.route) { inclusive = true }
                         }
                     } catch (e: Exception) {
-                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                        mainNavController.navigate(NavRoutes.Auth.Main.route) {
                             popUpTo(NavRoutes.Main.route) { inclusive = true }
                         }
                     }
@@ -103,7 +103,9 @@ fun ReportDetailScreen(
                 }
             )
             Column (
-                modifier = modifier.fillMaxWidth().wrapContentHeight(),
+                modifier = modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(25.dp, alignment = Alignment.CenterVertically)
             ) {
@@ -114,10 +116,12 @@ fun ReportDetailScreen(
                     style = Typography.labelLarge,
                     color = mainBlack
                 )
-                if(uiState.images.isEmpty()) {
+                if (uiState.images.isEmpty()) {
                     Box(
-                        modifier = modifier.fillMaxWidth().height(150.dp)
-                    ){
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                    ) {
                         Text(
                             modifier = modifier.align(alignment = Alignment.Center),
                             text = "기록이 없습니다😢",
@@ -126,9 +130,11 @@ fun ReportDetailScreen(
                         )
                     }
 
-                }else {
+                } else {
                     LazyRow(
-                        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
                         horizontalArrangement = Arrangement.spacedBy(
                             8.dp,
                             alignment = Alignment.Start
@@ -233,6 +239,7 @@ fun ImageDialog(
 private fun Preview(){
     val navController = rememberNavController()
     ReportDetailScreen(
-        mainNavController = navController)
+        mainNavController = navController
+    )
 
 }

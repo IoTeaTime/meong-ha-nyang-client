@@ -102,6 +102,7 @@ class LoginViewModel @Inject constructor(
                         _errorMessage.value = "잘못된 아이디 또는 비밀번호입니다."
                         Log.e("LoginViewModel", "Error: ${_errorMessage.value}")
                     }
+
                     else -> {
                         Log.e("LoginViewModel", "HttpException: ${e.message}")
                         _errorMessage.value = "서버 오류가 발생했습니다. 다시 시도해주세요."

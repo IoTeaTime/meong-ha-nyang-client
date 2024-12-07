@@ -25,7 +25,7 @@ class ImageRepositoryImpl @Inject constructor(
     private val imageApi: ImageApi,
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val cctvResponseDataStore: DataStore<CCTVResponseBody>,
-): ImageRepository {
+) : ImageRepository {
 
     override suspend fun getPresignedUrl(imageName: String): ImageResponse {
         val cctvAccessToken = cctvResponseDataStore.data.map { it.accessToken }.first()
@@ -39,13 +39,14 @@ class ImageRepositoryImpl @Inject constructor(
         }
         return response
     }
+
     override suspend fun saveImage(imageName: String, imagePath: String): saveImageResponse {
         val cctvAccessToken = cctvResponseDataStore.data.map { it.accessToken }.first()
         val request = ImageSaveRequest(
             imageName = imageName,
             imagePath = imagePath
         )
-        val response =  withContext(Dispatchers.IO) {
+        val response = withContext(Dispatchers.IO) {
             imageApi.imageDevice(
                 token = cctvAccessToken,
                 request = request
@@ -68,6 +69,7 @@ class ImageRepositoryImpl @Inject constructor(
             false
         }
     }
+
     override suspend fun getImages(year: Int, month: String, day: String): ImageListResponse {
         val token = accessTokenDataStore.data.map { it.accessToken }.first()
         return withContext(Dispatchers.IO) {
