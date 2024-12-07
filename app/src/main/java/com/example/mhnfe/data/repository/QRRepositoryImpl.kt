@@ -73,4 +73,5 @@ class QRRepositoryImpl @Inject constructor(
             qrApi.cctvIdInfo(cctvAccessToken)
         }
     }
+
 }
