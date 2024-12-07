@@ -1,0 +1,2 @@
+ninja: Entering directory `/Users/kim-seung-yeon/AndroidStudioProjects/meong-ha-nyang-client/opencv/.cxx/Debug/2i4u2p91/arm64-v8a'
+ninja: no work to do.

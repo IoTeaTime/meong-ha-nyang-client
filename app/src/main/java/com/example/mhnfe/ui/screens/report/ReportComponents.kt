@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,12 +41,16 @@ import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
 import com.example.mhnfe.ui.theme.mainYellow
 import java.time.LocalDate
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun ReportItemCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    date: String
+    date: String,
+    imagePath: String
 ) {
     Card(
         modifier = modifier
@@ -59,6 +64,16 @@ fun ReportItemCard(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
+            // 이미지 로딩
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imagePath)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Report Image",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
             Text(
                 modifier = modifier
                     .align(Alignment.BottomEnd)
@@ -211,7 +226,7 @@ private fun CalendarGrid(
         columns = GridCells.Fixed(7),
         modifier = modifier.fillMaxWidth().wrapContentHeight(),
         horizontalArrangement = Arrangement.Center,
-        verticalArrangement = Arrangement.spacedBy(10.dp, alignment = Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(5.dp, alignment = Alignment.CenterVertically),
         userScrollEnabled = false
     ) {
         items(days) { date ->
