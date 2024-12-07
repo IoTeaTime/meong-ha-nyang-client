@@ -16,6 +16,12 @@ import kotlinx.coroutines.launch
 import org.opencv.core.Mat
 import org.opencv.core.Rect
 import javax.inject.Inject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.io.ByteArrayOutputStream
+
+
 
 @HiltViewModel
 class AiViewModel @Inject constructor(
@@ -40,6 +46,10 @@ class AiViewModel @Inject constructor(
                         // Yolo 실행 및 콜백 처리
                         yoloDetectionManager.detect(bmp) { boundingBoxes, _ ->
                             if (boundingBoxes.isNotEmpty()) {
+                                val imageResult = createImage(bmp)
+                                val imageName = imageResult.first // 이미지 이름
+                                val imageData = imageResult.second // JPEG 포맷 이미지 데이터
+
                                 if (BoundingBoxUtils.shouldTriggerEvent(lastEventTime, eventDelayMillis)) {
                                     lastEventTime = System.currentTimeMillis()
                                     Log.d("DetectEvent", "detectEvent() 시작")
@@ -64,5 +74,17 @@ class AiViewModel @Inject constructor(
                 Log.e(tag, "Frame processing error", e)
             }
         }
+    }
+    private fun createImage(bitmap: Bitmap, quality: Int = 80): Pair<String, ByteArray> {
+        // 현재 시간을 기반으로 동적 이미지 이름 생성
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageName = "image_$timestamp.jpg" // 이미지 이름 (예: image_20241207_123456.jpg)
+
+        // Bitmap을 JPEG 포맷으로 변환
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+        val byteArray = outputStream.toByteArray()
+
+        return Pair(imageName, byteArray)
     }
 }
