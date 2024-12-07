@@ -67,9 +67,14 @@ object RepositoryModule {
     fun provideTokenRepository(tokenApi: TokenApi) : TokenRepository {
         return TokenRepositoryImpl(tokenApi)
     }
+
     @Provides
     @Singleton
-    fun provideImageRepository(imageApi: ImageApi, cctvResponseDataStore: DataStore<CCTVResponseBody>,accessTokenDataStore: DataStore<AccessToken>) :ImageRepository {
+    fun provideImageRepository(
+        imageApi: ImageApi,
+        cctvResponseDataStore: DataStore<CCTVResponseBody>,
+        accessTokenDataStore: DataStore<AccessToken>
+    ): ImageRepository {
         return ImageRepositoryImpl(imageApi, accessTokenDataStore, cctvResponseDataStore)
     }
 }

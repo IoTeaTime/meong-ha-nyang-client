@@ -54,7 +54,7 @@ fun ReportItemCard(
 ) {
     Card(
         modifier = modifier
-            .size(340.dp,200.dp)
+            .size(340.dp, 200.dp)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = mainBlack
@@ -177,7 +177,10 @@ private fun WeekDayHeader(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier.padding(vertical = 23.dp).fillMaxWidth().wrapContentHeight(),
+        modifier = modifier
+            .padding(vertical = 23.dp)
+            .fillMaxWidth()
+            .wrapContentHeight(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -224,7 +227,9 @@ private fun CalendarGrid(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(7),
-        modifier = modifier.fillMaxWidth().wrapContentHeight(),
+        modifier = modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
         horizontalArrangement = Arrangement.Center,
         verticalArrangement = Arrangement.spacedBy(5.dp, alignment = Alignment.CenterVertically),
         userScrollEnabled = false

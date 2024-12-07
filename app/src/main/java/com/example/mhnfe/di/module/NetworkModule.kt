@@ -100,6 +100,7 @@ object NetworkModule {
     fun provideDeviceApi(@Named("default") retrofit: Retrofit): DeviceApi {
         return retrofit.create(DeviceApi::class.java)
     }
+
     @Provides
     @Singleton
     fun provideImageApi(@Named("default") retrofit: Retrofit): ImageApi {

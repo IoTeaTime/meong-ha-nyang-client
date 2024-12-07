@@ -103,13 +103,13 @@ fun ProfileScreen(
             MainTopBar(
                 text = "마이페이지",
                 onImageClick = {
-                    try{
+                    try {
                         authStateViewModel.logout()
-                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                        mainNavController.navigate(NavRoutes.Auth.Main.route) {
                             popUpTo(NavRoutes.Main.route) { inclusive = true }
                         }
                     } catch (e: Exception) {
-                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                        mainNavController.navigate(NavRoutes.Auth.Main.route) {
                             popUpTo(NavRoutes.Main.route) { inclusive = true }
                         }
                     }
@@ -181,7 +181,9 @@ fun ProfileScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(
-                                    modifier = modifier.wrapContentWidth().wrapContentHeight(),
+                                    modifier = modifier
+                                        .wrapContentWidth()
+                                        .wrapContentHeight(),
                                     horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
