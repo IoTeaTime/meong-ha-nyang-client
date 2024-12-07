@@ -196,7 +196,7 @@ fun MainScreen(
                     modifier = modifier.size(50.dp)
                 )
                 Image(
-                    painter = painterResource(id = R.drawable.google1),
+                    painter = painterResource(id = R.drawable.google),
                     contentDescription = "구글 로그인",
                     modifier = modifier.size(50.dp)
 
