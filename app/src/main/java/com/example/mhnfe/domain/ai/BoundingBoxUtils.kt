@@ -12,10 +12,9 @@ data class BoundingBoxCoordinates(
 )
 
 object BoundingBoxUtils {
-    private const val TAG = "BoundingBoxUtils"
 
-    // BoundingBox 객체의 좌표를 변환하여 BoundingBoxCoordinates 객체 생성
-    private fun BoundingBoxCoordinates(box: BoundingBox): BoundingBoxCoordinates {
+    // BoundingBox 객체의 좌표를 BoundingBoxCoordinates 객체로 변환
+    private fun boundingBoxCoordinates(box: BoundingBox): BoundingBoxCoordinates {
         return BoundingBoxCoordinates(
             x1 = box.x1.toInt(),  // 좌상단 x
             y1 = box.y1.toInt(),  // 좌상단 y
@@ -29,10 +28,10 @@ object BoundingBoxUtils {
     }
 
     // 각 박스의 좌표를 JSON 형식으로 반환
-    fun coordinatesJson(boundingBoxes: List<BoundingBox>): String {
+    fun generateCoordinatesJson(boundingBoxes: List<BoundingBox>): String {
         return JSONObject().apply {
             boundingBoxes.forEachIndexed { index, box ->
-                val coordinates = BoundingBoxCoordinates(box)
+                val coordinates = boundingBoxCoordinates(box)
                 put("box_$index", JSONObject().apply {
                     put("x1", coordinates.x1)
                     put("y1", coordinates.y1)
@@ -47,25 +46,16 @@ object BoundingBoxUtils {
         }.toString()
     }
 
-    // 각 박스의 confidence 값을 JSON 형식으로 반환
-    fun confidenceJson(boundingBoxes: List<BoundingBox>): String {
-        return JSONObject().apply {
-            boundingBoxes.forEachIndexed { index, box ->
-                put("box_$index", JSONObject().apply {
-                    put("confidence", box.cnf)
-                })
-            }
-        }.toString()
-    }
+    fun generateObjectNameJson(boundingBoxes: List<BoundingBox>): String =
+        boundingBoxes.joinToString(prefix = "[", postfix = "]") { box ->
+            "{\"object_name\":\"${box.objectName}\"}"
+        }
 
-    // 각 박스의 class name을 JSON 형식으로 반환
-    fun objectNameJson(boundingBoxes: List<BoundingBox>): String {
-        return JSONObject().apply {
-            boundingBoxes.forEachIndexed { index, box ->
-                put("box_$index", JSONObject().apply {
-                    put("object_name", box.objectName)
-                })
-            }
-        }.toString()
-    }
+    fun generateConfidenceJson(boundingBoxes: List<BoundingBox>): String =
+        boundingBoxes.joinToString(prefix = "[", postfix = "]") { box ->
+            "{\"confidence\":${box.cnf}}"
+        }
+
+    fun shouldTriggerEvent(lastEventTime: Long, eventDelayMillis: Long): Boolean =
+        (System.currentTimeMillis() - lastEventTime) >= eventDelayMillis
 }
