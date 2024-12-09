@@ -44,11 +44,19 @@ class MainViewModel @Inject constructor(
                 // 3. 성공 시 그룹 아이디와 역할을 리턴
                 if(response.result.code == 200){
                     onSuccess(response.body.role, response.body.groupId)
-                } else if(response.result.code == 404) {
+                }
+                else if(response.result.code == 404) {
                     onSuccess("", 0L)
                 }
+            } catch (e: retrofit2.HttpException) {
+                if (e.code() == 404) {
+                    // 404를 별도로 처리
+                    onSuccess("", 0L)
+                } else {
+                    Log.e("MainViewModel", "AutoLogin Failed... ${e.message()}")
+                }
             } catch (e: Exception) {
-                Log.d("MainViewModel", "AutoLogin Failed... ${e.message}")
+                Log.e("MainViewModel", "AutoLogin Failed... ${e.message}")
             }
         }
     }
