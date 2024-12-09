@@ -1,6 +1,6 @@
 package com.example.mhnfe.ui.navigation
 
-
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -59,7 +58,6 @@ sealed class NavRoutes(val route: String) {
     object Monitoring : NavRoutes("monitoring") {
         object Group : NavRoutes("monitoring/group")
         object Master : NavRoutes("monitoring/master")
-//        object Viewer : NavRoutes("monitoring/viewer")
         object Viewer {
             const val route = "monitoring/viewer/{channelName}"
 
@@ -75,21 +73,11 @@ sealed class NavRoutes(val route: String) {
     }
     object Report : NavRoutes("report") {
         object ReportDetail : NavRoutes("report/report_detail")
-        //추후에 화면이 추가 될 수 있기 때문에 이렇게 따로 빼서 구현 추후 화면 추가가 없을 시 삭제
     }
     object MyPage : NavRoutes("myPage") {
         object Profile : NavRoutes("myPage/profile")
         object ChangePassword : NavRoutes("myPage/change_password")
         object DeviceManagement : NavRoutes("myPage/device_management")
-    }
-}
-
-// 추가: 로그인에서 메인으로 네비게이션할 때 사용할 익스텐션 함수
-fun NavController.navigateToMain(userType: UserType) {
-    navigate(NavRoutes.Main.createRoute(userType)) {
-        popUpTo(NavRoutes.MyPage.route) {
-            inclusive = true  // Auth 그래프를 백스택에서 완전히 제거
-        }
     }
 }
 
@@ -189,6 +177,7 @@ fun AppNavigation() {
     }
 }
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun MainContent(
     mainNavController: NavController,
@@ -301,17 +290,10 @@ fun MainContent(
                 route = NavRoutes.Report.route
             ) {
                 composable(NavRoutes.Report.ReportDetail.route) {
-//                    entry ->
-//                    val kvsViewModel: KVSSignalingViewModel = viewModel(viewModelStoreOwner = entry)
-//                    SignalingChannelTest(
-//                        navController = bottomNavController,
-//                        kvsViewModel = kvsViewModel,
-//                    )
                     ReportDetailScreen(
                         mainNavController = mainNavController
                     )
                 }
-                //추후에 화면이 추가 될 수 있기 때문에 이렇게 따로 빼서 구현 추후 화면 추가가 없을 시 삭제
             }
 
             // MyPage Graph
