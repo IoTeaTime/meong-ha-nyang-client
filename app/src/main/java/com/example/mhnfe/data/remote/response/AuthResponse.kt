@@ -27,14 +27,6 @@ data class Result(
     val description: String? = null
 )
 
-
-data class User(
-    val email: String,
-    val password: String,
-    val passwordConfirm: String,
-    val nickname: String
-)
-
 data class LoginResponse(
     val result: Result,
     val body: Jwt

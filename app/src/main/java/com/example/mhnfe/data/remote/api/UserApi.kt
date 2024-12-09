@@ -5,7 +5,6 @@ import com.example.mhnfe.data.remote.request.ChangePasswordRequest
 import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.DeleteResponse
-import com.example.mhnfe.data.remote.response.RefreshAccessTokenResponse
 import com.example.mhnfe.data.remote.response.LogoutResponse
 import com.example.mhnfe.data.remote.response.ProfileResponse
 import retrofit2.http.Body
