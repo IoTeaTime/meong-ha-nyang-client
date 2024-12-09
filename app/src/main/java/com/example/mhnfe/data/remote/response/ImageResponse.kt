@@ -1,6 +1,5 @@
 package com.example.mhnfe.data.remote.response
 
-
 data class ImageResponse(
     val result: Result,
     val body: ImageResponseBody
