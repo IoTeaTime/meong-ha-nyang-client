@@ -355,4 +355,13 @@ class MqttViewModel @Inject constructor(
             onMessageReceived(receivedTopic, message.toString(Charsets.UTF_8))
         }
     }
+
+    fun convertNetworkStatusToString(networkStatus: Int): String {
+        if(networkStatus == 5) return "원활"
+        else if(networkStatus == 4) return "양호"
+        else if(networkStatus == 3) return "보통"
+        else if(networkStatus == 2) return "약함"
+        else if(networkStatus == 1) return "위험"
+        else return "비활성"
+    }
 }
