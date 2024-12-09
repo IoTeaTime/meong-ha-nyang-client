@@ -35,22 +35,23 @@ class MainViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
+                Log.d("MainViewModel","AutoLogin logic Start")
                 // 1. Access Token 가져오기
                 val accessToken = accessTokenDataStore.data.map { it.accessToken }.first()
 
                 // 2. Access Token으로 그룹과 역할을 조회
                 val response = groupRepository.getGroupMember(accessToken)
+                Log.d("MainViewModel","AutoLogin getGroupMember $response")
 
                 // 3. 성공 시 그룹 아이디와 역할을 리턴
                 if(response.result.code == 200){
+                    Log.d("MainViewModel","AutoLogin Success & InGroup $response")
                     onSuccess(response.body.role, response.body.groupId)
-                }
-                else if(response.result.code == 404) {
-                    onSuccess("", 0L)
                 }
             } catch (e: retrofit2.HttpException) {
                 if (e.code() == 404) {
                     // 404를 별도로 처리
+                    Log.d("MainViewModel","AutoLogin Success but notInGroup $e")
                     onSuccess("", 0L)
                 } else {
                     Log.e("MainViewModel", "AutoLogin Failed... ${e.message()}")
