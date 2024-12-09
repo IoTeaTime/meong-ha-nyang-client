@@ -10,7 +10,6 @@ import com.example.mhnfe.data.remote.response.GroupResponse
 import com.example.mhnfe.data.remote.response.QRApiResponse
 import retrofit2.Response
 
-
 interface GroupRepository {
     suspend fun getGroup(response: GroupResponse): Group
     suspend fun getGroupInfo(): Result<GroupInfoResponse>
