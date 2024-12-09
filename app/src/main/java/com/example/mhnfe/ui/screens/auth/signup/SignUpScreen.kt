@@ -50,9 +50,6 @@ fun SignUpScreen(
 
     val scope = rememberCoroutineScope()
 
-    var isEmailDuplicate by remember { mutableStateOf(false) }
-    var isEmailChecked by remember { mutableStateOf(false) }
-
     val focusManager = LocalFocusManager.current
 
     var currentStep by remember { mutableIntStateOf(0) }
@@ -408,11 +405,6 @@ fun SignUpScreen(
                                                     "SignUpScreen",
                                                     "인증 코드 불일치: code=$code, description=$description, email=$email, enteredCode=$verificationCode"
                                                 )
-//                                                emailErrorMessage = "인증번호가 일치하지 않습니다."
-//                                                isVerificationError = true
-//                                                isEmailError = true
-//                                                errorMessage = emailErrorMessage
-//                                                Log.e("SignUpScreen", "인증 코드 불일치 : $description")
                                             }
                                             else -> {
                                                 emailErrorMessage = "인증번호가 일치하지 않습니다."
