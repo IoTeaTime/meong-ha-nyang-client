@@ -40,6 +40,8 @@ class DeviceViewModel @Inject constructor(
         viewModelScope.launch {
             val token = accessTokenDataStore.data.map { it.accessToken }.first()
             val response: Response<CctvInfoResponse> = deviceRepository.getCctvInfo(token, cctvId)
+            Log.d(TAG, "응답 바디: ${response.body()?.body}")
+            Log.d(TAG, "응답 result: ${response.body()?.result}")
             if(response.isSuccessful) {
                 _cctv.value = response.body()?.body?.toCCTV()
                 response.body()?.body?.let { onCctvInfoFetched(it) }
