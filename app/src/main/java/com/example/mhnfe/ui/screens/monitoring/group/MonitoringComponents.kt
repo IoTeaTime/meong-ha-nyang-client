@@ -93,10 +93,10 @@ fun CCTVItemCard(
         mqttViewModel.groupShadowSub(thingId) { reportedData ->
             reportedData.let {
                 if (it != null) {
-                    networkStatus = it.networkStatus!!
-                }
-                if (it != null) {
-                    batteryStatus = it.batteryLevel!!
+                    if(it.isBackCamera == null ){
+                        networkStatus = it.networkStatus!!
+                        batteryStatus = it.batteryLevel!!
+                    }
                 }
             }
         }
