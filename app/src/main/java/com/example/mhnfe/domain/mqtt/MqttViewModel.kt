@@ -210,11 +210,14 @@ class MqttViewModel @Inject constructor(
             val device: DeviceInfoShadow = json.decodeFromString(message)
             // JSON 파싱 시 ignoreUnknownKeys = true 설정
             val reportedData: ReportedData? = device.state?.reported
+            if (reportedData == null) {
+                Log.e(tag, "Reported data가 null입니다. JSON: $message")
+                return
+            }
             when {
-                topic.contains("thingId") -> {
+                topic.contains("things") -> {
                     Log.d(tag, "Accepted 메시지 수신: $message")
                 }
-
                 else -> {
                     Log.w(tag, "Unhandled Shadow Topic: $topic")
                 }
