@@ -42,9 +42,9 @@ class MainViewModel @Inject constructor(
                 val response = groupRepository.getGroupMember(accessToken)
 
                 // 3. 성공 시 그룹 아이디와 역할을 리턴
-                if(response.isSuccessful){
-                    response.body()?.body?.let { onSuccess(it.role, it.groupId) }
-                } else {
+                if(response.result.code == 200){
+                    onSuccess(response.body.role, response.body.groupId)
+                } else if(response.result.code == 404) {
                     onSuccess("", 0L)
                 }
             } catch (e: Exception) {

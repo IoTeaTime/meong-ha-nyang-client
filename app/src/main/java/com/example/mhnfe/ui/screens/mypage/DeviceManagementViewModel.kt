@@ -98,21 +98,21 @@ class DeviceManagementViewModel @Inject constructor(
         }
     }
 
-    fun getGroupMemberInfo() {
-        viewModelScope.launch {
-            val token = accessTokenDataStore.data.map { it.accessToken }.first()
-            val response: Response<GroupMemberResponse> = groupRepository.getGroupMember(token)
-            if(response.isSuccessful) {
-                _groupMemberInfo.value = response.body()?.body
-            } else {
-                val jsonObject = JSONObject(response.errorBody()!!.string())
-                val errorBody = Json.decodeFromString<DeleteDeviceResponse>(jsonObject.toString())
-
-                _errorMessage.value = errorBody.result.description
-                Log.e(TAG,"Error: " + _errorMessage.value)
-            }
-        }
-    }
+//    fun getGroupMemberInfo() {
+//        viewModelScope.launch {
+//            val token = accessTokenDataStore.data.map { it.accessToken }.first()
+//            val response: Response<GroupMemberResponse> = groupRepository.getGroupMember(token)
+//            if(response.isSuccessful) {
+//                _groupMemberInfo.value = response.body()?.body
+//            } else {
+//                val jsonObject = JSONObject(response.errorBody()!!.string())
+//                val errorBody = Json.decodeFromString<DeleteDeviceResponse>(jsonObject.toString())
+//
+//                _errorMessage.value = errorBody.result.description
+//                Log.e(TAG,"Error: " + _errorMessage.value)
+//            }
+//        }
+//    }
 
     fun getCctvList() {
         viewModelScope.launch {

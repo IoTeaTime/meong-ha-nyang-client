@@ -27,7 +27,7 @@ interface GroupApi {
     @GET("/api/group")
     suspend fun getGroupMember(
         @Header("Authorization") authToken: String
-    ): Response<GroupMemberResponse>
+    ): GroupMemberResponse
 
     @GET("/api/group/{groupId}/member")
     suspend fun getGroupMemberList(
