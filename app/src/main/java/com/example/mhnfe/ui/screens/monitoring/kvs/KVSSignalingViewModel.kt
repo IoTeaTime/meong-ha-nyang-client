@@ -19,6 +19,7 @@ import android.util.Base64
 import android.util.Log
 import android.view.PixelCopy
 import android.widget.Toast
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -43,6 +44,7 @@ import com.amazonaws.services.kinesisvideosignaling.model.GetIceServerConfigRequ
 import com.amazonaws.services.kinesisvideosignaling.model.IceServer
 import com.amazonaws.services.kinesisvideowebrtcstorage.AWSKinesisVideoWebRTCStorageClient
 import com.amazonaws.services.kinesisvideowebrtcstorage.model.JoinStorageSessionRequest
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.signaling.SignalingListener
 import com.example.mhnfe.data.signaling.model.Event
 import com.example.mhnfe.data.signaling.model.Message
@@ -137,7 +139,7 @@ sealed class KvsSignalingState {
 }
 
 
-class KVSSignalingViewModel : ViewModel() {
+class KVSSignalingViewModel: ViewModel() {
     private var applicationContext: Context? = null
 
     fun initialize(context: Context) {
@@ -1568,7 +1570,9 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
 
-    private var isBackCamera = false
+    private val _isBackCamera = MutableStateFlow(false)
+    val isBackCamera: StateFlow<Boolean> = _isBackCamera
+
     private val _isCameraSwitching = MutableStateFlow(false)
     val isCameraSwitching: StateFlow<Boolean> = _isCameraSwitching
 
@@ -1581,7 +1585,7 @@ class KVSSignalingViewModel : ViewModel() {
                     val deviceNames = enumerator.deviceNames
 
                     val targetDevice = deviceNames.firstOrNull { deviceName ->
-                        if (isBackCamera) {
+                        if (isBackCamera.value) {
                             enumerator.isFrontFacing(deviceName)
                         } else {
                             enumerator.isBackFacing(deviceName)
@@ -1593,7 +1597,7 @@ class KVSSignalingViewModel : ViewModel() {
                     targetDevice?.let { device ->
                         capturer.switchCamera(object : CameraVideoCapturer.CameraSwitchHandler {
                             override fun onCameraSwitchDone(isFrontCamera: Boolean) {
-                                isBackCamera = !isFrontCamera
+                                _isBackCamera.value = !isFrontCamera
                                 Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
                             }
 
@@ -1616,6 +1620,7 @@ class KVSSignalingViewModel : ViewModel() {
             }
         }
     }
+
     fun captureScreen(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {

@@ -1,6 +1,7 @@
 package com.example.mhnfe.ui.navigation
 
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -61,9 +62,9 @@ sealed class NavRoutes(val route: String) {
         object Master : NavRoutes("monitoring/master")
 //        object Viewer : NavRoutes("monitoring/viewer")
         object Viewer {
-            const val route = "monitoring/viewer/{channelName}"
+    const val route = "monitoring/viewer/{channelName}/{cctvId}"
 
-            fun createRoute(channelName: String) = "monitoring/viewer/$channelName"
+    fun createRoute(channelName: String, cctvId: Long) = "monitoring/viewer/$channelName/$cctvId"
         }
 
         object DeviceInformation : NavRoutes("device_information/{cctvId}") {
@@ -165,6 +166,7 @@ fun AppNavigation() {
                     navController = navController,
                     viewModel = kvsSignalingViewModel,
                     channelName = channelName,
+                    cctvId = null,
                     role = role
                 )
             }
@@ -189,6 +191,7 @@ fun AppNavigation() {
     }
 }
 
+@SuppressLint("UnrememberedGetBackStackEntry")
 @Composable
 fun MainContent(
     mainNavController: NavController,
@@ -232,8 +235,8 @@ fun MainContent(
                         mainNavController = mainNavController
                     )
                 }
-                composable(NavRoutes.Monitoring.Master.route) {
-                    val parentEntry = remember(bottomNavController) {
+                composable(NavRoutes.Monitoring.Master.route) { entry ->
+                    val parentEntry = remember(entry) {
                         bottomNavController.getBackStackEntry(NavRoutes.Report.ReportDetail.route)
                     }
                     val kvsSignalingViewModel: KVSSignalingViewModel = viewModel(
@@ -247,23 +250,27 @@ fun MainContent(
                         navController = bottomNavController,
                         viewModel = kvsSignalingViewModel,
                         channelName = channelName,
+                        cctvId = null,
                         role = role
                     )
                 }
                 composable(
                     route = NavRoutes.Monitoring.Viewer.route,
                     arguments = listOf(
-                        navArgument("channelName") { type = NavType.StringType }
-                    )
+                        navArgument("channelName") { type = NavType.StringType },
+                        navArgument("cctvId") { type = NavType.LongType }
+                    ),
                 ) { backStackEntry ->
                     val channelName = backStackEntry.arguments?.getString("channelName") ?: "demo-channel"
+                    val cctvId = backStackEntry.arguments?.getLong("cctvId") ?: return@composable
                     val kvsSignalingViewModel: KVSSignalingViewModel = viewModel()
 
                     WebRtcScreen(
                         navController = bottomNavController,
                         viewModel = kvsSignalingViewModel,
                         channelName = channelName,
-                        role = ChannelRole.VIEWER
+                        role = ChannelRole.VIEWER,
+                        cctvId = cctvId
                     )
                 }
                 composable(
