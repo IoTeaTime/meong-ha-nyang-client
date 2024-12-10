@@ -149,7 +149,7 @@ class MqttViewModel @Inject constructor(
         try {
             subscribe(topic, { receivedTopic, message ->
                 Log.d(tag, "Message received on topic $receivedTopic: $message")
-                groupShadowReceiveHandler(receivedTopic, message) { reportedData ->
+                 groupShadowReceiveHandler(receivedTopic, message) { reportedData ->
                     data(reportedData)
                 }
             })
@@ -210,11 +210,14 @@ class MqttViewModel @Inject constructor(
             val device: DeviceInfoShadow = json.decodeFromString(message)
             // JSON 파싱 시 ignoreUnknownKeys = true 설정
             val reportedData: ReportedData? = device.state?.reported
+            if (reportedData == null) {
+                Log.e(tag, "Reported data가 null입니다. JSON: $message")
+                return
+            }
             when {
-                topic.contains("thingId") -> {
+                topic.contains("things") -> {
                     Log.d(tag, "Accepted 메시지 수신: $message")
                 }
-
                 else -> {
                     Log.w(tag, "Unhandled Shadow Topic: $topic")
                 }
@@ -286,6 +289,16 @@ class MqttViewModel @Inject constructor(
         }
     }
 
+    private fun updateShadow(payload: String,thingId: String) {
+        val topic = "\$aws/things/${thingId}/shadow/update"
+        try {
+            awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
+            Log.d(tag, "Published Shadow Update: $payload")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to publish shadow update: ${e.message}", e)
+        }
+    }
+
     fun startObservingData(context: Context) {
         if (dataObserver == null) {
             dataObserver = DataObserver(context).apply {
@@ -313,6 +326,11 @@ class MqttViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun cameraSwitchUpdateShadow(isBackCamera: Boolean, thingId: String){
+        val payload = DeviceUtils.getIsBackCameraPayload(isBackCamera)
+        updateShadow(payload,thingId)
     }
 
     fun stopObservingData() {

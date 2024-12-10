@@ -2,6 +2,8 @@ package com.example.mhnfe.utils
 
 import DeviceUtils
 import android.content.Context
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -18,6 +20,7 @@ class DataObserver(private val context: Context) {
     private val batteryLevelFlow = MutableStateFlow(DeviceUtils.getBatteryLevel(context))
     private val networkStatusFlow = MutableStateFlow( -1)
     private val kvsChannelActiveFlow = MutableStateFlow(false)
+    private val isBackCameraFlow = MutableStateFlow(false)
 
     val batteryLevel: StateFlow<Int> get() = batteryLevelFlow
     val networkStatus: StateFlow<Int>get() = networkStatusFlow
