@@ -54,7 +54,7 @@ fun CCTVItemCard(
     var networkStatus by remember { mutableStateOf(1) }
     var batteryStatus by remember { mutableStateOf(0) }
     val scope = CoroutineScope(Dispatchers.Main)
-    val interval: Long = 15000
+    val interval: Long = 5000
 
 
     LaunchedEffect(Unit) {
@@ -77,6 +77,7 @@ fun CCTVItemCard(
                 // 메시지가 도착했는지 확인하는 플래그
                 messageReceived = false
                 // 메시지 타임아웃을 처리하기 위한 Job
+                delay(interval)
                 val timeoutJob = launch {
                     if (!messageReceived) {
                         // 메시지가 없으면 네트워크와 배터리를 0으로 설정
@@ -92,11 +93,13 @@ fun CCTVItemCard(
         //shadow sub
         mqttViewModel.groupShadowSub(thingId) { reportedData ->
             reportedData.let {
-                if (it != null) {
-                    networkStatus = it.networkStatus!!
-                }
-                if (it != null) {
-                    batteryStatus = it.batteryLevel!!
+                if (it != null && it.isBackCamera == null) {
+                    if(it.networkStatus == null){
+                        batteryStatus = it.batteryLevel!!
+                    }else{
+                        networkStatus = it.networkStatus
+
+                    }
                 }
             }
         }

@@ -15,7 +15,7 @@ object DeviceUtils {
         val kvsChannelActive = true
         val kvsChannelDeleteRequested = false
         val networkStatus = getWifiInfo(context)
-
+        val isBackCamera = false
         return """
         {
             "state": {
@@ -23,7 +23,8 @@ object DeviceUtils {
                     "batteryLevel": $batteryLevel,
                     "kvsChannelActive": $kvsChannelActive,
                     "kvsChannelDeleteRequested": $kvsChannelDeleteRequested,
-                    "networkStatus": $networkStatus
+                    "networkStatus": $networkStatus,
+                    "isBackCamera": $isBackCamera
                 }
             }
         }
@@ -141,6 +142,18 @@ object DeviceUtils {
             "state": {
                 "reported": {
                     "kvsChannelActive": $isActive
+                }
+            }
+        }
+        """.trimIndent()
+    }
+
+    fun getIsBackCameraPayload(isBackCamera: Boolean): String {
+        return """
+        {
+            "state": {
+                "reported": {
+                    "isBackCamera": $isBackCamera
                 }
             }
         }

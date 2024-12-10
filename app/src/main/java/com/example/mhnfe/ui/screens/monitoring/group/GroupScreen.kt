@@ -132,7 +132,8 @@ fun GroupScreen(
                             )
                                 bottomNavController.navigate(
                                 NavRoutes.Monitoring.Viewer.createRoute(
-                                    channelName = cctvItem.kvsChannelName
+                                    channelName = cctvItem.kvsChannelName,
+                                    cctvId = cctvItem.cctvId
                                 )
                             )
                         }, onEdit = {
