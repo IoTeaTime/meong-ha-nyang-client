@@ -145,7 +145,9 @@ fun MainScreen(
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "명하냥 로고",
-            modifier = modifier.size(315.dp, 358.dp)
+            modifier = modifier
+                .size(315.dp, 358.dp)
+                .padding(top = 60.dp)
         )
 
         // 버튼 영역
@@ -194,7 +196,7 @@ fun MainScreen(
                     modifier = modifier.size(50.dp)
                 )
                 Image(
-                    painter = painterResource(id = R.drawable.google1),
+                    painter = painterResource(id = R.drawable.google),
                     contentDescription = "구글 로그인",
                     modifier = modifier.size(50.dp)
 

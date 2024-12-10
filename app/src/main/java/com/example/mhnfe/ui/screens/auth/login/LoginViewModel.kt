@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -91,8 +93,22 @@ class LoginViewModel @Inject constructor(
                     )
                     Log.e("LoginViewModel","Error: " + _errorMessage.value)
                 }
+            } catch (e: IOException) {
+                Log.e("LoginViewModel", "IOException: ${e.message}")
+                _errorMessage.value = "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요."
+            } catch (e: HttpException) {
+                when (e.code()) {
+                    400, 404 -> {
+                        _errorMessage.value = "잘못된 아이디 또는 비밀번호입니다."
+                        Log.e("LoginViewModel", "Error: ${_errorMessage.value}")
+                    }
+
+                    else -> {
+                        Log.e("LoginViewModel", "HttpException: ${e.message}")
+                        _errorMessage.value = "서버 오류가 발생했습니다. 다시 시도해주세요."
+                    }
+                }
             } catch (e: Exception) {
-                // 네트워크 오류 등 예외 처리
                 Log.e("LoginViewModel", "Login error", e)
                 _errorMessage.value = "로그인 중 오류가 발생했습니다. ${e.message}"
             }

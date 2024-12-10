@@ -57,13 +57,13 @@ fun GroupScreen(
             MainTopBar(
                 text = groupInfo?.groupName ?: "그룹",
                 onImageClick = {
-                    try{
+                    try {
                         authStateViewModel.logout()
-                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                        mainNavController.navigate(NavRoutes.Auth.Main.route) {
                             popUpTo(NavRoutes.Main.route) { inclusive = true }
                         }
                     } catch (e: Exception) {
-                        mainNavController.navigate(NavRoutes.Auth.Main.route){
+                        mainNavController.navigate(NavRoutes.Auth.Main.route) {
                             popUpTo(NavRoutes.Main.route) { inclusive = true }
                         }
                     }
@@ -123,24 +123,26 @@ fun GroupScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     items(items = cctvList, key = { it.cctvId }) { cctvItem ->
-                        CCTVItemCard(cctv = cctvItem.toCCTV(), groupId = groupInfo!!.groupId, onClick = {
-                            bottomNavController.currentBackStackEntry?.savedStateHandle?.set(
+                        CCTVItemCard(
+                            cctv = cctvItem.toCCTV(),
+                            groupId = groupInfo!!.groupId,
+                            onClick = {
+                                bottomNavController.currentBackStackEntry?.savedStateHandle?.set(
                                 "role", ChannelRole.VIEWER
                             )
-                            bottomNavController.navigate(
+                                bottomNavController.navigate(
                                 NavRoutes.Monitoring.Viewer.createRoute(
                                     channelName = cctvItem.kvsChannelName,
                                     cctvId = cctvItem.cctvId
                                 )
                             )
                         }, onEdit = {
-                            bottomNavController.navigate(
+                                bottomNavController.navigate(
                                 NavRoutes.Monitoring.DeviceInformation.createRoute(
                                     cctvItem.cctvId
                                 )
                             )
                         })
-
                     }
                 }
             }

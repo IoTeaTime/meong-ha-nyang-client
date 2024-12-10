@@ -29,12 +29,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mhnfe.R
@@ -87,7 +89,7 @@ fun LoginScreen(
             modifier = modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .padding(horizontal = 34.dp, vertical = 30.dp),
+                .padding(horizontal = 34.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -104,13 +106,13 @@ fun LoginScreen(
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "로고",
-                    modifier = Modifier.size(250.dp),
+                    modifier = modifier.size(250.dp),
                     contentScale = ContentScale.Fit
                 )
 
                 // 입력 필드들과 자동로그인을 포함하는 Column
                 Column(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
                         .wrapContentHeight(),
                     verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.CenterVertically),
@@ -118,29 +120,35 @@ fun LoginScreen(
                 ) {
                     MainTextBox(
                         focusManager = focusManager,
+                        onIsErrorChange = { loginError = it },
                         inputText = id,
-                        onInputTextChange = { id = it },
+                        onInputTextChange = {
+                            id = it
+                            loginError = false
+                        },
                         isError = loginError,
-                        onIsErrorChange = {loginError = it},
-                        warningText = errorMessage ?: "",
-                        hintText = "아이디"
+                        hintText = "아이디",
+                        warningText = if (loginError) "아이디를 입력하세요." else ""
                     )
 
                     MainTextBox(
                         focusManager = focusManager,
+                        onIsErrorChange = { passwordError = it },
                         inputText = password,
-                        onInputTextChange = { password = it },
+                        onInputTextChange = {
+                            password = it
+                            passwordError = false
+                        },
                         isError = passwordError,
-                        onIsErrorChange = {passwordError = it},
-                        warningText = errorMessage ?: "",
                         hintText = "비밀번호",
-                        isPasswordField = true
+                        isPasswordField = true,
+                        warningText = if (passwordError) "비밀번호를 입력하세요." else ""
                     )
 
                     // 자동 로그인 체크박스
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
+                        modifier = modifier
                             .offset((-12).dp)
                             .fillMaxWidth()
                             .wrapContentHeight(),
@@ -175,14 +183,33 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .wrapContentHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(
+                    14.dp,
+                    alignment = Alignment.CenterVertically
+                )
             ) {
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage ?: "",
+                        color = Color.Red,
+                        fontSize = 14.sp
+                    )
+                }
+
                 // 로그인 버튼
                 MiddleButton(
                     text = "로그인",
                     onClick = {
-                        // ViewModel에 로그인 요청 전달 (isAutoLogin 포함)
-                        loginViewModel.loginUser(id, password, isAutoLogin)
+                        if (id.isEmpty()) {
+                            loginError = true
+                        }
+                        if (password.isEmpty()) {
+                            passwordError = true
+                        }
+                        if (!loginError && !passwordError) {
+                            // ViewModel에 로그인 요청 전달 (isAutoLogin 포함)
+                            loginViewModel.loginUser(id, password, isAutoLogin)
+                        }
                     }
                 )
 

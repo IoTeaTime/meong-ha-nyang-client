@@ -33,9 +33,9 @@ class AuthAuthenticator @Inject constructor(
                 return runBlocking {
 //                    val newTokenResult = tokenManager.refreshAccessToken()
                     try {
-                        Log.d("AuthAuthenticator","get newToken try")
+                        Log.d("AuthAuthenticator", "get newToken try")
                         val newTokenResult = tokenManager.refreshAccessToken()
-                        Log.d("AuthAuthenticator","AuthAuthenticator get newToken!!}")
+                        Log.d("AuthAuthenticator", "AuthAuthenticator get newToken!!}")
                         if (newTokenResult != null) {
                             val accessToken = newTokenResult
                             // Update the access token in your storage.
@@ -46,7 +46,10 @@ class AuthAuthenticator @Inject constructor(
                                 .header("Authorization", accessToken)
                                 .build()
                         } else {
-                            Log.d("AuthAuthenticator","AuthAuthenticator failed by expired refreshToken!!")
+                            Log.d(
+                                "AuthAuthenticator",
+                                "AuthAuthenticator failed by expired refreshToken!!"
+                            )
                             return@runBlocking null
                         }
                     } catch (e: Exception) {

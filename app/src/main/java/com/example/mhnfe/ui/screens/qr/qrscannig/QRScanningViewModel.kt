@@ -91,7 +91,6 @@ class QRScanningViewModel @Inject constructor(
             QRData(
                 groupId = json.getInt("groupId"),
                 kvsChannelName = json.getString("kvsChannelId")  // QR에서는 kvsChannelId로 읽고
-
             )
         } catch (e: JSONException) {
             throw IllegalArgumentException("CCTV QR 코드 형식이 올바르지 않습니다")

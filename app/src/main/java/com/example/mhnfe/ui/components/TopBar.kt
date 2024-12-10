@@ -59,12 +59,12 @@ fun MainTopBar(
                 .padding(end = 20.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
-        ){
+        ) {
 
             Image(
                 modifier = modifier
                     .size(35.dp, 35.dp)
-                    .clickable {onImageClick()},
+                    .clickable { onImageClick() },
                 painter = painterResource(id = R.drawable.logo2),
                 contentDescription = "멍하냥 로고",
                 colorFilter = ColorFilter.tint(Color.White)
@@ -118,7 +118,7 @@ fun SubTopBar(
 @Preview(showBackground = true)
 @Composable
 fun MainTopBarPreview() {
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
