@@ -25,10 +25,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -112,6 +112,10 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun clearError() {
+        _error.value = null
+    }
+
     fun changePassword(currentPassword: String, newPassword: String) {
         viewModelScope.launch {
             try {
@@ -124,7 +128,14 @@ class ProfileViewModel @Inject constructor(
                 }
                 _changeResponse.value = response
 
-            } catch (e: Exception) {
+            } catch (e: HttpException) {
+                if (e.code() == 400) {
+                    _error.value = "기존 비밀번호가 일치하지 않습니다."
+                } else {
+                    _error.value = "비밀번호 변경 요청 실패. 다시 시도해주세요."
+                }
+            }
+            catch (e: Exception) {
                 // 에러 처리
                 e.printStackTrace()
             }
