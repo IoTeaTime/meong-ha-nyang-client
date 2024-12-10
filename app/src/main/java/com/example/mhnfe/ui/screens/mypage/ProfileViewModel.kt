@@ -16,6 +16,7 @@ import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.LogoutResponse
 import com.example.mhnfe.data.remote.response.MemberId
+import com.example.mhnfe.data.remote.response.ProfileBody
 import com.example.mhnfe.data.remote.response.ProfileResponse
 import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.domain.repository.UserRepository
@@ -168,7 +169,7 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun fetchMemberDetails() {
+    fun fetchMemberDetails(callback: (ProfileBody) -> Unit) {
         viewModelScope.launch {
             try {
                 val token = accessTokenDataStore.data.map { it.accessToken }.first()
@@ -188,6 +189,7 @@ class ProfileViewModel @Inject constructor(
                 val profileBody = profileResponse.body
                 if (profileBody != null) {
                     _profileResponse.value = profileResponse
+                    callback(profileBody)
                 } else {
                     _error.value = "ProfileBody is null"
                     Log.e("ProfileViewModel", "ProfileBody is null")

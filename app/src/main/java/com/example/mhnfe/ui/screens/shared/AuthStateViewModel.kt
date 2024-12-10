@@ -24,7 +24,7 @@ class AuthStateViewModel @Inject constructor(
     private val accessTokenDataStore: DataStore<AccessToken>,
     private val refreshTokenDataStore: DataStore<RefreshToken>,
     private val sharedPreferences: SharedPreferences
-): ViewModel() {
+) : ViewModel() {
 
     private val _logoutResponse = MutableStateFlow<LogoutResponse?>(null)
     val logoutResponse: StateFlow<LogoutResponse?> = _logoutResponse

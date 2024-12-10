@@ -51,7 +51,7 @@ fun SelectScreen(
         topBar = {
             MainTopBar(
                 text = "선택",
-                onImageClick = { navController.navigate(NavRoutes.Auth.Login.route)})
+                onImageClick = { navController.navigate(NavRoutes.Auth.Login.route) })
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->

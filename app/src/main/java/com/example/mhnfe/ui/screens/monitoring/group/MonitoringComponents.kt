@@ -137,7 +137,9 @@ fun CCTVItemCard(
                     modifier = modifier.size(24.dp)
                 ) {
                     Icon(
-                        modifier = modifier.size(20.dp, 16.dp).align(Alignment.Center),
+                        modifier = modifier
+                            .size(20.dp, 16.dp)
+                            .align(Alignment.Center),
                         painter = painterResource(id = if(networkStatus >= 2) R.drawable.good_signal else R.drawable.bad_signal),
                         contentDescription = "signal",
                         tint = Color.Unspecified
@@ -147,7 +149,9 @@ fun CCTVItemCard(
                     modifier = modifier.size(24.dp)
                 ) {
                     Icon(
-                        modifier = modifier.size(20.dp, 16.dp).align(Alignment.Center),
+                        modifier = modifier
+                            .size(20.dp, 16.dp)
+                            .align(Alignment.Center),
                         painter = painterResource(
                             id = when {
                                 //배터리 양 별로 다른 아이콘

@@ -9,31 +9,37 @@ import com.example.mhnfe.domain.ai.BoundingBoxUtils
 import com.example.mhnfe.domain.ai.DetectionManager
 import com.example.mhnfe.domain.ai.opencv.BitmapToMatConverter
 import com.example.mhnfe.domain.ai.opencv.MotionDetector
+import com.example.mhnfe.domain.ai.yolo.HandleDetection
 import com.example.mhnfe.domain.ai.yolo.YoloDetectionManager
+import com.example.mhnfe.domain.repository.ImageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import org.opencv.core.Mat
 import org.opencv.core.Rect
-import javax.inject.Inject
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.io.ByteArrayOutputStream
-
+import javax.inject.Inject
 
 
 @HiltViewModel
 class AiViewModel @Inject constructor(
     @ApplicationContext private val context: Context, // Context 주입
+    private val imageRepository: ImageRepository
 ) : ViewModel() {
     private val tag = "AiViewModel"
     private val motionDetector = MotionDetector()
     private val yoloDetectionManager = YoloDetectionManager(context)
     private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록
-    private val eventDelayMillis = 500L // event data to iot 딜레이 시간
+    private val eventDelayMillis = 6000L // event data to iot 딜레이 시간
+    private val handleDetection = HandleDetection()
 
-    fun processFrame(bitmap: Bitmap?, onResult: (Int, String, String, String) -> Unit) {
+    fun processFrame(
+        bitmap: Bitmap?,
+        onResult: (Int, String, Float, List<Map<String, Int>>) -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 bitmap?.let { bmp ->
@@ -45,23 +51,62 @@ class AiViewModel @Inject constructor(
 
                         // Yolo 실행 및 콜백 처리
                         yoloDetectionManager.detect(bmp) { boundingBoxes, _ ->
-                            if (boundingBoxes.isNotEmpty()) {
+                            val filteredBoxes =
+                                handleDetection.handleDetectionResults(boundingBoxes)
+                            if (filteredBoxes.isNotEmpty()) {
                                 val imageResult = createImage(bmp)
                                 val imageName = imageResult.first // 이미지 이름
                                 val imageData = imageResult.second // JPEG 포맷 이미지 데이터
 
-                                if (BoundingBoxUtils.shouldTriggerEvent(lastEventTime, eventDelayMillis)) {
+                                if (BoundingBoxUtils.shouldTriggerEvent(
+                                        lastEventTime,
+                                        eventDelayMillis
+                                    )
+                                ) {
                                     lastEventTime = System.currentTimeMillis()
                                     Log.d("DetectEvent", "detectEvent() 시작")
 
-                                    val trackingId = DetectionManager.getNextTrackingId()
+                                    //api 연결
+                                    viewModelScope.launch {
+                                        try {
+                                            //Presigned URL 가져오기
+                                            val urlResponse =
+                                                imageRepository.getPresignedUrl(imageName)
 
-                                    // BoundingBoxUtil을 사용하여 JSON 데이터 생성
-                                    val coordinatesJson = BoundingBoxUtils.generateCoordinatesJson(boundingBoxes)
-                                    val objectNameJson = BoundingBoxUtils.generateObjectNameJson(boundingBoxes)
-                                    val confidenceJson = BoundingBoxUtils.generateConfidenceJson(boundingBoxes)
+                                            //Presigned URL 이미지 업로드
+                                            val uploadResult = imageRepository.uploadToPresignedUrl(
+                                                urlResponse.body.presignedUrl,
+                                                imageData
+                                            )
 
-                                    onResult(trackingId, coordinatesJson, objectNameJson, confidenceJson)
+                                            if (uploadResult) {
+                                                imageRepository.saveImage(
+                                                    imageName = urlResponse.body.imageName,
+                                                    imagePath = urlResponse.body.imagePath
+                                                )
+                                                Log.e("PresignedURL", "이미지 저장 성공")
+                                            }
+
+                                            val trackingId = DetectionManager.getNextTrackingId()
+
+                                            // BoundingBoxUtils를 사용하여 데이터 추출
+                                            val (objectType, confidence) = BoundingBoxUtils.getTypeAndConfidence(
+                                                boundingBoxes
+                                            )
+                                            val coordinates =
+                                                BoundingBoxUtils.getCoordinates(boundingBoxes)
+
+                                            onResult(
+                                                trackingId,
+                                                objectType,
+                                                confidence,
+                                                coordinates
+                                            )
+                                        } catch (e: Exception) {
+                                            Log.e(tag, "Image upload failed", e)
+                                        }
+                                    }
+
                                 }
                             }
                         }
@@ -75,6 +120,7 @@ class AiViewModel @Inject constructor(
             }
         }
     }
+
     private fun createImage(bitmap: Bitmap, quality: Int = 80): Pair<String, ByteArray> {
         // 현재 시간을 기반으로 동적 이미지 이름 생성
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())

@@ -231,7 +231,7 @@ fun MainContent(
                 composable(NavRoutes.Monitoring.Group.route) {
                     GroupScreen(
                         userType = userType,
-                        bottomNavController= bottomNavController,
+                        bottomNavController = bottomNavController,
                         mainNavController = mainNavController
                     )
                 }
