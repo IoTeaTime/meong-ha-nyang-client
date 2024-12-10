@@ -1,7 +1,9 @@
 package com.example.mhnfe.ui.screens.auth.login
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import android.widget.Toast
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,6 +16,7 @@ import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.data.remote.response.SendPasswordResponse
 import com.example.mhnfe.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -30,7 +33,8 @@ class LoginViewModel @Inject constructor(
     private val refreshTokenDataStore: DataStore<RefreshToken>,
     private val groupIdDataStore: DataStore<GroupId>,
     private val memberIdDataStore: DataStore<MemberId>,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     // 로그인 결과 상태
@@ -187,6 +191,7 @@ class LoginViewModel @Inject constructor(
                 if(response.result.code == 200) {
                     _sendPasswordResponse.value = response
                     _errorMessage.value = null
+                    Toast.makeText(context, "임시 비밀번호가 메일로 전송되었습니다.", Toast.LENGTH_SHORT).show()
                 } else {
                     _errorMessage.value = mapErrorMessage(
                         response.result.code,
