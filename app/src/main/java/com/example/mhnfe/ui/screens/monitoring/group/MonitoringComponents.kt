@@ -2,6 +2,7 @@ package com.example.mhnfe.ui.screens.monitoring.group
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,13 +56,28 @@ fun CCTVItemCard(
     var networkStatus by remember { mutableStateOf(1) }
     var batteryStatus by remember { mutableStateOf(0) }
     val scope = CoroutineScope(Dispatchers.Main)
-    val interval: Long = 5000
+    val interval: Long = 10_000
 
 
     LaunchedEffect(Unit) {
+        //shadow sub
+        mqttViewModel.groupShadowSub(thingId) { reportedData ->
+            reportedData.let {
+                if (it != null && it.isBackCamera == null) {
+                    if(it.networkStatus == null){
+                        batteryStatus = it.batteryLevel!!
+                    }else{
+                        networkStatus = it.networkStatus
 
+                    }
+                }
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
         //topic pub sub
-        scope.launch {
+        var job = scope.launch {
             var messageReceived: Boolean
             mqttViewModel.groupThingsSub(thingId) { reportedData ->
                 // 메시지 수신 시 처리
@@ -72,6 +89,7 @@ fun CCTVItemCard(
                 messageReceived = true
             }
             while (isActive) {
+                Log.d("MonitoringComponents", "Send Topic to get device info")
                 // Group Info Request Publish
                 mqttViewModel.groupInfoRequestPub("", groupId)
                 // 메시지가 도착했는지 확인하는 플래그
@@ -89,20 +107,7 @@ fun CCTVItemCard(
                 timeoutJob.cancel()
             }
         }
-
-        //shadow sub
-        mqttViewModel.groupShadowSub(thingId) { reportedData ->
-            reportedData.let {
-                if (it != null && it.isBackCamera == null) {
-                    if(it.networkStatus == null){
-                        batteryStatus = it.batteryLevel!!
-                    }else{
-                        networkStatus = it.networkStatus
-
-                    }
-                }
-            }
-        }
+        onDispose { job.cancel() }
     }
 
     Card(
