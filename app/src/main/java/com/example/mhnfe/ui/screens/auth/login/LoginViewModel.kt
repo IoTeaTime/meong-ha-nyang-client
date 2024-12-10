@@ -98,8 +98,13 @@ class LoginViewModel @Inject constructor(
                 _errorMessage.value = "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요."
             } catch (e: HttpException) {
                 when (e.code()) {
-                    400, 404 -> {
+                    400 -> {
                         _errorMessage.value = "잘못된 아이디 또는 비밀번호입니다."
+                        Log.e("LoginViewModel", "Error: ${_errorMessage.value}")
+                    }
+
+                    404 -> {
+                        _errorMessage.value = "회원 정보를 찾을 수 없습니다."
                         Log.e("LoginViewModel", "Error: ${_errorMessage.value}")
                     }
 
