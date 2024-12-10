@@ -1003,15 +1003,12 @@ class KVSSignalingViewModel : ViewModel() {
                         // Observer 생성
                         val observer = object : CapturerObserver {
                             override fun onFrameCaptured(frame: VideoFrame) {
-                                val currentTime = System.currentTimeMillis()
-                                if (currentTime - lastFrameTime >= frameInterval) {
-                                    lastFrameTime = currentTime
-                                    Log.d(TAG, "Frame captured with timestamp: $currentTime")
+                                if (System.currentTimeMillis() - lastFrameTime >= frameInterval) {
+                                    lastFrameTime = System.currentTimeMillis()
+                                    Log.d(TAG, "Frame captured with timestamp: $lastFrameTime")
 
                                     try {
-                                        val buffer = frame.buffer
-
-                                        when (buffer) {
+                                        when (val buffer = frame.buffer) {
                                             is VideoFrame.I420Buffer -> {
                                                 convertI420ToBitmap(buffer)
                                             }
@@ -1023,7 +1020,7 @@ class KVSSignalingViewModel : ViewModel() {
                                         Log.e(TAG, "Error in frame processing", e)
                                     }
                                 }
-                                videoSource?.capturerObserver?.onFrameCaptured(frame)
+                                videoSource.capturerObserver?.onFrameCaptured(frame)
                             }
 
                             override fun onCapturerStarted(success: Boolean) {
@@ -1040,13 +1037,13 @@ class KVSSignalingViewModel : ViewModel() {
                         videoCapturer.startCapture(1280, 720, 30)
 
                         localVideoTrack = peerConnectionFactory?.createVideoTrack("local_track", videoSource)!!
-                        localVideoTrack?.setEnabled(true)
-                        localVideoTrack?.addSink(localRenderer)
+                        localVideoTrack.setEnabled(true)
+                        localVideoTrack.addSink(localRenderer)
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to initialize video components", e)
                     }
                     // 로컬 트랙이 있으면 렌더러에 연결
-                    localVideoTrack?.addSink(localRenderer)
+                    localVideoTrack.addSink(localRenderer)
                 }
                 Log.d(TAG, "initWsConnection ${role.name}")
                 initWsConnection(role.name)
