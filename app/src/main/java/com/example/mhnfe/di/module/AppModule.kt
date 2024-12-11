@@ -6,7 +6,6 @@ import android.provider.Settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
-import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.RefreshToken
 import dagger.Module

@@ -167,7 +167,6 @@ fun WebRtcScreen(
         }
     }
 
-
     LaunchedEffect(connectionEvent) {
         Log.d("WebRtcScreen", "connectionEvent 상태: $connectionEvent")
         when (connectionEvent) {
@@ -232,14 +231,6 @@ fun WebRtcScreen(
             }
         }
     }
-//    DisposableEffect(Unit) {
-//        onDispose {
-//            viewModel.viewModelScope.launch {
-//                    viewModel.releasePeerConnection()
-//                    cleanup()
-//            }
-//        }
-//    }
 
     Log.d("WebRtcScreen", "channelName: $channelName, role: $role")
 
@@ -501,7 +492,6 @@ fun WebRtcScreen(
                         )
                     }
                 }
-
                 else -> { /* 다른 상태 처리 */
                 }
             }

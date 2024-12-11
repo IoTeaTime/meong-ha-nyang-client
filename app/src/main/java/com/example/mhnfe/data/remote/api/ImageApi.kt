@@ -2,7 +2,6 @@ package com.example.mhnfe.data.remote.api
 
 import com.example.mhnfe.data.remote.request.ImageRequest
 import com.example.mhnfe.data.remote.request.ImageSaveRequest
-import com.example.mhnfe.data.remote.request.getImageRequest
 import com.example.mhnfe.data.remote.response.ImageListResponse
 import com.example.mhnfe.data.remote.response.ImageResponse
 import com.example.mhnfe.data.remote.response.saveImageResponse

@@ -1,16 +1,13 @@
 package com.example.mhnfe.ui.screens.qr.qrscannig
 
 import android.util.Log
-import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
-import com.example.mhnfe.data.remote.response.CCTVResponseBody
 import com.example.mhnfe.data.remote.response.CctvQRResponse
 import com.example.mhnfe.data.remote.response.ViewerQRResponse
 import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.repository.QRRepository
-import com.example.mhnfe.ui.navigation.NavRoutes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,11 +1,9 @@
 package com.example.mhnfe.domain.ai.opencv
 
-
 import kotlinx.coroutines.*
 import android.util.Log
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
-
 
 class MotionDetector {
 

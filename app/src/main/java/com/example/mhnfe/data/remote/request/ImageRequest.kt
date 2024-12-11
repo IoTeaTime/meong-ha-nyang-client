@@ -8,9 +8,3 @@ data class ImageSaveRequest(
 data class ImageRequest(
     val imageName: String
 )
-
-data class getImageRequest(
-    val year: Int,
-    val month: Int,
-    val day: Int
-)

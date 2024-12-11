@@ -3,7 +3,6 @@ package com.example.mhnfe.data.remote.response
 import com.example.mhnfe.data.remote.request.CctvInfo
 import com.example.mhnfe.data.remote.request.Group
 import com.example.mhnfe.data.remote.request.GroupInfo
-import com.example.mhnfe.data.remote.request.QRResponseBody
 import kotlinx.serialization.Serializable
 
 data class GroupResponse(
@@ -49,16 +48,11 @@ data class CctvListResponse(
 data class CctvList(
     val cctv: List<CctvInfo>
 )
-// 그룹 cctv 리스트 응답
 
 data class Group(
     val groupId: Int,
     val groupName: String,
     val createdAt: String
-)
-
-data class CreateGroupRequest(
-    val thingId: String
 )
 
 data class GroupInfoResponse(
@@ -71,7 +65,10 @@ data class QRApiResponse(
     val body: QRResponseBody
 )
 
-
+data class QRResponseBody(
+    val groupId: Long,
+    val kvsChannelId: String? = null // CCTV일 때만 사용
+)
 
 @Serializable
 data class GroupId(

@@ -1,7 +1,5 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,7 +56,6 @@ fun CCTVItemCard(
     val scope = CoroutineScope(Dispatchers.Main)
     val interval: Long = 10_000
 
-
     LaunchedEffect(Unit) {
         //shadow sub
         mqttViewModel.groupShadowSub(thingId) { reportedData ->
@@ -68,7 +65,6 @@ fun CCTVItemCard(
                         batteryStatus = it.batteryLevel!!
                     }else{
                         networkStatus = it.networkStatus
-
                     }
                 }
             }

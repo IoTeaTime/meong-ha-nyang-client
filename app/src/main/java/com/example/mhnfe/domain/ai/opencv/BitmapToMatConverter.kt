@@ -10,10 +10,4 @@ object BitmapToMatConverter {
         Utils.bitmapToMat(bitmap, mat)
         return mat
     }
-
-    fun MatToBitmap(mat: Mat): Bitmap {
-        val bitmap = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(mat, bitmap)
-        return bitmap
-    }
 }

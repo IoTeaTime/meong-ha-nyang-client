@@ -23,7 +23,6 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
-
 @HiltViewModel
 class AiViewModel @Inject constructor(
     @ApplicationContext private val context: Context,

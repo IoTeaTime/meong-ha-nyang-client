@@ -263,5 +263,4 @@ private fun DeviceInfoCard(
             }
         }
     }
-
 }

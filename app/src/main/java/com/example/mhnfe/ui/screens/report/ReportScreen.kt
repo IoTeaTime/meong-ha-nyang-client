@@ -50,7 +50,6 @@ import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import java.time.LocalDate
 
-
 @Composable
 fun ReportDetailScreen(
     modifier: Modifier = Modifier,
@@ -229,10 +228,6 @@ fun ImageDialog(
         }
     }
 }
-
-
-
-
 
 @Preview(showBackground = true)
 @Composable

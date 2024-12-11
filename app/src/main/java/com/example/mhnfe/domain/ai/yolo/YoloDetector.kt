@@ -59,11 +59,6 @@ class YoloDetector(
         }
     }
 
-    fun restart(isGpu: Boolean) {
-        interpreter.close()
-        interpreter = InterpreterInitializer.createInterpreter(context, modelPath, isGpu)
-    }
-
     fun close() {
         interpreter.close()
     }

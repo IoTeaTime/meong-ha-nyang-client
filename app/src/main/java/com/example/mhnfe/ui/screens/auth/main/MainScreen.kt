@@ -35,20 +35,15 @@ import com.example.mhnfe.di.UserType
 import com.example.mhnfe.domain.mqtt.MqttViewModel
 import com.example.mhnfe.ui.components.MiddleButton
 import com.example.mhnfe.ui.navigation.NavRoutes
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.example.mhnfe.ui.theme.Typography
-import com.example.mhnfe.ui.theme.hoverYellow
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray
-import com.example.mhnfe.ui.theme.mainYellow
 
 @Composable
 fun MainScreen(
