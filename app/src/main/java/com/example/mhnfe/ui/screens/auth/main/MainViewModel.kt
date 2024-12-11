@@ -40,6 +40,8 @@ class MainViewModel @Inject constructor(
                 if(response.result.code == 200){
                     Log.d("MainViewModel","AutoLogin Success & InGroup $response")
                     onSuccess(response.body.role, response.body.groupId)
+                } else {
+                    onSuccess("", 0L)
                 }
             } catch (e: retrofit2.HttpException) {
                 if (e.code() == 404) {
