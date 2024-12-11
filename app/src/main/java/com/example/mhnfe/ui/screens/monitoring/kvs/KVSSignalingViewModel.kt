@@ -139,7 +139,7 @@ sealed class KvsSignalingState {
 }
 
 
-class KVSSignalingViewModel: ViewModel() {
+class KVSSignalingViewModel : ViewModel() {
     private var applicationContext: Context? = null
 
     fun initialize(context: Context) {
@@ -971,6 +971,7 @@ class KVSSignalingViewModel: ViewModel() {
     }
 
 
+    private var isUsingFrontCamera = true
 
     fun initializeSurfaceViews(context: Context, eglBaseContext: EglBase.Context, role: ChannelRole) {
         viewModelScope.launch(Dispatchers.Main) {
@@ -988,7 +989,7 @@ class KVSSignalingViewModel: ViewModel() {
                 val remoteRenderer = SurfaceViewRenderer(context).apply {
                     init(eglBaseContext, null)
                     setEnableHardwareScaler(true)
-                    setMirror(false)
+                    setMirror(true)
                 }
 
                 _localView.value = localRenderer
@@ -1005,12 +1006,15 @@ class KVSSignalingViewModel: ViewModel() {
                         // Observer 생성
                         val observer = object : CapturerObserver {
                             override fun onFrameCaptured(frame: VideoFrame) {
-                                if (System.currentTimeMillis() - lastFrameTime >= frameInterval) {
-                                    lastFrameTime = System.currentTimeMillis()
-                                    Log.d(TAG, "Frame captured with timestamp: $lastFrameTime")
+                                val currentTime = System.currentTimeMillis()
+                                if (currentTime - lastFrameTime >= frameInterval) {
+                                    lastFrameTime = currentTime
+                                    Log.d(TAG, "Frame captured with timestamp: $currentTime")
 
                                     try {
-                                        when (val buffer = frame.buffer) {
+                                        val buffer = frame.buffer
+
+                                        when (buffer) {
                                             is VideoFrame.I420Buffer -> {
                                                 convertI420ToBitmap(buffer)
                                             }
@@ -1022,7 +1026,7 @@ class KVSSignalingViewModel: ViewModel() {
                                         Log.e(TAG, "Error in frame processing", e)
                                     }
                                 }
-                                videoSource.capturerObserver?.onFrameCaptured(frame)
+                                videoSource?.capturerObserver?.onFrameCaptured(frame)
                             }
 
                             override fun onCapturerStarted(success: Boolean) {
@@ -1039,13 +1043,13 @@ class KVSSignalingViewModel: ViewModel() {
                         videoCapturer.startCapture(1280, 720, 30)
 
                         localVideoTrack = peerConnectionFactory?.createVideoTrack("local_track", videoSource)!!
-                        localVideoTrack.setEnabled(true)
-                        localVideoTrack.addSink(localRenderer)
+                        localVideoTrack?.setEnabled(true)
+                        localVideoTrack?.addSink(localRenderer)
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to initialize video components", e)
                     }
                     // 로컬 트랙이 있으면 렌더러에 연결
-                    localVideoTrack.addSink(localRenderer)
+                    localVideoTrack?.addSink(localRenderer)
                 }
                 Log.d(TAG, "initWsConnection ${role.name}")
                 initWsConnection(role.name)
@@ -1404,7 +1408,7 @@ class KVSSignalingViewModel: ViewModel() {
         }
     }
 
-    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean, ) {
+    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 val remoteVideoTrack = stream.videoTracks.firstOrNull()
@@ -1432,6 +1436,7 @@ class KVSSignalingViewModel: ViewModel() {
                         )
                         _remoteView.value?.let { renderer ->
                             try {
+                                renderer.setMirror(isUsingFrontCamera)
                                 videoTrack.addSink(renderer)
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error adding sink to remote video track", e)
@@ -1566,6 +1571,7 @@ class KVSSignalingViewModel: ViewModel() {
         _remoteView.value = null
     }
 
+//    private var isBackCamera = false
 
     private val _isBackCamera = MutableStateFlow(false)
     val isBackCamera: StateFlow<Boolean> = _isBackCamera
@@ -1595,6 +1601,9 @@ class KVSSignalingViewModel: ViewModel() {
                         capturer.switchCamera(object : CameraVideoCapturer.CameraSwitchHandler {
                             override fun onCameraSwitchDone(isFrontCamera: Boolean) {
                                 _isBackCamera.value = !isFrontCamera
+                                isUsingFrontCamera = isFrontCamera
+                                _localView.value?.setMirror(true)
+                                _remoteView.value?.setMirror(isFrontCamera)
                                 Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
                             }
 
@@ -1617,7 +1626,6 @@ class KVSSignalingViewModel: ViewModel() {
             }
         }
     }
-
     fun captureScreen(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
