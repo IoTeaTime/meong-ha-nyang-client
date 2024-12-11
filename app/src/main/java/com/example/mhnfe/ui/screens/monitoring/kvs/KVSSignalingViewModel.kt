@@ -1583,9 +1583,12 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
     private var isBackCamera = false
+    private val _isCameraSwitching = MutableStateFlow(false)
+    val isCameraSwitching: StateFlow<Boolean> = _isCameraSwitching
 
     fun switchCamera(context: Context) {
         viewModelScope.launch {
+            _isCameraSwitching.value = true
             try {
                 (videoCapturer as? CameraVideoCapturer)?.let { capturer ->
                     val enumerator = Camera1Enumerator(false)
@@ -1625,6 +1628,8 @@ class KVSSignalingViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("Camera", "카메라 전환 중 에러 발생", e)
+            } finally {
+                _isCameraSwitching.value = false
             }
         }
     }
@@ -1716,26 +1721,6 @@ class KVSSignalingViewModel : ViewModel() {
             }
         }
     }
-    private val _isAudioEnabled = MutableStateFlow(true)
-    val isAudioEnabled = _isAudioEnabled.asStateFlow()
-
-    fun toggleAudio() {
-        viewModelScope.launch {
-            _isAudioEnabled.value = !_isAudioEnabled.value
-            // remoteAudioTrack의 상태를 업데이트
-            _remoteVideoTrack.value?.let { track ->
-                track.setEnabled(_isAudioEnabled.value)
-            }
-            val audioManager = applicationContext?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-            if (_isAudioEnabled.value) {
-                audioManager?.mode = AudioManager.MODE_IN_COMMUNICATION
-                audioManager?.isSpeakerphoneOn = true
-            } else {
-                audioManager?.isSpeakerphoneOn = false
-            }
-        }
-    }
-
 }
 
 
