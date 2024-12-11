@@ -1,8 +1,6 @@
 package com.example.mhnfe.ui.screens.qr.qrscannig
 
 import android.annotation.SuppressLint
-import android.content.ContentValues.TAG
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.camera.core.CameraSelector
