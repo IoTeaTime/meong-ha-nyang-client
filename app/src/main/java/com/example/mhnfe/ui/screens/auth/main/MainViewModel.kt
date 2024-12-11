@@ -6,13 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
-import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.remote.response.CctvSelfInfoResponse
 import com.example.mhnfe.domain.repository.GroupRepository
 import com.example.mhnfe.domain.repository.QRRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -23,12 +20,8 @@ class MainViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
     private val qrRepository: QRRepository,
     private val accessTokenDataStore: DataStore<AccessToken>,
-    private val cctvResponseDataStore: DataStore<CCTVResponseBody>,
-//    private val tokenManager: TokenManager
+    private val cctvResponseDataStore: DataStore<CCTVResponseBody>
 ) : ViewModel() {
-
-    private val _cctvInfo = MutableStateFlow<CctvSelfInfoResponse?>(null)
-    val cctvInfo = _cctvInfo.asStateFlow()
 
     fun autoLogin(
         onSuccess: (String, Long) -> Unit
@@ -69,7 +62,6 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val cctvInfo = qrRepository.getCctvInfo()
-                _cctvInfo.value = cctvInfo
                 onSuccess(cctvInfo)
             } catch (e: Exception) {
                 onFailure(e)

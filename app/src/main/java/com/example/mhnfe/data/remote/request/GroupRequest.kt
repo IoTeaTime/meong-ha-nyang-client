@@ -2,14 +2,8 @@ package com.example.mhnfe.data.remote.request
 
 import com.example.mhnfe.data.remote.response.Result
 
-
 data class CreateGroupRequest(
     val thingId: String
-)
-
-data class QRResponseBody(
-    val groupId: Long,
-    val kvsChannelId: String? = null // CCTV일 때만 사용
 )
 
 data class GroupInfo(
@@ -31,7 +25,6 @@ data class CctvInfo(
     val thingId: String,
     val kvsChannelName: String,
 )
-// CCTV 정보 조회 응답
 
 data class Group(
     val groupId: Int,

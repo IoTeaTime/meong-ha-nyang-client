@@ -24,7 +24,7 @@ import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.R
 
 @Composable
-fun deletePopup(
+fun DeletePopup(
     modifier: Modifier = Modifier,
     onConfirmation: () -> Unit,
     onDismissRequest: () -> Unit,
@@ -119,6 +119,6 @@ fun NewQuizPreview() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        deletePopup(onConfirmation = {}) { }
+        DeletePopup(onConfirmation = {}) { }
     }
 }

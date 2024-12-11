@@ -106,31 +106,4 @@ object NetworkModule {
     fun provideImageApi(@Named("default") retrofit: Retrofit): ImageApi {
         return retrofit.create(ImageApi::class.java)
     }
-
-//    @Provides
-//    @Singleton
-//    fun provideUserApi(apiService: ApiService): UserApi {
-//        // ApiService를 주입받아 UserApi 생성
-//        return apiService.createApiService(UserApi::class.java)
-//    }
-//
-//    @Provides
-//    @Singleton
-//    fun provideAuthApi(apiService: ApiService): AuthApi {
-//        // ApiService를 주입받아 AuthApi 생성
-//        return apiService.createApiService(AuthApi::class.java)
-//    }
-//
-//    @Provides
-//    @Singleton
-//    fun provideGroupApi(apiService: ApiService): GroupApi {
-//        // ApiService를 주입받아 GroupApi 생성
-//        return apiService.createApiService(GroupApi::class.java)
-//    }
-//
-//    @Provides
-//    @Singleton
-//    fun provideApiService(retrofit: Retrofit): ApiService {
-//        return retrofit.create(ApiService::class.java)
-//    }
 }
