@@ -40,7 +40,6 @@ fun SmallButton(
 ) {
     Button(
         modifier = modifier,
-//            .defaultMinSize(130.dp, 56.dp),
         shape = RoundedCornerShape(16.dp),
         contentPadding = PaddingValues(vertical = 18.dp),
         colors = ButtonDefaults.buttonColors(
