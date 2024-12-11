@@ -33,18 +33,4 @@ object BoundingBoxUtils {
     // 이벤트 발생 여부를 결정하는 메서드
     fun shouldTriggerEvent(lastEventTime: Long, eventDelayMillis: Long): Boolean =
         (System.currentTimeMillis() - lastEventTime) >= eventDelayMillis
-
-    // 좌표를 단일 JSON 객체로 변환하는 메서드
-    fun getFirstCoordinatesAsJson(boundingBoxes: List<BoundingBox>): String {
-        return boundingBoxes.firstOrNull()?.let { box ->
-            """
-            {
-                "x1": ${box.x1}, "y1": ${box.y1},
-                "x2": ${box.x2}, "y2": ${box.y2},
-                "x3": ${box.x1}, "y3": ${box.y2},
-                "x4": ${box.x2}, "y4": ${box.y1}
-            }
-            """.trimIndent()
-        } ?: "{}"
-    }
 }

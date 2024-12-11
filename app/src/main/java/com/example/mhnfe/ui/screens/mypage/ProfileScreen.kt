@@ -88,7 +88,7 @@ fun ProfileScreen(
     }
     exitGroupResponse?.let {
         if (it.isSuccessful) {
-            mainNavController.navigate(NavRoutes.Auth.Main.route) {
+            mainNavController.navigate(NavRoutes.Auth.Select.route) {
                 popUpTo(NavRoutes.Main.route) { inclusive = true }
             }
         }
@@ -347,13 +347,3 @@ fun ProfileScreen(
         }
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//private fun ProfileScreenPreview() {
-//    val navController = rememberNavController()
-//    ProfileScreen(
-//        bottomNavController = navController,
-//        mainNavController = navController
-//    )
-//}
