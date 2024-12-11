@@ -1,9 +1,8 @@
 package com.example.mhnfe.data.remote.api
 
-
 import com.example.mhnfe.data.remote.response.ApiResponse
 import com.example.mhnfe.data.remote.response.CctvListResponse
-import com.example.mhnfe.data.remote.response.CreateGroupRequest
+import com.example.mhnfe.data.remote.request.CreateGroupRequest
 import com.example.mhnfe.data.remote.response.GroupInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberResponse
@@ -27,7 +26,7 @@ interface GroupApi {
     @GET("/api/group")
     suspend fun getGroupMember(
         @Header("Authorization") authToken: String
-    ): Response<GroupMemberResponse>
+    ): GroupMemberResponse
 
     @GET("/api/group/{groupId}/member")
     suspend fun getGroupMemberList(

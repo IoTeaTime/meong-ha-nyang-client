@@ -50,7 +50,6 @@ fun GroupScreen(
         }
     }
 
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {

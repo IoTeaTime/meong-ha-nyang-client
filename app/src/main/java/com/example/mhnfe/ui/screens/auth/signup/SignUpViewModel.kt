@@ -6,8 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.repository.AuthRepository
 import com.example.mhnfe.data.remote.response.SignUpResponse
 import com.example.mhnfe.data.remote.response.CheckEmailResponse
-import com.example.mhnfe.data.remote.response.CheckEmailVerificationResponse
-import com.example.mhnfe.data.remote.response.SendEmailVerificationResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,18 +21,10 @@ class SignUpViewModel @Inject constructor(
     private val _signUpResponse = MutableStateFlow<SignUpResponse?>(null)
     val signUpResponse: StateFlow<SignUpResponse?> = _signUpResponse
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
-
-    private val _emailCheckResponse = MutableStateFlow<CheckEmailResponse?>(null)
-    val emailCheckResponse: StateFlow<CheckEmailResponse?> = _emailCheckResponse
-
     suspend fun checkEmailStatus(email: String): Pair<Int, String> {
-//        Log.d("SignUpScreen", "checkEmailDuplicate 호출, email=$email")
         return try {
             // API call
             val response = authRepository.checkEmailDuplicate(email)
-//            Log.d("SignUpScreen", "checkEmailDuplicate 응답1: $response")
 
             // Response handling
             when (response.result.code) {

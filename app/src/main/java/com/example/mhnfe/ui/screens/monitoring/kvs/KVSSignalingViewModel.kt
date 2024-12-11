@@ -1,6 +1,5 @@
 package com.example.mhnfe.ui.screens.monitoring.kvs
 
-
 import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -95,7 +94,6 @@ import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
-
 
 enum class ConnectionEvent {
     ConnectionFailed,

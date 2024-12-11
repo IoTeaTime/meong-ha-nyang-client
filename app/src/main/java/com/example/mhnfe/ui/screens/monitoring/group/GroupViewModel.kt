@@ -23,7 +23,6 @@ class GroupViewModel @Inject constructor(
     val groupInfo = _groupInfo.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()

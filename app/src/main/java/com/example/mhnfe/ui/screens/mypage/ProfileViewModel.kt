@@ -7,14 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.api.UserApi
-import com.example.mhnfe.data.remote.request.LoginRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.ApiResponse
 import com.example.mhnfe.data.remote.response.ChangeNicknameOrGroupNameResponse
 import com.example.mhnfe.data.remote.response.ChangePasswordResponse
 import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.GroupId
-import com.example.mhnfe.data.remote.response.LogoutResponse
 import com.example.mhnfe.data.remote.response.MemberId
 import com.example.mhnfe.data.remote.response.ProfileBody
 import com.example.mhnfe.data.remote.response.ProfileResponse
@@ -49,9 +47,6 @@ class ProfileViewModel @Inject constructor(
 
     private val _changeResponse = MutableStateFlow<ChangePasswordResponse?>(null)
     val changeResponse: StateFlow<ChangePasswordResponse?> = _changeResponse
-
-    private val _changeNicknameOrGroupNameResponse = MutableStateFlow<ChangeNicknameOrGroupNameResponse?>(null)
-    val changeNicknameOrGroupNameResponse: StateFlow<ChangeNicknameOrGroupNameResponse?> = _changeNicknameOrGroupNameResponse
 
     private val _profileResponse = MutableStateFlow<ProfileResponse?>(null)
     val profileResponse: StateFlow<ProfileResponse?> = _profileResponse
@@ -170,7 +165,6 @@ class ProfileViewModel @Inject constructor(
                     }
                     userRepository.changeNicknameOrGroupName(token,processedNickname,processedGroupName)
                 }
-                _changeNicknameOrGroupNameResponse.value = response
 
             }catch (e: Exception) {
                 // 에러 처리

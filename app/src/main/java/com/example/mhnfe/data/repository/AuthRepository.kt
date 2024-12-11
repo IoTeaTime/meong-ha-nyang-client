@@ -38,13 +38,10 @@ class AuthRepository @Inject constructor(
 
     suspend fun checkEmailDuplicate(email: String): CheckEmailResponse {
         val emailRequest = EmailRequest(email)
-//        Log.d("AuthRepository", "checkEmailDuplicate 요청: $emailRequest")
         return try {
             val response = authApi.checkEmailDuplicate(emailRequest)
-//            Log.d("AuthRepository", "checkEmailDuplicate 응답2: $response")
             response
         } catch (e: HttpException) {
-//            Log.e("AuthRepository", "checkEmailDuplicate HTTP 예외1: ${e.code()}", e)
             val errorBody = e.response()?.errorBody()?.string()
             val errorResponse = parseErrorResponse(errorBody)
             CheckEmailResponse(errorResponse.result, errorResponse.data)

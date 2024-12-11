@@ -47,7 +47,7 @@ import com.example.mhnfe.ui.screens.shared.AuthStateViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray2
-import deletePopup
+import DeletePopup
 
 @Composable
 fun ProfileScreen(
@@ -315,7 +315,7 @@ fun ProfileScreen(
                 )
             }
             if (dialogVisible1) {
-                deletePopup(
+                DeletePopup(
                     onConfirmation = {
                         profileViewModel.quit()
                         setDialogVisible1(false)

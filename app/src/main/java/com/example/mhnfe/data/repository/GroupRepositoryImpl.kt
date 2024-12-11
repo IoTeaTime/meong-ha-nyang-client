@@ -5,9 +5,8 @@ import com.example.mhnfe.data.remote.api.GroupApi
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.ApiResponse
 import com.example.mhnfe.data.remote.response.CctvListResponse
-import com.example.mhnfe.data.remote.response.CreateGroupRequest
+import com.example.mhnfe.data.remote.request.CreateGroupRequest
 import com.example.mhnfe.data.remote.response.Group
-import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.GroupInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
 import com.example.mhnfe.data.remote.response.GroupMemberResponse
@@ -66,7 +65,7 @@ class GroupRepositoryImpl @Inject constructor(
     }
 
     // 그룹 가입 정보 조회
-    override suspend fun getGroupMember(authToken: String): Response<GroupMemberResponse> {
+    override suspend fun getGroupMember(authToken: String): GroupMemberResponse {
         return groupApi.getGroupMember(authToken)
     }
 

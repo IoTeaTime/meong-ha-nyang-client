@@ -33,10 +33,6 @@ class YoloDetectionManager(private val context: Context) {
         yoloDetector.detect(frame)
     }
 
-    fun restart(isGpu: Boolean) {
-        yoloDetector.restart(isGpu)
-    }
-
     fun close() {
         yoloDetector.close()
     }

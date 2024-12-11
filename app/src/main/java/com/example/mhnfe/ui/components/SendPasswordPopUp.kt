@@ -26,7 +26,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.R
-import com.example.mhnfe.ui.components.MainTextBox
 import com.example.mhnfe.ui.screens.auth.login.LoginViewModel
 
 @Composable

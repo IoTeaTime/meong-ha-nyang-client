@@ -1,9 +1,6 @@
 package com.example.mhnfe.data.remote.response
 
-import com.example.mhnfe.data.remote.request.CctvInfoResponseBody
-import com.example.mhnfe.data.remote.request.CctvSelfInfoResponseBody
 import kotlinx.serialization.Serializable
-
 
 data class CctvQRResponse(
     val result: Result,
@@ -31,4 +28,19 @@ data class CctvInfoResponse(
 data class CctvSelfInfoResponse(
     val result: Result,
     val body: CctvSelfInfoResponseBody
+)
+
+data class CctvInfoResponseBody(
+    val cctvId: Int,
+    val cctvNickname: String,
+    val thingId: String,
+    val kvsChannelName: String
+)
+
+data class CctvSelfInfoResponseBody(
+    val groupId: Int,
+    val cctvId: Int,
+    val cctvNickname: String,
+    val thingId: String,
+    val kvsChannelName: String
 )
