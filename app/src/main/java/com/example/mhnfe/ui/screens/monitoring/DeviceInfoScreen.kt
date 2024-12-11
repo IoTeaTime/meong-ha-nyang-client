@@ -98,6 +98,7 @@ fun DeviceInfoScreen(
     DisposableEffect(Unit) {
         val job = scope.launch {
             while (isActive) {
+                Log.d("DeviceInfoScreen", "Send Topic to get device info")
                 cctv?.let {
                     mqttViewModel.cctvInfoRequestPub(it.thingId)
                     mqttStatus = true
@@ -262,5 +263,4 @@ private fun DeviceInfoCard(
             }
         }
     }
-
 }

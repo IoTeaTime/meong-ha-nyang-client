@@ -23,28 +23,28 @@ import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
-
 @HiltViewModel
 class AiViewModel @Inject constructor(
-    @ApplicationContext private val context: Context, // Context 주입
+    @ApplicationContext private val context: Context,
     private val imageRepository: ImageRepository
 ) : ViewModel() {
     private val tag = "AiViewModel"
     private val motionDetector = MotionDetector()
     private val yoloDetectionManager = YoloDetectionManager(context)
     private var lastEventTime: Long = 0 // 마지막 이벤트 발생 시간 기록
-    private val eventDelayMillis = 6000L // event data to iot 딜레이 시간
+    private val eventDelayMillis = 60000L // event data to iot 딜레이 시간
     private val handleDetection = HandleDetection()
 
     fun processFrame(
         bitmap: Bitmap?,
         onResult: (Int, String, Float, List<Map<String, Int>>) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch label@{
+            var currentFrame: Mat? = null
             try {
                 bitmap?.let { bmp ->
-                    val currentFrame: Mat = BitmapToMatConverter.BitToMat(bmp)
-                    val motionAreas: List<Rect> = motionDetector.detectMotion(currentFrame)
+                    currentFrame = BitmapToMatConverter.BitToMat(bmp)
+                    val motionAreas: List<Rect> = motionDetector.detectMotion(currentFrame!!)
 
                     if (motionAreas.isNotEmpty()) {
                         Log.d(tag, "Motion detected in ${motionAreas.size} area(s)")
@@ -54,9 +54,7 @@ class AiViewModel @Inject constructor(
                             val filteredBoxes =
                                 handleDetection.handleDetectionResults(boundingBoxes)
                             if (filteredBoxes.isNotEmpty()) {
-                                val imageResult = createImage(bmp)
-                                val imageName = imageResult.first // 이미지 이름
-                                val imageData = imageResult.second // JPEG 포맷 이미지 데이터
+                                val (imageName, imageData) = createImage(bmp)
 
                                 if (BoundingBoxUtils.shouldTriggerEvent(
                                         lastEventTime,
@@ -64,46 +62,44 @@ class AiViewModel @Inject constructor(
                                     )
                                 ) {
                                     lastEventTime = System.currentTimeMillis()
-                                    Log.d("DetectEvent", "detectEvent() 시작")
 
-                                    //api 연결
+                                    // API 연결 및 이벤트 토픽 발행
                                     viewModelScope.launch {
                                         try {
-                                            //Presigned URL 가져오기
+                                            // Get Presigned URL
                                             val urlResponse =
                                                 imageRepository.getPresignedUrl(imageName)
 
-                                            //Presigned URL 이미지 업로드
-                                            val uploadResult = imageRepository.uploadToPresignedUrl(
-                                                urlResponse.body.presignedUrl,
-                                                imageData
-                                            )
+                                            // Presigned URL 이미지 업로드
+                                            val uploadResult =
+                                                imageRepository
+                                                    .uploadToPresignedUrl(
+                                                        urlResponse.body.presignedUrl,
+                                                        imageData
+                                                    )
 
-                                            if (uploadResult) {
-                                                imageRepository.saveImage(
-                                                    imageName = urlResponse.body.imageName,
-                                                    imagePath = urlResponse.body.imagePath
-                                                )
-                                                Log.e("PresignedURL", "이미지 저장 성공")
+                                            if (!uploadResult) {
+                                                Log.e(tag, "S3 Image Upload Failed")
+                                                return@launch
                                             }
 
-                                            val trackingId = DetectionManager.getNextTrackingId()
-
-                                            // BoundingBoxUtils를 사용하여 데이터 추출
-                                            val (objectType, confidence) = BoundingBoxUtils.getTypeAndConfidence(
-                                                boundingBoxes
+                                            imageRepository.saveImage(
+                                                urlResponse.body.imageName,
+                                                urlResponse.body.imagePath
                                             )
-                                            val coordinates =
-                                                BoundingBoxUtils.getCoordinates(boundingBoxes)
+
+                                            // BoundingBoxUtils 데이터 추출
+                                            val (objectType, confidence) =
+                                                BoundingBoxUtils.getTypeAndConfidence(boundingBoxes)
 
                                             onResult(
-                                                trackingId,
+                                                DetectionManager.getNextTrackingId(),
                                                 objectType,
                                                 confidence,
-                                                coordinates
+                                                BoundingBoxUtils.getCoordinates(boundingBoxes)
                                             )
                                         } catch (e: Exception) {
-                                            Log.e(tag, "Image upload failed", e)
+                                            Log.e(tag, "Event Image Upload Failed: ", e)
                                         }
                                     }
 
@@ -111,12 +107,11 @@ class AiViewModel @Inject constructor(
                             }
                         }
                     }
-
-                    // 현재 프레임 객체 해제
-                    currentFrame.release()
                 }
             } catch (e: Exception) {
                 Log.e(tag, "Frame processing error", e)
+            } finally {
+                currentFrame?.release()
             }
         }
     }

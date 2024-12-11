@@ -30,7 +30,6 @@ class DeviceViewModel @Inject constructor(
     private val accessTokenDataStore: DataStore<AccessToken>
 ): ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
 
     private val _cctv = MutableStateFlow<CCTV?>(null)
     val cctv: StateFlow<CCTV?> = _cctv.asStateFlow()

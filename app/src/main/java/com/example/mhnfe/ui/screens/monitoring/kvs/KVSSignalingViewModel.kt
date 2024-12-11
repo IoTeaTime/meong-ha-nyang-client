@@ -1,6 +1,5 @@
 package com.example.mhnfe.ui.screens.monitoring.kvs
 
-
 import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -19,6 +18,7 @@ import android.util.Base64
 import android.util.Log
 import android.view.PixelCopy
 import android.widget.Toast
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -43,6 +43,7 @@ import com.amazonaws.services.kinesisvideosignaling.model.GetIceServerConfigRequ
 import com.amazonaws.services.kinesisvideosignaling.model.IceServer
 import com.amazonaws.services.kinesisvideowebrtcstorage.AWSKinesisVideoWebRTCStorageClient
 import com.amazonaws.services.kinesisvideowebrtcstorage.model.JoinStorageSessionRequest
+import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.signaling.SignalingListener
 import com.example.mhnfe.data.signaling.model.Event
 import com.example.mhnfe.data.signaling.model.Message
@@ -93,7 +94,6 @@ import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
-
 
 enum class ConnectionEvent {
     ConnectionFailed,
@@ -969,6 +969,7 @@ class KVSSignalingViewModel : ViewModel() {
     }
 
 
+    private var isUsingFrontCamera = true
 
     fun initializeSurfaceViews(context: Context, eglBaseContext: EglBase.Context, role: ChannelRole) {
         viewModelScope.launch(Dispatchers.Main) {
@@ -986,7 +987,7 @@ class KVSSignalingViewModel : ViewModel() {
                 val remoteRenderer = SurfaceViewRenderer(context).apply {
                     init(eglBaseContext, null)
                     setEnableHardwareScaler(true)
-                    setMirror(false)
+                    setMirror(true)
                 }
 
                 _localView.value = localRenderer
@@ -1405,7 +1406,7 @@ class KVSSignalingViewModel : ViewModel() {
         }
     }
 
-    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean, ) {
+    private fun addRemoteStreamToVideoView(stream: MediaStream, isMaster: Boolean) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 val remoteVideoTrack = stream.videoTracks.firstOrNull()
@@ -1433,6 +1434,7 @@ class KVSSignalingViewModel : ViewModel() {
                         )
                         _remoteView.value?.let { renderer ->
                             try {
+                                renderer.setMirror(isUsingFrontCamera)
                                 videoTrack.addSink(renderer)
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error adding sink to remote video track", e)
@@ -1567,8 +1569,11 @@ class KVSSignalingViewModel : ViewModel() {
         _remoteView.value = null
     }
 
+//    private var isBackCamera = false
 
-    private var isBackCamera = false
+    private val _isBackCamera = MutableStateFlow(false)
+    val isBackCamera: StateFlow<Boolean> = _isBackCamera
+
     private val _isCameraSwitching = MutableStateFlow(false)
     val isCameraSwitching: StateFlow<Boolean> = _isCameraSwitching
 
@@ -1581,7 +1586,7 @@ class KVSSignalingViewModel : ViewModel() {
                     val deviceNames = enumerator.deviceNames
 
                     val targetDevice = deviceNames.firstOrNull { deviceName ->
-                        if (isBackCamera) {
+                        if (isBackCamera.value) {
                             enumerator.isFrontFacing(deviceName)
                         } else {
                             enumerator.isBackFacing(deviceName)
@@ -1593,7 +1598,10 @@ class KVSSignalingViewModel : ViewModel() {
                     targetDevice?.let { device ->
                         capturer.switchCamera(object : CameraVideoCapturer.CameraSwitchHandler {
                             override fun onCameraSwitchDone(isFrontCamera: Boolean) {
-                                isBackCamera = !isFrontCamera
+                                _isBackCamera.value = !isFrontCamera
+                                isUsingFrontCamera = isFrontCamera
+                                _localView.value?.setMirror(true)
+                                _remoteView.value?.setMirror(isFrontCamera)
                                 Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
                             }
 
