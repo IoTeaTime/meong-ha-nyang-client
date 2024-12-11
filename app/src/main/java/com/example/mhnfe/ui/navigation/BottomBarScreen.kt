@@ -51,7 +51,6 @@ fun BottomNavigationBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
-//        val currentRoute = navBackStackEntry?.destination?.route
 
         val items = listOf(
             NavigationItem.Monitoring,

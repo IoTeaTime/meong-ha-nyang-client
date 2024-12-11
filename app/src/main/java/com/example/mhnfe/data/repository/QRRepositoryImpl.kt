@@ -7,7 +7,6 @@ import com.example.mhnfe.data.remote.request.CctvQRRequest
 import com.example.mhnfe.data.remote.request.ViewerQRRequest
 import com.example.mhnfe.data.remote.response.AccessToken
 import com.example.mhnfe.data.remote.response.CCTVResponseBody
-import com.example.mhnfe.data.remote.response.CctvInfoResponse
 import com.example.mhnfe.data.remote.response.CctvQRResponse
 import com.example.mhnfe.data.remote.response.CctvSelfInfoResponse
 import com.example.mhnfe.data.remote.response.ViewerQRResponse
