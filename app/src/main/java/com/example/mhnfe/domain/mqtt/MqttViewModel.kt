@@ -149,7 +149,7 @@ class MqttViewModel @Inject constructor(
         try {
             subscribe(topic, { receivedTopic, message ->
                 Log.d(tag, "Message received on topic $receivedTopic: $message")
-                groupShadowReceiveHandler(receivedTopic, message) { reportedData ->
+                 groupShadowReceiveHandler(receivedTopic, message) { reportedData ->
                     data(reportedData)
                 }
             })
@@ -210,11 +210,14 @@ class MqttViewModel @Inject constructor(
             val device: DeviceInfoShadow = json.decodeFromString(message)
             // JSON 파싱 시 ignoreUnknownKeys = true 설정
             val reportedData: ReportedData? = device.state?.reported
+            if (reportedData == null) {
+                Log.e(tag, "Reported data가 null입니다. JSON: $message")
+                return
+            }
             when {
-                topic.contains("thingId") -> {
+                topic.contains("things") -> {
                     Log.d(tag, "Accepted 메시지 수신: $message")
                 }
-
                 else -> {
                     Log.w(tag, "Unhandled Shadow Topic: $topic")
                 }
@@ -286,6 +289,16 @@ class MqttViewModel @Inject constructor(
         }
     }
 
+    private fun updateShadow(payload: String,thingId: String) {
+        val topic = "\$aws/things/${thingId}/shadow/update"
+        try {
+            awsMqttManager.publishString(payload, topic, AWSIotMqttQos.QOS0)
+            Log.d(tag, "Published Shadow Update: $payload")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to publish shadow update: ${e.message}", e)
+        }
+    }
+
     fun startObservingData(context: Context) {
         if (dataObserver == null) {
             dataObserver = DataObserver(context).apply {
@@ -315,6 +328,11 @@ class MqttViewModel @Inject constructor(
         }
     }
 
+    fun cameraSwitchUpdateShadow(isBackCamera: Boolean, thingId: String){
+        val payload = DeviceUtils.getIsBackCameraPayload(isBackCamera)
+        updateShadow(payload,thingId)
+    }
+
     fun stopObservingData() {
         dataObserver = null // todo. mqtt 연결 해제될 때 같이 수정
     }
@@ -325,23 +343,21 @@ class MqttViewModel @Inject constructor(
         confidence: Float,
         coordinates: List<Map<String, Int>>
     ) {
-        val payload = coordinates.firstOrNull().let { coord ->
-            """
+        val coord = coordinates.first()
+        val payload = """
         {
             "trackingId": $trackingId,
             "timestamp": ${System.currentTimeMillis() / 1000},
             "objectType": "$objectName",
             "confidence": $confidence,
             "coordinates": {
-                "x1": ${coord!!["x1"]}, "y1": ${coord["y1"]},
+                "x1": ${coord["x1"]}, "y1": ${coord["y1"]},
                 "x2": ${coord["x2"]}, "y2": ${coord["y2"]},
                 "x3": ${coord["x3"]}, "y3": ${coord["y3"]},
                 "x4": ${coord["x4"]}, "y4": ${coord["y4"]}
             }
         }
-        """.trimIndent()
-        }
-
+    """.trimIndent()
         publish("/mhn/event/detect/things/$thingId", payload)
     }
 
@@ -354,5 +370,14 @@ class MqttViewModel @Inject constructor(
         awsMqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0) { receivedTopic, message ->
             onMessageReceived(receivedTopic, message.toString(Charsets.UTF_8))
         }
+    }
+
+    fun convertNetworkStatusToString(networkStatus: Int): String {
+        if(networkStatus == 5) return "원활"
+        else if(networkStatus == 4) return "양호"
+        else if(networkStatus == 3) return "보통"
+        else if(networkStatus == 2) return "약함"
+        else if(networkStatus == 1) return "위험"
+        else return "비활성"
     }
 }

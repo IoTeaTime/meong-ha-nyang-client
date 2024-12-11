@@ -50,9 +50,9 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.amazonaws.services.kinesisvideo.model.ChannelRole
 import com.example.mhnfe.R
 import com.example.mhnfe.domain.mqtt.MqttViewModel
-import com.example.mhnfe.ui.navigation.NavRoutes
 import com.example.mhnfe.ui.screens.auth.main.MainViewModel
 import com.example.mhnfe.ui.screens.auth.main.RunningDogLoadingAnimation
+import com.example.mhnfe.ui.screens.monitoring.device.DeviceViewModel
 import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import kotlinx.coroutines.Dispatchers
@@ -71,11 +71,13 @@ fun WebRtcScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
     channelName: String,
+    cctvId: Long?,
     role: ChannelRole,
     viewModel: KVSSignalingViewModel,
     mqttViewModel: MqttViewModel = hiltViewModel(),
     aiViewModel: AiViewModel = hiltViewModel(),
-    mainViewModel: MainViewModel = hiltViewModel()
+    mainViewModel: MainViewModel = hiltViewModel(),
+    deviceViewModel: DeviceViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -88,25 +90,36 @@ fun WebRtcScreen(
     val window = (context as? Activity)?.window
     val isCameraSwitching by viewModel.isCameraSwitching.collectAsState()
     val isRecording = remember { mutableStateOf(false) }
+    val thingId = remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         var groupId = 0
-        mainViewModel.getCctvAccessToken { cctvAccessToken ->
-            if (cctvAccessToken != "") {
-                mainViewModel.fetchCctvId(
-                    onSuccess = { cctvInfo ->
-                        Log.d(
-                            "MainScreen",
-                            "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}"
-                        )
-                        groupId = cctvInfo.body.groupId
-                    },
-                    onFailure = { fetchError ->
-                        Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
-                    }
-                )
+        if(role == ChannelRole.MASTER){
+            mainViewModel.getCctvAccessToken { cctvAccessToken ->
+                if(cctvAccessToken != "") {
+                    mainViewModel.fetchCctvId(
+                        onSuccess = { cctvInfo ->
+                            Log.d(
+                                "MainScreen",
+                                "Loaded CCTV Info: ${cctvInfo.body.cctvNickname}, CCTV ID: ${cctvInfo.body.cctvId}"
+                            )
+                            groupId = cctvInfo.body.groupId
+                            thingId.value = cctvInfo.body.thingId
+                        },
+                        onFailure = { fetchError ->
+                            Log.e("MainScreen", "자동 로그인 실패 및 CCTV ID 확인 실패", fetchError)
+                        }
+                    )
+                }
+            }
+        }else{
+            if (cctvId != null) {
+                deviceViewModel.getCctvInfo(cctvId) { cctvInfo ->
+                    thingId.value = cctvInfo.thingId
+                }
             }
         }
+
 
         if (role == ChannelRole.MASTER && !mqttState) {
             val result = mqttViewModel.initialize()
@@ -119,6 +132,17 @@ fun WebRtcScreen(
         }
         if (role == ChannelRole.MASTER && mqttState) {
             mqttViewModel.startObservingData(context)
+        }
+
+        //shadow sub
+        mqttViewModel.groupShadowSub(thingId.value) { reportedData ->
+            reportedData.let {
+                if (it?.isBackCamera != null && it.isBackCamera != viewModel.isCameraSwitching.value) {
+                    if(role == ChannelRole.MASTER){
+                        viewModel.switchCamera(context)
+                    }
+                }
+            }
         }
     }
 
@@ -442,7 +466,11 @@ fun WebRtcScreen(
                             modifier = modifier
                                 .size(50.dp),
                             onClick = {
-                                viewModel.switchCamera(context)
+                                if(role == ChannelRole.MASTER){
+                                    viewModel.switchCamera(context)
+                                }else{
+                                    mqttViewModel.cameraSwitchUpdateShadow(true, thingId.value)
+                                }
                             }
                         ) {
                             Icon(
