@@ -376,8 +376,7 @@ fun WebRtcScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(
-                            modifier = modifier
-                                .size(42.dp),
+                            modifier = modifier.size(42.dp),
                             onClick = {
                                 viewModel.viewModelScope.launch {
                                     try {
@@ -385,17 +384,27 @@ fun WebRtcScreen(
                                         cleanup()
 
                                         withContext(Dispatchers.Main) {
-                                            navController.navigate("monitoring/group") {
-                                                popUpTo(navController.graph.findStartDestination().id)
-                                                launchSingleTop = true
+                                            if (role == ChannelRole.VIEWER) {
+                                                // 뷰어인 경우 monitoring/group으로 이동
+                                                navController.navigate("monitoring/group") {
+                                                    popUpTo(navController.graph.findStartDestination().id)
+                                                    launchSingleTop = true
+                                                }
+                                            } else {
+                                                // 마스터인 경우 앱 종료
+                                                (context as? Activity)?.finishAffinity()
                                             }
                                         }
                                     } catch (e: Exception) {
                                         Log.e("WebRTCScreen", "연결 해제 실패", e)
                                         withContext(Dispatchers.Main) {
-                                            navController.navigate("monitoring/group") {
-                                                popUpTo(navController.graph.findStartDestination().id)
-                                                launchSingleTop = true
+                                            if (role == ChannelRole.VIEWER) {
+                                                navController.navigate("monitoring/group") {
+                                                    popUpTo(navController.graph.findStartDestination().id)
+                                                    launchSingleTop = true
+                                                }
+                                            } else {
+                                                (context as? Activity)?.finishAffinity()
                                             }
                                         }
                                     }

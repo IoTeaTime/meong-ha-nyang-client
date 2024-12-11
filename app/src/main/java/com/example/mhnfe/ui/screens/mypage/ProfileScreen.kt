@@ -48,6 +48,10 @@ import com.example.mhnfe.ui.theme.Typography
 import com.example.mhnfe.ui.theme.mainBlack
 import com.example.mhnfe.ui.theme.mainGray2
 import DeletePopup
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun ProfileScreen(
@@ -168,101 +172,130 @@ fun ProfileScreen(
                             contentDescription = "로고",
                             contentScale = ContentScale.Fit
                         )
-
-                        Column(
+                        Column (
                             modifier = modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight(),
-                            verticalArrangement = Arrangement.spacedBy(
-                                10.dp,
-                                alignment = Alignment.CenterVertically
-                            ),
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Row(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ){
+                            IconButton(
                                 modifier = modifier
+                                    .align(Alignment.End)
+                                    .size(22.dp),
+                                onClick = { setDialogVisible(true) }
+                            ) {
+                                Icon(
+                                    modifier = modifier.size(16.dp, 16.dp),
+                                    painter = painterResource(id = R.drawable.edit),
+                                    contentDescription = null,
+                                    tint = Color.Unspecified
+                                )
+                            }
+
+                            Column(
+                                modifier = modifier
+                                    .padding(bottom = 16.dp)
                                     .fillMaxWidth()
                                     .wrapContentHeight(),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalArrangement = Arrangement.spacedBy(
+                                    10.dp,
+                                    alignment = Alignment.CenterVertically
+                                ),
+                                horizontalAlignment = Alignment.Start
                             ) {
+
                                 Row(
                                     modifier = modifier
-                                        .wrapContentWidth()
+                                        .fillMaxWidth()
                                         .wrapContentHeight(),
-                                    horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        modifier = modifier
+                                            .wrapContentWidth()
+                                            .wrapContentHeight(),
+                                        horizontalArrangement = Arrangement.spacedBy(
+                                            20.dp,
+                                            alignment = Alignment.Start
+                                        ),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            modifier = modifier,
+                                            text = "닉네임",
+                                            style = Typography.bodyMedium,
+                                            color = mainBlack
+                                        )
+                                        Text(
+                                            modifier = modifier,
+                                            text = nickname,
+                                            style = Typography.bodyMedium,
+                                            color = mainBlack
+                                        )
+                                    }
+
+                                    Spacer(modifier = modifier.weight(1f))
+
+
+                                }
+
+
+                                Row(
+                                    modifier = modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        20.dp,
+                                        alignment = Alignment.Start
+                                    ),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
                                         modifier = modifier,
-                                        text = "닉네임",
+                                        text = "아이디",
                                         style = Typography.bodyMedium,
                                         color = mainBlack
                                     )
-                                    Text(
-                                        modifier = modifier,
-                                        text = nickname,
-                                        style = Typography.bodyMedium,
-                                        color = mainBlack
-                                    )
+                                    Box(
+                                        modifier = modifier
+                                            .weight(1f)
+                                            .horizontalScroll(rememberScrollState())  // 가로 스크롤 추가
+                                    ) {
+                                        profileResponse?.body?.member?.email?.let {
+                                            Text(
+                                                modifier = modifier,
+                                                text = it,
+                                                style = Typography.bodyMedium,
+                                                color = mainBlack,
+                                                maxLines = 1,  // 한 줄로 제한
+                                            )
+                                        }
+                                    }
                                 }
 
-                                Spacer(modifier = modifier.weight(1f))
-
-                                IconButton(
+                                Row(
                                     modifier = modifier
-                                        .size(22.dp),
-                                    onClick = { setDialogVisible(true) }
+                                        .fillMaxWidth()
+                                        .wrapContentHeight(),
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        20.dp,
+                                        alignment = Alignment.Start
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        modifier = modifier.size(16.dp, 16.dp),
-                                        painter = painterResource(id = R.drawable.edit),
-                                        contentDescription = null,
-                                        tint = Color.Unspecified
-                                    )
-                                }
-                            }
-
-                            Row(
-                                modifier = modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    modifier = modifier,
-                                    text = "아이디",
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
-                                profileResponse?.body?.member?.email?.let {
                                     Text(
                                         modifier = modifier,
-                                        text = it,
+                                        text = "그룹명",
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
+                                    Text(
+                                        modifier = modifier,
+                                        text = groupName,
                                         style = Typography.bodyMedium,
                                         color = mainBlack
                                     )
                                 }
-                            }
-
-                            Row(
-                                modifier = modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight(),
-                                horizontalArrangement = Arrangement.spacedBy(30.dp , alignment = Alignment.Start),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    modifier = modifier,
-                                    text = "그룹명",
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
-                                Text(
-                                    modifier = modifier,
-                                    text = groupName,
-                                    style = Typography.bodyMedium,
-                                    color = mainBlack
-                                )
                             }
                         }
                     }

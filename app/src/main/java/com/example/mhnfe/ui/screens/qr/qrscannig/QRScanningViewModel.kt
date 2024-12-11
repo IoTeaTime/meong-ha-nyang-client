@@ -28,6 +28,7 @@ sealed class QRScanNavigationEvent {
     ) : QRScanNavigationEvent()
 
     data class NavigateToViewer(val userType: UserType) : QRScanNavigationEvent()
+    object NavigateToMain : QRScanNavigationEvent()
 }
 
 
@@ -61,9 +62,6 @@ class QRScanningViewModel @Inject constructor(
                     UserType.CCTV -> {
                         val qrInfo = parseCCTVQRData(result)
                         processCCTVQR(qrInfo)
-                        _navigationEvent.send(QRScanNavigationEvent.NavigateToCCTV(
-                            channelName = qrInfo.kvsChannelName
-                        ))
                     }
                     UserType.VIEWER -> {
                         processViewerQR(result)
@@ -108,12 +106,13 @@ class QRScanningViewModel @Inject constructor(
                     showMessage = "CCTV QR 코드가 성공적으로 등록되었습니다."
                 )
             }
-        } catch (e: Exception) {
-            handleError(e)
             // 에러가 발생해도 네비게이션 이벤트 전송
             _navigationEvent.send(QRScanNavigationEvent.NavigateToCCTV(
                 channelName = qrInfo.kvsChannelName
             ))
+        } catch (e: Exception) {
+            handleError(e)
+
         }
     }
 
@@ -140,7 +139,7 @@ class QRScanningViewModel @Inject constructor(
         }
     }
 
-    private fun handleError(e: Throwable) {
+    private suspend fun handleError(e: Throwable) {
         val errorMessage = when (e) {
             is HttpException -> when (e.code()) {
                 400 -> "잘못된 QR 코드입니다"
@@ -161,6 +160,7 @@ class QRScanningViewModel @Inject constructor(
             )
         }
         Log.e("QRScanningViewModel", "QR 처리 실패", e)
+        _navigationEvent.send(QRScanNavigationEvent.NavigateToMain)
     }
 
     fun resetState() {

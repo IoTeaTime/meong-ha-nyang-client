@@ -81,6 +81,13 @@ fun QRScanningScreen(
                         }
                     }
                 }
+                is QRScanNavigationEvent.NavigateToMain -> {
+                    navController.navigate(NavRoutes.Auth.Main.route) {
+                        popUpTo(NavRoutes.Auth.route) {
+                            inclusive = true
+                        }
+                    }
+                }
             }
         }
     }
