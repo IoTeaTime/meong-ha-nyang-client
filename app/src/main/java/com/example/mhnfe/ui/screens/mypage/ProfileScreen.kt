@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -67,10 +68,15 @@ fun ProfileScreen(
     val exitGroupResponse by profileViewModel.exitGroupResponse.collectAsState()
 
     val profileResponse by profileViewModel.profileResponse.collectAsState()
+    var nickname by remember { mutableStateOf("") }
+    var groupName by remember { mutableStateOf("") }
     val error by profileViewModel.error.collectAsState()
 
     LaunchedEffect(Unit) {
-        profileViewModel.fetchMemberDetails()
+        profileViewModel.fetchMemberDetails { response ->
+            nickname = response.member.nickname
+            groupName = response.group.groupName
+        }
     }
 
     logoutResponse?.let {
@@ -193,14 +199,12 @@ fun ProfileScreen(
                                         style = Typography.bodyMedium,
                                         color = mainBlack
                                     )
-                                    profileResponse?.body?.member?.let {
-                                        Text(
-                                            modifier = modifier,
-                                            text = it.nickname,
-                                            style = Typography.bodyMedium,
-                                            color = mainBlack
-                                        )
-                                    }
+                                    Text(
+                                        modifier = modifier,
+                                        text = nickname,
+                                        style = Typography.bodyMedium,
+                                        color = mainBlack
+                                    )
                                 }
 
                                 Spacer(modifier = modifier.weight(1f))
@@ -253,14 +257,12 @@ fun ProfileScreen(
                                     style = Typography.bodyMedium,
                                     color = mainBlack
                                 )
-                                profileResponse?.body?.group?.groupName?.let {
-                                    Text(
-                                        modifier = modifier,
-                                        text = it,
-                                        style = Typography.bodyMedium,
-                                        color = mainBlack
-                                    )
-                                }
+                                Text(
+                                    modifier = modifier,
+                                    text = groupName,
+                                    style = Typography.bodyMedium,
+                                    color = mainBlack
+                                )
                             }
                         }
                     }
@@ -302,7 +304,10 @@ fun ProfileScreen(
             if (dialogVisible) {
                 EditPopup(
                     onConfirmation = {
-                        profileViewModel.fetchMemberDetails()
+                        profileViewModel.fetchMemberDetails { response ->
+                            nickname = response.member.nickname
+                            groupName = response.group.groupName
+                        }
                         setDialogVisible(false)
                     },
                     onDismissRequest = { setDialogVisible(false) },

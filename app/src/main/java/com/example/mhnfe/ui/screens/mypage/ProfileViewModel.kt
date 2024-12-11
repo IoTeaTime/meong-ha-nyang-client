@@ -16,6 +16,7 @@ import com.example.mhnfe.data.remote.response.DeleteResponse
 import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.LogoutResponse
 import com.example.mhnfe.data.remote.response.MemberId
+import com.example.mhnfe.data.remote.response.ProfileBody
 import com.example.mhnfe.data.remote.response.ProfileResponse
 import com.example.mhnfe.data.remote.response.RefreshToken
 import com.example.mhnfe.domain.repository.UserRepository
@@ -24,10 +25,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -111,6 +112,10 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun clearError() {
+        _error.value = null
+    }
+
     fun changePassword(currentPassword: String, newPassword: String) {
         viewModelScope.launch {
             try {
@@ -123,7 +128,14 @@ class ProfileViewModel @Inject constructor(
                 }
                 _changeResponse.value = response
 
-            } catch (e: Exception) {
+            } catch (e: HttpException) {
+                if (e.code() == 400) {
+                    _error.value = "기존 비밀번호가 일치하지 않습니다."
+                } else {
+                    _error.value = "비밀번호 변경 요청 실패. 다시 시도해주세요."
+                }
+            }
+            catch (e: Exception) {
                 // 에러 처리
                 e.printStackTrace()
             }
@@ -168,7 +180,7 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun fetchMemberDetails() {
+    fun fetchMemberDetails(callback: (ProfileBody) -> Unit) {
         viewModelScope.launch {
             try {
                 val token = accessTokenDataStore.data.map { it.accessToken }.first()
@@ -188,6 +200,7 @@ class ProfileViewModel @Inject constructor(
                 val profileBody = profileResponse.body
                 if (profileBody != null) {
                     _profileResponse.value = profileResponse
+                    callback(profileBody)
                 } else {
                     _error.value = "ProfileBody is null"
                     Log.e("ProfileViewModel", "ProfileBody is null")
