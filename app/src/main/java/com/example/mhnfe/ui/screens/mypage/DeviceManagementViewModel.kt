@@ -15,7 +15,6 @@ import com.example.mhnfe.data.remote.response.GroupId
 import com.example.mhnfe.data.remote.response.GroupMember
 import com.example.mhnfe.data.remote.response.GroupMemberInfo
 import com.example.mhnfe.data.remote.response.GroupMemberInfoResponse
-import com.example.mhnfe.data.remote.response.GroupMemberResponse
 import com.example.mhnfe.domain.repository.DeviceRepository
 import com.example.mhnfe.domain.repository.GroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,7 +28,6 @@ import org.json.JSONObject
 import retrofit2.Response
 import javax.inject.Inject
 
-
 @HiltViewModel
 class DeviceManagementViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
@@ -40,8 +38,6 @@ class DeviceManagementViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val _groupMemberInfo = MutableStateFlow<GroupMember?>(null)
-    val groupMemberInfo: StateFlow<GroupMember?> = _groupMemberInfo
     private val _groupMemberInfoList = MutableStateFlow<List<GroupMemberInfo>?>(null)
     val groupMemberInfoList: StateFlow<List<GroupMemberInfo>?> = _groupMemberInfoList
     private val _cctvList = MutableStateFlow<List<CctvInfo>?>(null)
@@ -97,22 +93,6 @@ class DeviceManagementViewModel @Inject constructor(
             }
         }
     }
-
-//    fun getGroupMemberInfo() {
-//        viewModelScope.launch {
-//            val token = accessTokenDataStore.data.map { it.accessToken }.first()
-//            val response: Response<GroupMemberResponse> = groupRepository.getGroupMember(token)
-//            if(response.isSuccessful) {
-//                _groupMemberInfo.value = response.body()?.body
-//            } else {
-//                val jsonObject = JSONObject(response.errorBody()!!.string())
-//                val errorBody = Json.decodeFromString<DeleteDeviceResponse>(jsonObject.toString())
-//
-//                _errorMessage.value = errorBody.result.description
-//                Log.e(TAG,"Error: " + _errorMessage.value)
-//            }
-//        }
-//    }
 
     fun getCctvList() {
         viewModelScope.launch {
