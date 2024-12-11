@@ -14,3 +14,4 @@ misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
 /opencv/build
+/app/release/

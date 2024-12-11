@@ -1,11 +1,14 @@
 package com.example.mhnfe.ui.screens.monitoring.group
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -81,27 +84,39 @@ fun GroupScreen(
         ) {
             //마스터 화면 일 때 버튼 추가
             if (userType == UserType.MASTER) {
-                Row(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    SmallButton(
-                        onClick = {
-                            bottomNavController.navigate(
-                                NavRoutes.Monitoring.QRGenerate.createRoute(UserType.CCTV)
-                            )
-                        }, text = "CCTV 추가"
-                    )
-                    SmallButton(
-                        onClick = {
-                            bottomNavController.navigate(
-                                NavRoutes.Monitoring.QRGenerate.createRoute(UserType.VIEWER)
-                            )
-                        }, text = "참여자 추가"
-                    )
+                BoxWithConstraints {
+                    val buttonWidth = (maxWidth - 24.dp) / 2
+
+                    Row(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        SmallButton(
+                            modifier = Modifier
+                                .width(buttonWidth)
+                                .height(56.dp),
+                            onClick = {
+                                bottomNavController.navigate(
+                                    NavRoutes.Monitoring.QRGenerate.createRoute(UserType.CCTV)
+                                )
+                            },
+                            text = "CCTV 추가"
+                        )
+                        SmallButton(
+                            modifier = Modifier
+                                .width(buttonWidth)
+                                .height(56.dp),
+                            onClick = {
+                                bottomNavController.navigate(
+                                    NavRoutes.Monitoring.QRGenerate.createRoute(UserType.VIEWER)
+                                )
+                            },
+                            text = "참여자 추가"
+                        )
+                    }
                 }
             }
             val cctvList = groupInfo?.cctv ?: emptyList()
