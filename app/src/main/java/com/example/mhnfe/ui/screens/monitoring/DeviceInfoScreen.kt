@@ -77,7 +77,7 @@ fun DeviceInfoScreen(
                 batteryStatus = thingInfo.batteryLevel
                 networkStatus = mqttViewModel.convertNetworkStatusToString(thingInfo.networkStatus)
                 Log.e("Thing Subscribe", "battery : " + batteryStatus)
-                Log.e("Thing Subscribe", "network : " + batteryStatus)
+                Log.e("Thing Subscribe", "network : " + networkStatus)
 
                 mqttStatus = true
             }
@@ -87,7 +87,7 @@ fun DeviceInfoScreen(
                     batteryStatus = thingInfo.batteryLevel!!
                     networkStatus = mqttViewModel.convertNetworkStatusToString(thingInfo.networkStatus!!)
                     Log.e("Thing Shadow Subscribe", "battery : " + batteryStatus)
-                    Log.e("Thing Shadow Subscribe", "network : " + batteryStatus)
+                    Log.e("Thing Shadow Subscribe", "network : " + networkStatus)
 
                     mqttStatus = true
                 }
