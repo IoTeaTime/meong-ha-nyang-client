@@ -63,9 +63,7 @@ android {
 
 dependencies {
 
-    //webRTC 공식 지원 종료
-    // 로컬 WebRTC.aar 파일 사용
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
+    implementation("com.infobip:google-webrtc:1.0.42469")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
