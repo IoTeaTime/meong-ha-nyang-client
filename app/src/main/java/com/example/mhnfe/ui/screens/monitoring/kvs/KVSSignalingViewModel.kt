@@ -987,7 +987,7 @@ class KVSSignalingViewModel : ViewModel() {
                 val remoteRenderer = SurfaceViewRenderer(context).apply {
                     init(eglBaseContext, null)
                     setEnableHardwareScaler(true)
-                    setMirror(true)
+//                    setMirror(true)
                 }
 
                 _localView.value = localRenderer
@@ -1413,7 +1413,7 @@ class KVSSignalingViewModel : ViewModel() {
                 val remoteAudioTrack = stream.audioTracks.firstOrNull()
 
                 remoteAudioTrack?.let {AudioTrack ->
-                    remoteAudioTrack.setEnabled(true)
+//                    remoteAudioTrack.setEnabled(true)
                     audioManager?.setMode(AudioManager.MODE_IN_COMMUNICATION)
                     audioManager?.setSpeakerphoneOn(true)
 
@@ -1434,7 +1434,7 @@ class KVSSignalingViewModel : ViewModel() {
                         )
                         _remoteView.value?.let { renderer ->
                             try {
-                                renderer.setMirror(isUsingFrontCamera)
+//                                renderer.setMirror(false)
                                 videoTrack.addSink(renderer)
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error adding sink to remote video track", e)
@@ -1600,8 +1600,8 @@ class KVSSignalingViewModel : ViewModel() {
                             override fun onCameraSwitchDone(isFrontCamera: Boolean) {
                                 _isBackCamera.value = !isFrontCamera
                                 isUsingFrontCamera = isFrontCamera
-                                _localView.value?.setMirror(true)
-                                _remoteView.value?.setMirror(isFrontCamera)
+                                _localView.value?.setMirror(isFrontCamera)
+//                                _remoteView.value?.setMirror(isFrontCamera)
                                 Log.d("Camera", "카메라 전환 완료: ${if(isFrontCamera) "전면" else "후면"}")
                             }
 
